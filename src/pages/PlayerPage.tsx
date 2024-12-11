@@ -14,10 +14,25 @@ const PlayerPage = () => {
       const { data: songData, error: songError } = await supabase
         .from('songs')
         .select(`
-          *,
-          tracks (*),
-          lyrics (*),
-          chapters (*),
+          id,
+          title,
+          choir_id,
+          tracks (
+            id,
+            url,
+            voice_part
+          ),
+          lyrics (
+            id,
+            text,
+            start_time,
+            end_time
+          ),
+          chapters (
+            id,
+            title,
+            start_time
+          ),
           html_content
         `)
         .ilike('title', slug?.replace(/-/g, ' ') || '')
@@ -32,18 +47,18 @@ const PlayerPage = () => {
         id: songData.id,
         title: songData.title,
         choirId: songData.choir_id,
-        tracks: songData.tracks.map((track: any) => ({
+        tracks: songData.tracks.map((track) => ({
           id: track.id,
           url: track.url,
           voicePart: track.voice_part
         })),
-        lyrics: songData.lyrics.map((lyric: any) => ({
+        lyrics: songData.lyrics.map((lyric) => ({
           id: lyric.id,
           text: lyric.text,
           startTime: lyric.start_time,
           endTime: lyric.end_time
         })),
-        chapters: songData.chapters.map((chapter: any) => ({
+        chapters: songData.chapters.map((chapter) => ({
           id: chapter.id,
           title: chapter.title,
           time: chapter.start_time,

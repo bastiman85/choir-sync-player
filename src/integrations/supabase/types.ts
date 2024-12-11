@@ -101,18 +101,21 @@ export type Database = {
         Row: {
           choir_id: string | null
           created_at: string
+          html_content: string | null
           id: string
           title: string
         }
         Insert: {
           choir_id?: string | null
           created_at?: string
+          html_content?: string | null
           id?: string
           title: string
         }
         Update: {
           choir_id?: string | null
           created_at?: string
+          html_content?: string | null
           id?: string
           title?: string
         }
