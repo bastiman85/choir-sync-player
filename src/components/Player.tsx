@@ -17,6 +17,7 @@ const Player = ({ song }: PlayerProps) => {
   const [duration, setDuration] = useState(0);
   const [volumes, setVolumes] = useState<{ [key: string]: number }>({});
   const [mutedTracks, setMutedTracks] = useState<{ [key: string]: boolean }>({});
+  const [instrumentalMode, setInstrumentalMode] = useState(false);
 
   useEffect(() => {
     song.tracks.forEach((track) => {
@@ -58,11 +59,39 @@ const Player = ({ song }: PlayerProps) => {
 
   const handleVolumeChange = (trackId: string, value: number) => {
     const newVolume = value / 100;
+    const track = song.tracks.find(t => t.id === trackId);
+    
+    if (track?.voicePart === "instrumental" && !instrumentalMode && value > 0) {
+      // Switching to instrumental mode
+      setInstrumentalMode(true);
+      Object.entries(audioRefs.current).forEach(([id, audio]) => {
+        const trackPart = song.tracks.find(t => t.id === id)?.voicePart;
+        if (trackPart !== "instrumental") {
+          audio.volume = 0;
+          setVolumes(prev => ({ ...prev, [id]: 0 }));
+        }
+      });
+    } else if (track?.voicePart !== "instrumental" && instrumentalMode && value > 0) {
+      // Switching back to vocal mode
+      setInstrumentalMode(false);
+      const instrumentalTrack = song.tracks.find(t => t.voicePart === "instrumental");
+      if (instrumentalTrack) {
+        audioRefs.current[instrumentalTrack.id].volume = 0;
+        setVolumes(prev => ({ ...prev, [instrumentalTrack.id]: 0 }));
+      }
+    }
+
     setVolumes((prev) => ({ ...prev, [trackId]: newVolume }));
     audioRefs.current[trackId].volume = newVolume;
   };
 
   const handleMuteToggle = (trackId: string) => {
+    const track = song.tracks.find(t => t.id === trackId);
+    
+    if (track?.voicePart === "instrumental" && !mutedTracks[trackId]) {
+      setInstrumentalMode(false);
+    }
+
     setMutedTracks((prev) => {
       const newMuted = { ...prev, [trackId]: !prev[trackId] };
       audioRefs.current[trackId].muted = newMuted[trackId];

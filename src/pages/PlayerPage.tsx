@@ -12,12 +12,13 @@ const mockSongs: Song[] = [
     tracks: [
       { id: "1", voicePart: "soprano", url: "/path/to/soprano.mp3" },
       { id: "2", voicePart: "alto", url: "/path/to/alto.mp3" },
+      { id: "3", voicePart: "instrumental", url: "/path/to/instrumental.mp3" },
     ],
     lyrics: [
-      { id: "1", text: "Amazing grace, how sweet the sound", startTime: 0, endTime: 5 },
-      { id: "2", text: "That saved a wretch like me", startTime: 5, endTime: 10 },
+      { id: "1", text: "Amazing grace, how sweet the sound", startTime: 0 },
+      { id: "2", text: "That saved a wretch like me", startTime: 5 },
     ],
-    chapters: [] // Added empty chapters array
+    chapters: []
   },
 ];
 

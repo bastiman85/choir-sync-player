@@ -1,4 +1,4 @@
-export type VoicePart = "soprano" | "alto" | "tenor" | "bass";
+export type VoicePart = "soprano" | "alto" | "tenor" | "bass" | "instrumental";
 
 export interface Track {
   id: string;
@@ -10,7 +10,7 @@ export interface LyricLine {
   id: string;
   text: string;
   startTime: number;
-  endTime: number;
+  endTime?: number;
 }
 
 export interface ChapterMarker {
