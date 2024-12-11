@@ -8,6 +8,7 @@ const mockSongs: Song[] = [
   {
     id: "1",
     title: "Amazing Grace",
+    choirId: "1",
     tracks: [
       { id: "1", voicePart: "soprano", url: "/path/to/soprano.mp3" },
       { id: "2", voicePart: "alto", url: "/path/to/alto.mp3" },

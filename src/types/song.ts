@@ -9,8 +9,8 @@ export interface Track {
 export interface LyricLine {
   id: string;
   text: string;
-  startTime: number; // in seconds
-  endTime: number; // in seconds
+  startTime: number;
+  endTime: number;
 }
 
 export interface Song {
@@ -18,4 +18,11 @@ export interface Song {
   title: string;
   tracks: Track[];
   lyrics: LyricLine[];
+  choirId: string;
+}
+
+export interface Choir {
+  id: string;
+  name: string;
+  description?: string;
 }

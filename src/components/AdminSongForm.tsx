@@ -2,7 +2,22 @@ import React, { useState } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-import { Song, Track, LyricLine, VoicePart } from "@/types/song";
+import { Song, Track, LyricLine, VoicePart, Choir } from "@/types/song";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// This would normally come from an API
+const mockChoirs: Choir[] = [
+  {
+    id: "1",
+    name: "St. Mary's Choir",
+    description: "Traditional church choir"
+  },
+  {
+    id: "2",
+    name: "Community Singers",
+    description: "Local community choir"
+  }
+];
 
 interface AdminSongFormProps {
   onSubmit: (song: Partial<Song>) => void;
@@ -11,6 +26,7 @@ interface AdminSongFormProps {
 
 const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
   const [title, setTitle] = useState(initialSong?.title || "");
+  const [choirId, setChoirId] = useState(initialSong?.choirId || mockChoirs[0].id);
   const [tracks, setTracks] = useState<Track[]>(initialSong?.tracks || []);
   const [lyrics, setLyrics] = useState<string>(
     initialSong?.lyrics.map((l) => `${l.startTime},${l.endTime},${l.text}`).join("\n") || ""
@@ -34,6 +50,7 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
 
     onSubmit({
       title,
+      choirId,
       tracks,
       lyrics: parsedLyrics,
     });
@@ -64,6 +81,22 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Enter song title"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Choir</label>
+        <Select value={choirId} onValueChange={setChoirId}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a choir" />
+          </SelectTrigger>
+          <SelectContent>
+            {mockChoirs.map((choir) => (
+              <SelectItem key={choir.id} value={choir.id}>
+                {choir.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div>
