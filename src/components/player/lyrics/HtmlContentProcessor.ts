@@ -41,25 +41,30 @@ export const processHtmlContent = (
     
     if (showVoicePart(currentSection, activeVoicePart)) {
       if (divTime !== lastMatchedTimeRef.current) {
-        // Don't filter if activeVoicePart is 'all' or 'instrumental'
-        const shouldFilter = activeVoicePart && 
-          activeVoicePart !== 'all' && 
-          activeVoicePart !== 'instrumental';
+        // Show all text if:
+        // 1. activeVoicePart is 'all' or 'instrumental'
+        // 2. No active voice part is set
+        // 3. Multiple voice parts are active
+        const shouldShowAllText = 
+          !activeVoicePart || 
+          activeVoicePart === 'all' || 
+          activeVoicePart === 'instrumental';
 
-        // Count active voice parts that are currently unmuted
-        const activeParts = Array.from(currentSection.querySelectorAll('.lattextblock'))
-          .filter(block => {
-            // Get the voice part class (s, a, t, b)
-            const voiceClass = Array.from(block.classList)
-              .find(cls => ['s', 'a', 't', 'b'].includes(cls));
-            
-            // If this is the active voice part or if it's not a voice part block, count it
-            return voiceClass === activeVoicePart?.[0].toLowerCase() || !voiceClass;
+        // Count active voice parts (s, a, t, b)
+        const voiceParts = Array.from(currentSection.querySelectorAll('.lattextblock'))
+          .map(block => {
+            const classes = Array.from(block.classList);
+            return classes.find(cls => ['s', 'a', 't', 'b'].includes(cls));
           })
-          .length;
+          .filter(Boolean);
 
-        // Only filter if we should filter AND there's only one active part
-        const processedSection = (shouldFilter && activeParts <= 1) 
+        const uniqueVoiceParts = new Set(voiceParts);
+        const hasMultipleVoiceParts = uniqueVoiceParts.size > 1;
+
+        // Only filter if we have exactly one voice part active and it's not 'all' or 'instrumental'
+        const shouldFilter = !shouldShowAllText && !hasMultipleVoiceParts && activeVoicePart;
+        
+        const processedSection = shouldFilter
           ? filterVoicePart(currentSection, activeVoicePart[0].toLowerCase())
           : currentSection;
         
