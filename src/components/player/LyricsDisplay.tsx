@@ -37,21 +37,24 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     }
 
     const voiceInitial = activeVoicePart[0].toLowerCase();
-    const lattextblock = element.querySelector('.lattextblock');
     
-    if (!lattextblock) {
-      console.log('No lattextblock found in element');
-      return true;
+    // Get all lattextblocks within this time section
+    const lattextblocks = element.querySelectorAll('.lattextblock');
+    console.log('Checking lattextblocks in current section:', lattextblocks.length);
+    
+    // Check if any lattextblock in this section matches the voice part
+    for (const block of lattextblocks) {
+      const classes = Array.from(block.classList);
+      console.log('Checking classes for voice part in section:', classes, 'looking for:', voiceInitial);
+      
+      if (classes.includes(voiceInitial)) {
+        console.log('Found matching voice part in section');
+        return true;
+      }
     }
-
-    // Get all classes of the lattextblock
-    const classes = Array.from(lattextblock.classList);
-    console.log('Checking classes for voice part:', classes, 'looking for:', voiceInitial);
     
-    // Return true only if the exact voice initial class exists
-    const hasMatchingClass = classes.includes(voiceInitial);
-    console.log('Voice part match result:', hasMatchingClass);
-    return hasMatchingClass;
+    console.log('No matching voice part found in section');
+    return false;
   };
 
   const processHtmlContent = (html: string) => {
