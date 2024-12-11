@@ -31,6 +31,7 @@ export const usePlaybackControls = ({
           audio.play();
         });
       }
+      setCurrentTime(0); // Ensure UI is updated when track ends
     } else {
       setIsPlaying(false);
     }
@@ -49,6 +50,7 @@ export const usePlaybackControls = ({
           audio.play();
         });
       }
+      setCurrentTime(0); // Ensure UI is updated when looping
       return; // Don't check for chapter loop if we're looping the song
     }
 
@@ -67,6 +69,7 @@ export const usePlaybackControls = ({
               audio.play();
             });
           }
+          setCurrentTime(currentChapter.time); // Ensure UI is updated when looping chapter
         }
       }
     }
