@@ -43,7 +43,7 @@ const PlayerControls = ({
               checked={autoRestartChapter}
               onCheckedChange={onAutoRestartChapterChange}
             />
-            <span className="text-sm">Upprepa kapitel</span>
+            <span className="text-sm">Upprepa del</span>
           </label>
         )}
       </div>

@@ -18,9 +18,18 @@ const TrackControls = ({
   onVolumeChange,
   onMuteToggle,
 }: TrackControlsProps) => {
+  const voicePartLabels: Record<string, string> = {
+    soprano: "Sopran",
+    alto: "Alt",
+    tenor: "Tenor",
+    bass: "Bas",
+    instrumental: "Instrumental",
+    all: "Alla"
+  };
+
   return (
     <div className="flex items-center gap-4">
-      <span className="w-20 font-semibold">{track.voicePart}</span>
+      <span className="w-20 font-semibold">{voicePartLabels[track.voicePart] || track.voicePart}</span>
       <Button variant="ghost" size="icon" onClick={onMuteToggle}>
         {isMuted ? <VolumeX /> : <Volume2 />}
       </Button>

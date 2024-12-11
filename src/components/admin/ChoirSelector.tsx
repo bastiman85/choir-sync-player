@@ -24,7 +24,7 @@ const ChoirSelector = ({ choirs, selectedChoirId, onChoirSelect, onAddChoir }: C
         }}
       >
         <SelectTrigger>
-          <SelectValue placeholder="Select a choir" />
+          <SelectValue placeholder="Välj en kör" />
         </SelectTrigger>
         <SelectContent>
           {choirs.map((choir) => (
@@ -36,7 +36,7 @@ const ChoirSelector = ({ choirs, selectedChoirId, onChoirSelect, onAddChoir }: C
           <SelectItem value="add-choir" className="text-primary">
             <div className="flex items-center">
               <Plus className="mr-2 h-4 w-4" />
-              Add New Choir
+              Lägg till ny kör
             </div>
           </SelectItem>
         </SelectContent>

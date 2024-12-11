@@ -31,19 +31,19 @@ const SongBasicDetails = ({
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium mb-2">Song Title</label>
+        <label className="block text-sm font-medium mb-2">Sångtitel</label>
         <Input
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
-          placeholder="Enter song title"
+          placeholder="Ange sångtitel"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">Choir</label>
+        <label className="block text-sm font-medium mb-2">Kör</label>
         <Select value={choirId} onValueChange={onChoirIdChange}>
           <SelectTrigger>
-            <SelectValue placeholder="Select a choir" />
+            <SelectValue placeholder="Välj en kör" />
           </SelectTrigger>
           <SelectContent>
             {choirs.map((choir) => (
