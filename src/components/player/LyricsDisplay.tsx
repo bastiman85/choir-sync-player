@@ -40,8 +40,13 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     
     if (!lattextblock) return true;
 
-    // Check if the lattextblock has the voice initial in its class list
-    return lattextblock.classList.contains(voiceInitial);
+    // Get all classes of the lattextblock
+    const classes = Array.from(lattextblock.classList);
+    
+    // Filter out the 'lattextblock' class and check if any remaining class exactly matches the voice initial
+    return classes
+      .filter(className => className !== 'lattextblock')
+      .some(className => className === voiceInitial);
   };
 
   const processHtmlContent = (html: string) => {
