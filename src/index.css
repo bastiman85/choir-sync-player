@@ -40,14 +40,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-/* Minimal styling for the current section */
-.current-section {
-  background-color: rgba(0, 0, 0, 0.05);
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-}
-
-.dark .current-section {
-  background-color: rgba(255, 255, 255, 0.05);
-}
