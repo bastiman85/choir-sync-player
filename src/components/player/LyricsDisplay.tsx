@@ -30,23 +30,21 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     return undefined;
   };
 
-  const shouldShowLyricBlock = (div: Element): boolean => {
+  const showVoicePart = (element: Element): boolean => {
     if (!activeVoicePart || activeVoicePart === 'all' || activeVoicePart === 'instrumental') {
       return true;
     }
 
     const voiceInitial = activeVoicePart[0].toLowerCase();
-    const lattextblock = div.querySelector('.lattextblock');
+    const lattextblock = element.querySelector('.lattextblock');
     
     if (!lattextblock) return true;
 
     // Get all classes of the lattextblock
     const classes = Array.from(lattextblock.classList);
     
-    // Filter out the 'lattextblock' class and check if any remaining class exactly matches the voice initial
-    return classes
-      .filter(className => className !== 'lattextblock')
-      .some(className => className === voiceInitial);
+    // Return true only if the exact voice initial class exists
+    return classes.includes(voiceInitial);
   };
 
   const processHtmlContent = (html: string) => {
@@ -67,10 +65,10 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     let matchFound = false;
     let latestMatchingDiv: Element | null = null;
 
-    // First pass: find the latest matching div based on time and voice part
+    // Find the latest matching div based on time and voice part
     divs.forEach((div) => {
       const divTime = div.getAttribute('data-time');
-      if (divTime && divTime <= timeString && shouldShowLyricBlock(div)) {
+      if (divTime && divTime <= timeString && showVoicePart(div)) {
         latestMatchingDiv = div;
         matchFound = true;
       }
@@ -86,7 +84,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
       }
     } else if (currentTime === 0) {
       // For initial display, find the first div that matches the voice part
-      const firstShowableDiv = Array.from(divs).find(div => shouldShowLyricBlock(div));
+      const firstShowableDiv = Array.from(divs).find(div => showVoicePart(div));
       if (firstShowableDiv) {
         setCurrentHtmlSection(firstShowableDiv.outerHTML);
         lastMatchedTimeRef.current = firstShowableDiv.getAttribute('data-time');
@@ -96,7 +94,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
         lastMatchedTimeRef.current = null;
       }
     } else {
-      // If no matching div is found, show nothing instead of falling back to an unfiltered div
+      // If no matching div is found, show nothing
       setCurrentHtmlSection('');
       lastMatchedTimeRef.current = null;
     }
