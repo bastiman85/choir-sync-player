@@ -64,13 +64,17 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
 
     let matchFound = false;
     let latestMatchingDiv: Element | null = null;
+    let latestTimeMatchingDiv: Element | null = null;
 
     // Find the latest matching div based on time and voice part
     divs.forEach((div) => {
       const divTime = div.getAttribute('data-time');
-      if (divTime && divTime <= timeString && showVoicePart(div)) {
-        latestMatchingDiv = div;
-        matchFound = true;
+      if (divTime && divTime <= timeString) {
+        latestTimeMatchingDiv = div;
+        if (showVoicePart(div)) {
+          latestMatchingDiv = div;
+          matchFound = true;
+        }
       }
     });
 
@@ -82,9 +86,17 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
         lastMatchedTimeRef.current = divTime;
         setError(null);
       }
+    } else if (latestTimeMatchingDiv) {
+      // If no matching div for the voice part is found, show the time-matched div
+      const divTime = latestTimeMatchingDiv.getAttribute('data-time');
+      if (divTime !== lastMatchedTimeRef.current) {
+        setCurrentHtmlSection(latestTimeMatchingDiv.outerHTML);
+        lastMatchedTimeRef.current = divTime;
+        setError(null);
+      }
     } else if (currentTime === 0) {
       // For initial display, find the first div that matches the voice part
-      const firstShowableDiv = Array.from(divs).find(div => showVoicePart(div));
+      const firstShowableDiv = Array.from(divs).find(div => showVoicePart(div)) || divs[0];
       if (firstShowableDiv) {
         setCurrentHtmlSection(firstShowableDiv.outerHTML);
         lastMatchedTimeRef.current = firstShowableDiv.getAttribute('data-time');
