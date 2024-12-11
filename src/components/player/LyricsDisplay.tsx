@@ -9,6 +9,7 @@ interface LyricsDisplayProps {
 
 const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps) => {
   const [currentHtmlSection, setCurrentHtmlSection] = useState<string | null>(null);
+  const [fullHtmlContent, setFullHtmlContent] = useState<string>("");
   const containerRef = useRef<HTMLDivElement>(null);
   const lastMatchedTimeRef = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,12 +43,14 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
             return response.text();
           })
           .then(html => {
+            setFullHtmlContent(html);
             processHtmlContent(html);
           })
           .catch(() => {
             setError('Error loading HTML content');
           });
       } else {
+        setFullHtmlContent(content);
         processHtmlContent(content);
       }
     }
@@ -82,14 +85,24 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
     if (matchFound && latestMatchingDiv) {
       const divTime = latestMatchingDiv.getAttribute('data-time');
       if (divTime !== lastMatchedTimeRef.current) {
-        setCurrentHtmlSection(latestMatchingDiv.innerHTML);
+        // Instead of replacing content, we'll add a class to highlight the current section
+        const allDivs = tempDiv.querySelectorAll('[data-time]');
+        allDivs.forEach(div => {
+          if (div === latestMatchingDiv) {
+            div.classList.add('current-section');
+          } else {
+            div.classList.remove('current-section');
+          }
+        });
+        setCurrentHtmlSection(tempDiv.innerHTML);
         lastMatchedTimeRef.current = divTime;
         setError(null);
       }
     } else if (currentTime === 0) {
       const firstDiv = divs[0];
       if (firstDiv) {
-        setCurrentHtmlSection(firstDiv.innerHTML);
+        firstDiv.classList.add('current-section');
+        setCurrentHtmlSection(tempDiv.innerHTML);
         lastMatchedTimeRef.current = firstDiv.getAttribute('data-time');
         setError(null);
       }
@@ -108,7 +121,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
             <div 
               ref={containerRef}
               className="w-full text-center"
-              dangerouslySetInnerHTML={{ __html: currentHtmlSection || '' }}
+              dangerouslySetInnerHTML={{ __html: currentHtmlSection || fullHtmlContent }}
             />
           )}
         </div>
