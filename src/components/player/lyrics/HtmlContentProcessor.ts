@@ -26,24 +26,26 @@ export const processHtmlContent = (
   let currentSection: Element | null = null;
   const allSections = document.createElement('div');
 
+  // First, clone all divs without any current-section class
   divs.forEach((div) => {
-    const divTime = div.getAttribute('data-time');
     const divClone = div.cloneNode(true) as Element;
-    
-    // Only highlight if this is the current section
+    divClone.classList.remove('current-section'); // Ensure no section has the highlight class initially
+    allSections.appendChild(divClone);
+  });
+
+  // Then find and highlight the current section
+  const allClonedDivs = allSections.querySelectorAll('[data-time]');
+  allClonedDivs.forEach((div, index) => {
+    const divTime = div.getAttribute('data-time');
     if (divTime && divTime <= timeString) {
-      const nextDiv = Array.from(divs).find(d => {
-        const nextTime = d.getAttribute('data-time');
-        return nextTime && nextTime > timeString;
-      });
+      const nextDiv = allClonedDivs[index + 1];
+      const nextTime = nextDiv?.getAttribute('data-time');
       
-      if (!nextDiv || (nextDiv.getAttribute('data-time') || '') > timeString) {
-        divClone.classList.add('current-section');
-        currentSection = divClone;
+      if (!nextDiv || (nextTime && timeString < nextTime)) {
+        div.classList.add('current-section');
+        currentSection = div;
       }
     }
-    
-    allSections.appendChild(divClone);
   });
 
   if (currentSection) {
@@ -58,7 +60,7 @@ export const processHtmlContent = (
     lastMatchedTimeRef.current = divs[0].getAttribute('data-time');
     setError(null);
   } else {
-    setCurrentHtmlSection(tempDiv.innerHTML);
+    setCurrentHtmlSection(allSections.innerHTML);
     lastMatchedTimeRef.current = null;
   }
 };
