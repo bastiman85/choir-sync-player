@@ -36,8 +36,8 @@ const Player = ({ song }: PlayerProps) => {
       <h2 className="text-2xl font-bold mb-6">{song.title}</h2>
       
       <div className="bg-white rounded-lg p-6 shadow-lg">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="md:col-span-2 space-y-4">
+        <div className={`grid grid-cols-1 ${song.chapters?.length ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 mb-6`}>
+          <div className={`${song.chapters?.length ? 'md:col-span-2' : 'md:col-span-2'} space-y-4`}>
             {song.tracks.map((track) => (
               <TrackControls
                 key={track.id}
@@ -49,14 +49,16 @@ const Player = ({ song }: PlayerProps) => {
               />
             ))}
           </div>
-          <div className="md:col-span-1">
-            <h3 className="text-sm font-medium mb-2">Chapters</h3>
-            <ChapterMarkers
-              chapters={song.chapters || []}
-              onChapterClick={handleChapterClick}
-              currentTime={currentTime}
-            />
-          </div>
+          {song.chapters?.length > 0 && (
+            <div className="md:col-span-1">
+              <h3 className="text-sm font-medium mb-2">Chapters</h3>
+              <ChapterMarkers
+                chapters={song.chapters}
+                onChapterClick={handleChapterClick}
+                currentTime={currentTime}
+              />
+            </div>
+          )}
         </div>
 
         <div className="mb-6">
