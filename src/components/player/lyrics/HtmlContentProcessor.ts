@@ -26,23 +26,11 @@ export const processHtmlContent = (
   let currentSection: Element | null = null;
   const allSections = document.createElement('div');
 
-  // First, clone all divs and filter them based on voice part
+  // Add all divs to allSections
   divs.forEach((div) => {
-    if (activeVoicePart && ['soprano', 'alto', 'tenor', 'bass'].includes(activeVoicePart)) {
-      const voiceInitial = activeVoicePart[0].toLowerCase();
-      const filteredDiv = filterVoicePart(div, voiceInitial);
-      
-      // Only add the div if it has content for the active voice part
-      if (filteredDiv && showVoicePart(div, activeVoicePart)) {
-        const divClone = filteredDiv.cloneNode(true) as Element;
-        divClone.classList.remove('current-section');
-        allSections.appendChild(divClone);
-      }
-    } else {
-      const divClone = div.cloneNode(true) as Element;
-      divClone.classList.remove('current-section');
-      allSections.appendChild(divClone);
-    }
+    const divClone = div.cloneNode(true) as Element;
+    divClone.classList.remove('current-section');
+    allSections.appendChild(divClone);
   });
 
   // Then find and highlight the current section

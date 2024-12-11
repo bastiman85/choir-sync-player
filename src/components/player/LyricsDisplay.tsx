@@ -12,6 +12,7 @@ interface LyricsDisplayProps {
 
 const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: LyricsDisplayProps) => {
   const [currentHtmlSection, setCurrentHtmlSection] = useState<string | null>(null);
+  const [filteredHtml, setFilteredHtml] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastMatchedTimeRef = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +33,31 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     return undefined;
   };
 
+  // Filter HTML content when voice part changes
+  useEffect(() => {
+    if (htmlContent && containerRef.current) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent;
+      
+      if (activeVoicePart && ['soprano', 'alto', 'tenor', 'bass'].includes(activeVoicePart)) {
+        const voiceInitial = activeVoicePart[0].toLowerCase();
+        const allDivs = tempDiv.querySelectorAll('[data-time]');
+        const filteredSections = document.createElement('div');
+        
+        allDivs.forEach(div => {
+          const filteredDiv = filterVoicePart(div, voiceInitial);
+          if (filteredDiv && showVoicePart(div, activeVoicePart)) {
+            filteredSections.appendChild(filteredDiv);
+          }
+        });
+        
+        setFilteredHtml(filteredSections.innerHTML);
+      } else {
+        setFilteredHtml(htmlContent);
+      }
+    }
+  }, [htmlContent, activeVoicePart]);
+
   useEffect(() => {
     if (htmlContent && containerRef.current) {
       if (htmlContent.startsWith('blob:') || htmlContent.startsWith('http')) {
@@ -44,7 +70,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
           })
           .then(html => {
             processHtmlContent(
-              html,
+              filteredHtml || html,
               currentTime,
               activeVoicePart,
               lastMatchedTimeRef,
@@ -59,7 +85,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
           });
       } else {
         processHtmlContent(
-          htmlContent,
+          filteredHtml || htmlContent,
           currentTime,
           activeVoicePart,
           lastMatchedTimeRef,
@@ -70,7 +96,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
         );
       }
     }
-  }, [currentTime, htmlContent, activeVoicePart]);
+  }, [currentTime, htmlContent, activeVoicePart, filteredHtml]);
 
   const currentLyric = getCurrentLyric(currentTime, lyrics);
 
