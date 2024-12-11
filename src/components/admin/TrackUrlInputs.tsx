@@ -7,7 +7,7 @@ interface TrackUrlInputsProps {
 }
 
 const TrackUrlInputs = ({ tracks, onTracksChange }: TrackUrlInputsProps) => {
-  const voiceParts: VoicePart[] = ["soprano", "alto", "tenor", "bass"];
+  const voiceParts: VoicePart[] = ["soprano", "alto", "tenor", "bass", "instrumental", "all"];
 
   const handleUrlChange = (voicePart: VoicePart, url: string) => {
     const existingTrackIndex = tracks.findIndex((t) => t.voicePart === voicePart);
@@ -35,7 +35,12 @@ const TrackUrlInputs = ({ tracks, onTracksChange }: TrackUrlInputsProps) => {
       <div className="grid grid-cols-2 gap-4">
         {voiceParts.map((part) => (
           <div key={part} className="space-y-2">
-            <label className="block text-sm capitalize">{part}</label>
+            <label className="block text-sm capitalize">
+              {part}
+              {(part === "instrumental" || part === "all") && (
+                <span className="text-xs text-muted-foreground ml-1">(exclusive)</span>
+              )}
+            </label>
             <Input
               type="url"
               placeholder={`Enter ${part} track URL`}

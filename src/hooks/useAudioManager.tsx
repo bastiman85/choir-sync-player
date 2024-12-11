@@ -9,6 +9,7 @@ export const useAudioManager = (song: Song) => {
   const [volumes, setVolumes] = useState<{ [key: string]: number }>({});
   const [mutedTracks, setMutedTracks] = useState<{ [key: string]: boolean }>({});
   const [instrumentalMode, setInstrumentalMode] = useState(false);
+  const [allTrackMode, setAllTrackMode] = useState(false);
   const [autoRestartSong, setAutoRestartSong] = useState(false);
   const [autoRestartChapter, setAutoRestartChapter] = useState(false);
 
@@ -84,21 +85,36 @@ export const useAudioManager = (song: Song) => {
     const newVolume = value / 100;
     const track = song.tracks.find(t => t.id === trackId);
     
-    if (track?.voicePart === "instrumental" && !instrumentalMode && value > 0) {
-      setInstrumentalMode(true);
+    if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && !instrumentalMode && !allTrackMode && value > 0) {
+      // Enable instrumental or all track mode
+      if (track.voicePart === "instrumental") {
+        setInstrumentalMode(true);
+        setAllTrackMode(false);
+      } else {
+        setAllTrackMode(true);
+        setInstrumentalMode(false);
+      }
+      
       Object.entries(audioRefs.current).forEach(([id, audio]) => {
         const trackPart = song.tracks.find(t => t.id === id)?.voicePart;
-        if (trackPart !== "instrumental") {
+        if (trackPart !== track.voicePart) {
           audio.volume = 0;
           setVolumes(prev => ({ ...prev, [id]: 0 }));
         }
       });
-    } else if (track?.voicePart !== "instrumental" && instrumentalMode && value > 0) {
+    } else if ((track?.voicePart !== "instrumental" && track?.voicePart !== "all") && (instrumentalMode || allTrackMode) && value > 0) {
+      // Disable instrumental and all track mode when adjusting other tracks
       setInstrumentalMode(false);
+      setAllTrackMode(false);
       const instrumentalTrack = song.tracks.find(t => t.voicePart === "instrumental");
+      const allTrack = song.tracks.find(t => t.voicePart === "all");
       if (instrumentalTrack) {
         audioRefs.current[instrumentalTrack.id].volume = 0;
         setVolumes(prev => ({ ...prev, [instrumentalTrack.id]: 0 }));
+      }
+      if (allTrack) {
+        audioRefs.current[allTrack.id].volume = 0;
+        setVolumes(prev => ({ ...prev, [allTrack.id]: 0 }));
       }
     }
 
@@ -109,8 +125,9 @@ export const useAudioManager = (song: Song) => {
   const handleMuteToggle = (trackId: string) => {
     const track = song.tracks.find(t => t.id === trackId);
     
-    if (track?.voicePart === "instrumental" && !mutedTracks[trackId]) {
+    if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && !mutedTracks[trackId]) {
       setInstrumentalMode(false);
+      setAllTrackMode(false);
     }
 
     setMutedTracks((prev) => {

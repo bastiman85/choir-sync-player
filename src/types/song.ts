@@ -1,4 +1,4 @@
-export type VoicePart = "soprano" | "alto" | "tenor" | "bass" | "instrumental";
+export type VoicePart = "soprano" | "alto" | "tenor" | "bass" | "instrumental" | "all";
 
 export interface Track {
   id: string;
