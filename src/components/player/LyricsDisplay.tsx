@@ -74,59 +74,50 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
       return;
     }
 
-    let matchFound = false;
-    let latestMatchingDiv: Element | null = null;
-    let latestTimeMatchingDiv: Element | null = null;
-
-    // Find the latest matching div based on time and voice part
-    divs.forEach((div) => {
+    let currentTimeMatchingDiv: Element | null = null;
+    
+    // First, find the correct time section
+    for (const div of divs) {
       const divTime = div.getAttribute('data-time');
       console.log('Checking div with time:', divTime, 'content:', div.textContent?.slice(0, 50));
       
       if (divTime && divTime <= timeString) {
-        latestTimeMatchingDiv = div;
+        currentTimeMatchingDiv = div;
         console.log('Found time-matching div:', divTime);
-        
-        if (showVoicePart(div)) {
-          latestMatchingDiv = div;
-          matchFound = true;
-          console.log('Found voice-part matching div:', divTime);
+      } else {
+        // Stop searching once we've passed the current time
+        break;
+      }
+    }
+
+    if (currentTimeMatchingDiv) {
+      const divTime = currentTimeMatchingDiv.getAttribute('data-time');
+      
+      // Only check for voice part within the current time section
+      if (showVoicePart(currentTimeMatchingDiv)) {
+        console.log('Found voice-part matching div:', divTime);
+        if (divTime !== lastMatchedTimeRef.current) {
+          setCurrentHtmlSection(currentTimeMatchingDiv.outerHTML);
+          lastMatchedTimeRef.current = divTime;
+          setError(null);
+        }
+      } else {
+        // If no matching voice part, show the time-matched section anyway
+        console.log('No voice-part match found, showing time-matched div:', divTime);
+        if (divTime !== lastMatchedTimeRef.current) {
+          setCurrentHtmlSection(currentTimeMatchingDiv.outerHTML);
+          lastMatchedTimeRef.current = divTime;
+          setError(null);
         }
       }
-    });
-
-    // If we found a matching div and it's different from the last one shown
-    if (matchFound && latestMatchingDiv) {
-      const divTime = latestMatchingDiv.getAttribute('data-time');
-      if (divTime !== lastMatchedTimeRef.current) {
-        console.log('Updating section with voice-part matching div:', divTime);
-        setCurrentHtmlSection(latestMatchingDiv.outerHTML);
-        lastMatchedTimeRef.current = divTime;
-        setError(null);
-      }
-    } else if (latestTimeMatchingDiv) {
-      // If no matching div for the voice part is found, show the time-matched div
-      const divTime = latestTimeMatchingDiv.getAttribute('data-time');
-      if (divTime !== lastMatchedTimeRef.current) {
-        console.log('No voice-part match found, falling back to time-matched div:', divTime);
-        setCurrentHtmlSection(latestTimeMatchingDiv.outerHTML);
-        lastMatchedTimeRef.current = divTime;
-        setError(null);
-      }
     } else if (currentTime === 0) {
-      // For initial display, find the first div that matches the voice part
-      const firstShowableDiv = Array.from(divs).find(div => showVoicePart(div)) || divs[0];
-      if (firstShowableDiv) {
-        console.log('Setting initial div display');
-        setCurrentHtmlSection(firstShowableDiv.outerHTML);
-        lastMatchedTimeRef.current = firstShowableDiv.getAttribute('data-time');
-        setError(null);
-      } else {
-        setCurrentHtmlSection('');
-        lastMatchedTimeRef.current = null;
-      }
+      // For initial display, show the first div
+      const firstDiv = divs[0];
+      console.log('Setting initial div display');
+      setCurrentHtmlSection(firstDiv.outerHTML);
+      lastMatchedTimeRef.current = firstDiv.getAttribute('data-time');
+      setError(null);
     } else {
-      // If no matching div is found, show nothing
       console.log('No matching div found for current time');
       setCurrentHtmlSection('');
       lastMatchedTimeRef.current = null;
