@@ -27,7 +27,29 @@ const AdminSongPage = () => {
         .eq('id', id)
         .single();
       if (error) throw error;
-      return data as Song;
+      
+      return {
+        id: data.id,
+        title: data.title,
+        choirId: data.choir_id,
+        tracks: data.tracks.map((track: any) => ({
+          id: track.id,
+          url: track.url,
+          voicePart: track.voice_part
+        })),
+        lyrics: data.lyrics.map((lyric: any) => ({
+          id: lyric.id,
+          text: lyric.text,
+          startTime: lyric.start_time,
+          endTime: lyric.end_time
+        })),
+        chapters: data.chapters.map((chapter: any) => ({
+          id: chapter.id,
+          title: chapter.title,
+          time: chapter.start_time,
+          type: "verse" as const
+        }))
+      } as Song;
     },
     enabled: isEditMode
   });

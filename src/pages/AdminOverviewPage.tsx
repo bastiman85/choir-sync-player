@@ -42,11 +42,34 @@ const AdminOverviewPage = () => {
         .from('songs')
         .select(`
           *,
-          tracks (*)
+          tracks (*),
+          lyrics (*),
+          chapters (*)
         `)
         .eq('choir_id', selectedChoirId);
       if (error) throw error;
-      return data as Song[];
+      return data.map(song => ({
+        id: song.id,
+        title: song.title,
+        choirId: song.choir_id,
+        tracks: song.tracks.map((track: any) => ({
+          id: track.id,
+          url: track.url,
+          voicePart: track.voice_part
+        })),
+        lyrics: song.lyrics.map((lyric: any) => ({
+          id: lyric.id,
+          text: lyric.text,
+          startTime: lyric.start_time,
+          endTime: lyric.end_time
+        })),
+        chapters: song.chapters.map((chapter: any) => ({
+          id: chapter.id,
+          title: chapter.title,
+          time: chapter.start_time,
+          type: "verse" as const
+        }))
+      })) as Song[];
     },
     enabled: !!selectedChoirId
   });
@@ -57,15 +80,40 @@ const AdminOverviewPage = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('songs')
-        .select('*')
+        .select(`
+          *,
+          tracks (*),
+          lyrics (*),
+          chapters (*)
+        `)
         .is('choir_id', null);
       if (error) throw error;
-      return data as Song[];
+      return data.map(song => ({
+        id: song.id,
+        title: song.title,
+        choirId: song.choir_id,
+        tracks: song.tracks.map((track: any) => ({
+          id: track.id,
+          url: track.url,
+          voicePart: track.voice_part
+        })),
+        lyrics: song.lyrics.map((lyric: any) => ({
+          id: lyric.id,
+          text: lyric.text,
+          startTime: lyric.start_time,
+          endTime: lyric.end_time
+        })),
+        chapters: song.chapters.map((chapter: any) => ({
+          id: chapter.id,
+          title: chapter.title,
+          time: chapter.start_time,
+          type: "verse" as const
+        }))
+      })) as Song[];
     },
     enabled: !!selectedChoirId
   });
 
-  // Mutation to add songs to choir
   const addSongsToChoir = useMutation({
     mutationFn: async (songIds: string[]) => {
       const { error } = await supabase
