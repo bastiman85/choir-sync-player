@@ -31,60 +31,72 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
 
   useEffect(() => {
     if (htmlContent && containerRef.current) {
-      fetch(htmlContent)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`Failed to fetch HTML content`);
-          }
-          return response.text();
-        })
-        .then(html => {
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = html;
-
-          const minutes = Math.floor(currentTime / 60);
-          const seconds = Math.floor(currentTime % 60);
-          const timeString = `${minutes.toString().padStart(2, '0')}${seconds.toString().padStart(2, '0')}`;
-          
-          const divs = tempDiv.querySelectorAll('[data-time]');
-          
-          if (divs.length === 0) {
-            setError('No timed sections found in the HTML content');
-            return;
-          }
-
-          let matchFound = false;
-          let latestMatchingDiv: Element | null = null;
-
-          divs.forEach((div) => {
-            const divTime = div.getAttribute('data-time');
-            if (divTime && divTime <= timeString) {
-              latestMatchingDiv = div;
-              matchFound = true;
+      let content = htmlContent;
+      
+      // If the content starts with 'blob:' or 'http', fetch it
+      if (htmlContent.startsWith('blob:') || htmlContent.startsWith('http')) {
+        fetch(htmlContent)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Failed to fetch HTML content');
             }
+            return response.text();
+          })
+          .then(html => {
+            processHtmlContent(html);
+          })
+          .catch(() => {
+            setError('Error loading HTML content');
           });
-
-          if (matchFound && latestMatchingDiv) {
-            const divTime = latestMatchingDiv.getAttribute('data-time');
-            if (divTime !== lastMatchedTimeRef.current) {
-              setCurrentHtmlSection(latestMatchingDiv.innerHTML);
-              lastMatchedTimeRef.current = divTime;
-              setError(null);
-            }
-          } else if (currentTime === 0) {
-            const firstDiv = divs[0];
-            if (firstDiv) {
-              setCurrentHtmlSection(firstDiv.innerHTML);
-              lastMatchedTimeRef.current = firstDiv.getAttribute('data-time');
-              setError(null);
-            }
-          }
-        })
-        .catch(() => {
-          setError('Error loading HTML content');
-        });
+      } else {
+        // Use the content directly if it's not a URL
+        processHtmlContent(htmlContent);
+      }
     }
   }, [currentTime, htmlContent]);
+
+  const processHtmlContent = (html: string) => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+
+    const minutes = Math.floor(currentTime / 60);
+    const seconds = Math.floor(currentTime % 60);
+    const timeString = `${minutes.toString().padStart(2, '0')}${seconds.toString().padStart(2, '0')}`;
+    
+    const divs = tempDiv.querySelectorAll('[data-time]');
+    
+    if (divs.length === 0) {
+      setError('No timed sections found in the HTML content');
+      return;
+    }
+
+    let matchFound = false;
+    let latestMatchingDiv: Element | null = null;
+
+    divs.forEach((div) => {
+      const divTime = div.getAttribute('data-time');
+      if (divTime && divTime <= timeString) {
+        latestMatchingDiv = div;
+        matchFound = true;
+      }
+    });
+
+    if (matchFound && latestMatchingDiv) {
+      const divTime = latestMatchingDiv.getAttribute('data-time');
+      if (divTime !== lastMatchedTimeRef.current) {
+        setCurrentHtmlSection(latestMatchingDiv.innerHTML);
+        lastMatchedTimeRef.current = divTime;
+        setError(null);
+      }
+    } else if (currentTime === 0) {
+      const firstDiv = divs[0];
+      if (firstDiv) {
+        setCurrentHtmlSection(firstDiv.innerHTML);
+        lastMatchedTimeRef.current = firstDiv.getAttribute('data-time');
+        setError(null);
+      }
+    }
+  };
 
   const currentLyric = getCurrentLyric(currentTime, lyrics);
 

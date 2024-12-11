@@ -10,31 +10,6 @@ const HtmlContentInput = ({
   htmlContentUrl,
   onHtmlContentUrlChange,
 }: HtmlContentInputProps) => {
-  const handleContentChange = (content: string) => {
-    // Create a blob from the HTML content and generate an object URL
-    const blob = new Blob([content], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    onHtmlContentUrlChange(url);
-  };
-
-  // Convert object URL back to content for editing
-  const getContentFromUrl = (url: string): string => {
-    if (!url) return '';
-    try {
-      // Extract content from blob URL if it exists
-      const match = url.match(/^blob:/);
-      if (match) {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', url, false);  // Synchronous request
-        xhr.send(null);
-        return xhr.responseText;
-      }
-      return '';
-    } catch (error) {
-      return '';
-    }
-  };
-
   return (
     <div className="space-y-4">
       <div>
@@ -45,8 +20,8 @@ const HtmlContentInput = ({
           </span>
         </Label>
         <Textarea
-          value={getContentFromUrl(htmlContentUrl)}
-          onChange={(e) => handleContentChange(e.target.value)}
+          value={htmlContentUrl}
+          onChange={(e) => onHtmlContentUrlChange(e.target.value)}
           placeholder="<div data-time='0000'>First verse...</div>"
           className="min-h-[200px] font-mono text-sm"
         />
