@@ -25,25 +25,41 @@ export const usePlaybackControls = ({
   const handleTrackEnd = () => {
     if (autoRestartSong) {
       handleSeek([0]);
-      setIsPlaying(true);
-      Object.values(audioRefs.current).forEach(audio => {
-        audio.currentTime = 0;
-        audio.play();
-      });
+      if (isPlaying) {
+        Object.values(audioRefs.current).forEach(audio => {
+          audio.currentTime = 0;
+          audio.play();
+        });
+      }
     } else {
       setIsPlaying(false);
     }
   };
 
-  const checkAndHandleChapterLoop = () => {
+  const checkAndHandleLooping = () => {
+    const firstAudio = Object.values(audioRefs.current)[0];
+    if (!firstAudio) return;
+
+    // Check for song loop
+    if (autoRestartSong && firstAudio.currentTime >= (firstAudio.duration - 0.1)) {
+      handleSeek([0]);
+      if (isPlaying) {
+        Object.values(audioRefs.current).forEach(audio => {
+          audio.currentTime = 0;
+          audio.play();
+        });
+      }
+      return; // Don't check for chapter loop if we're looping the song
+    }
+
+    // Check for chapter loop
     if (autoRestartChapter && song.chapters?.length > 0) {
       const currentChapter = getCurrentChapter();
       if (currentChapter) {
         const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
-        const firstAudio = Object.values(audioRefs.current)[0];
-        const chapterEndTime = nextChapter ? nextChapter.time : firstAudio?.duration || 0;
+        const chapterEndTime = nextChapter ? nextChapter.time : firstAudio.duration;
         
-        if (firstAudio && firstAudio.currentTime >= chapterEndTime) {
+        if (firstAudio.currentTime >= chapterEndTime) {
           handleSeek([currentChapter.time]);
           if (isPlaying) {
             Object.values(audioRefs.current).forEach(audio => {
@@ -60,14 +76,12 @@ export const usePlaybackControls = ({
     if (isPlaying) {
       Object.values(audioRefs.current).forEach((audio) => {
         audio.pause();
-        // Add timeupdate listener when playing
-        audio.removeEventListener('timeupdate', checkAndHandleChapterLoop);
+        audio.removeEventListener('timeupdate', checkAndHandleLooping);
       });
     } else {
       Object.values(audioRefs.current).forEach((audio) => {
         audio.play();
-        // Remove timeupdate listener when paused
-        audio.addEventListener('timeupdate', checkAndHandleChapterLoop);
+        audio.addEventListener('timeupdate', checkAndHandleLooping);
       });
     }
     setIsPlaying(!isPlaying);
@@ -80,9 +94,8 @@ export const usePlaybackControls = ({
     });
     setCurrentTime(newTime);
     
-    // Check for chapter loop immediately after seeking
     if (isPlaying) {
-      checkAndHandleChapterLoop();
+      checkAndHandleLooping();
     }
   };
 
