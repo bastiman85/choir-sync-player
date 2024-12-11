@@ -16,26 +16,25 @@ const SongList = ({ songs }: SongListProps) => {
   );
 
   const handleSongClick = (song: Song) => {
-    // Create URL-friendly slug from song title
     const slug = song.title.toLowerCase().replace(/\s+/g, '-');
     navigate(`/player/${slug}`);
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-3 sm:p-4 max-w-2xl mx-auto">
       <Input
         type="search"
         placeholder="Search songs..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="mb-6"
+        className="mb-4"
       />
       <div className="space-y-2">
         {filteredSongs.map((song) => (
           <div
             key={song.id}
             onClick={() => handleSongClick(song)}
-            className="p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            className="p-3 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
           >
             <h3 className="text-lg font-semibold text-gray-900">{song.title}</h3>
             <div className="flex gap-2 mt-2">
