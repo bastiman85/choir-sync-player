@@ -1,28 +1,19 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import PlayerPage from "./pages/PlayerPage";
 import AdminSongPage from "./pages/AdminSongPage";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/player/:songId" element={<PlayerPage />} />
-          <Route path="/admin/songs/new" element={<AdminSongPage />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/player/:id" element={<PlayerPage />} />
+        <Route path="/admin/songs/new" element={<AdminSongPage />} />
+        <Route path="/admin/songs/:id/edit" element={<AdminSongPage />} />
+      </Routes>
+    </Router>
+  );
+}
 
 export default App;
