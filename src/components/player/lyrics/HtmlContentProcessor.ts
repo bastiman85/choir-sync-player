@@ -15,8 +15,6 @@ export const processHtmlContent = (
   const seconds = Math.floor(currentTime % 60);
   const timeString = `${minutes.toString().padStart(2, '0')}${seconds.toString().padStart(2, '0')}`;
   
-  console.log('Processing HTML content for time:', timeString, 'activeVoicePart:', activeVoicePart);
-  
   const divs = tempDiv.querySelectorAll('[data-time]');
   
   if (divs.length === 0) {
@@ -24,7 +22,6 @@ export const processHtmlContent = (
     return;
   }
 
-  // Find the current time section
   let currentSection: Element | null = null;
 
   for (let i = 0; i < divs.length; i++) {
@@ -43,9 +40,7 @@ export const processHtmlContent = (
     const divTime = currentSection.getAttribute('data-time');
     
     if (showVoicePart(currentSection, activeVoicePart)) {
-      console.log('Found voice-part match in current section:', divTime);
       if (divTime !== lastMatchedTimeRef.current) {
-        // Filter the content to show only the matching voice part
         const filteredSection = activeVoicePart && 
           activeVoicePart !== 'all' && 
           activeVoicePart !== 'instrumental' 
@@ -57,7 +52,6 @@ export const processHtmlContent = (
         setError(null);
       }
     } else {
-      console.log('No voice-part match in current section, showing anyway:', divTime);
       if (divTime !== lastMatchedTimeRef.current) {
         setCurrentHtmlSection(currentSection.outerHTML);
         lastMatchedTimeRef.current = divTime;
@@ -66,12 +60,10 @@ export const processHtmlContent = (
     }
   } else if (currentTime === 0) {
     const firstDiv = divs[0];
-    console.log('Setting initial div display');
     setCurrentHtmlSection(firstDiv.outerHTML);
     lastMatchedTimeRef.current = firstDiv.getAttribute('data-time');
     setError(null);
   } else {
-    console.log('No matching section found for current time');
     setCurrentHtmlSection('');
     lastMatchedTimeRef.current = null;
   }
