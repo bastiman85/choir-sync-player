@@ -15,7 +15,7 @@ const ChapterMarkers = ({ chapters, onChapterClick, currentTime }: ChapterMarker
 
   return (
     <div className="border rounded-md p-4">
-      <div className="space-y-2">
+      <div className="space-y-0">
         {chapters.map((chapter) => (
           <Button
             key={chapter.id}
