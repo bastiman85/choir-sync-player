@@ -33,6 +33,7 @@ const mockSongs: Song[] = [
       { id: "1", text: "Amazing grace, how sweet the sound", startTime: 0, endTime: 5 },
       { id: "2", text: "That saved a wretch like me", startTime: 5, endTime: 10 },
     ],
+    chapters: [] // Added empty chapters array
   },
   {
     id: "2",
@@ -46,6 +47,7 @@ const mockSongs: Song[] = [
       { id: "3", text: "Hallelujah, Hallelujah", startTime: 0, endTime: 5 },
       { id: "4", text: "Hallelujah, Hallelujah", startTime: 5, endTime: 10 },
     ],
+    chapters: [] // Added empty chapters array
   },
 ];
 

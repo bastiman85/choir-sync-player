@@ -17,6 +17,7 @@ const mockSongs: Song[] = [
       { id: "1", text: "Amazing grace, how sweet the sound", startTime: 0, endTime: 5 },
       { id: "2", text: "That saved a wretch like me", startTime: 5, endTime: 10 },
     ],
+    chapters: [] // Added empty chapters array
   },
 ];
 
