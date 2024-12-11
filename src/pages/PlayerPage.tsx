@@ -1,9 +1,10 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import Player from "@/components/Player";
+import { Song } from "@/types/song";
 
 // This would normally come from an API
-const mockSongs = [
+const mockSongs: Song[] = [
   {
     id: "1",
     title: "Amazing Grace",

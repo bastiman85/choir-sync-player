@@ -2,9 +2,10 @@ import React from "react";
 import SongList from "@/components/SongList";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Song } from "@/types/song";
 
 // This would normally come from an API
-const mockSongs = [
+const mockSongs: Song[] = [
   {
     id: "1",
     title: "Amazing Grace",
