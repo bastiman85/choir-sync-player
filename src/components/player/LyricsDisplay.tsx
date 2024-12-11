@@ -10,6 +10,7 @@ interface LyricsDisplayProps {
 const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps) => {
   const [currentHtmlSection, setCurrentHtmlSection] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastMatchedTimeRef = useRef<string | null>(null);
 
   const getCurrentLyric = (time: number, lyrics: LyricLine[]): LyricLine | undefined => {
     const sortedLyrics = [...lyrics].sort((a, b) => a.startTime - b.startTime);
@@ -41,28 +42,38 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
       console.log('Current HTML content length:', htmlContent.length);
       console.log('Current time string:', timeString);
 
-      // Find the div that matches the current time
+      // Find all divs with data-time attributes
       const divs = tempDiv.querySelectorAll('[data-time]');
       console.log('Found divs with data-time:', divs.length);
       
-      let currentDiv: Element | null = null;
+      let matchFound = false;
+      let latestMatchingDiv: Element | null = null;
 
+      // Find the latest matching div
       divs.forEach((div) => {
         const divTime = div.getAttribute('data-time');
         console.log('Checking div with time:', divTime);
         if (divTime && divTime <= timeString) {
-          currentDiv = div;
+          latestMatchingDiv = div;
+          matchFound = true;
         }
       });
 
-      // If no div is found or currentTime is 0, show the first div
-      if (!currentDiv && divs.length > 0 && currentTime === 0) {
-        currentDiv = divs[0];
-      }
-
-      if (currentDiv) {
-        console.log('Selected div content length:', currentDiv.innerHTML.length);
-        setCurrentHtmlSection(currentDiv.innerHTML);
+      // Update content only if we found a new match or if it's the first match
+      if (matchFound && latestMatchingDiv) {
+        const divTime = latestMatchingDiv.getAttribute('data-time');
+        if (divTime !== lastMatchedTimeRef.current) {
+          console.log('New matching div found with time:', divTime);
+          setCurrentHtmlSection(latestMatchingDiv.innerHTML);
+          lastMatchedTimeRef.current = divTime;
+        }
+      } else if (currentTime === 0) {
+        // Reset to first div at the start
+        const firstDiv = divs[0];
+        if (firstDiv) {
+          setCurrentHtmlSection(firstDiv.innerHTML);
+          lastMatchedTimeRef.current = firstDiv.getAttribute('data-time');
+        }
       }
     }
   }, [currentTime, htmlContent]);
@@ -75,7 +86,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
         <div 
           ref={containerRef}
           className="prose prose-sm max-w-none w-full"
-          dangerouslySetInnerHTML={{ __html: currentHtmlSection || htmlContent }}
+          dangerouslySetInnerHTML={{ __html: currentHtmlSection || '' }}
         />
       ) : (
         <p className="text-xl font-mono text-center">
