@@ -17,6 +17,11 @@ const SongList = ({ songs }: SongListProps) => {
     song.title.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleSongClick = (songId: string) => {
+    // Navigate to the player page with the song ID
+    navigate(`/player/${songId}`);
+  };
+
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <Input
@@ -30,7 +35,7 @@ const SongList = ({ songs }: SongListProps) => {
         {filteredSongs.map((song) => (
           <div
             key={song.id}
-            onClick={() => navigate(`/player/${song.id}`)}
+            onClick={() => handleSongClick(song.id)}
             className="p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
           >
             <h3 className="text-lg font-semibold text-gray-900">{song.title}</h3>
