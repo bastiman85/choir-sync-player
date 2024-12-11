@@ -82,7 +82,6 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
     if (matchFound && latestMatchingDiv) {
       const divTime = latestMatchingDiv.getAttribute('data-time');
       if (divTime !== lastMatchedTimeRef.current) {
-        // Instead of just the innerHTML, we'll use outerHTML to include the div itself
         setCurrentHtmlSection(latestMatchingDiv.outerHTML);
         lastMatchedTimeRef.current = divTime;
         setError(null);
@@ -90,7 +89,6 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
     } else if (currentTime === 0) {
       const firstDiv = divs[0];
       if (firstDiv) {
-        // Use outerHTML here as well
         setCurrentHtmlSection(firstDiv.outerHTML);
         lastMatchedTimeRef.current = firstDiv.getAttribute('data-time');
         setError(null);
@@ -109,7 +107,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
           ) : (
             <div 
               ref={containerRef}
-              className="w-full text-center space-y-4"
+              className="lyrics-display w-full text-center space-y-4"
               dangerouslySetInnerHTML={{ __html: currentHtmlSection || '' }}
             />
           )}

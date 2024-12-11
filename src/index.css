@@ -94,6 +94,43 @@
   @apply italic;
 }
 
-.lattextblock {
-  @apply w-full;
+/* Scoped lyrics display styles */
+.lyrics-display {
+  .stamrubrik {
+    background-color: #f3f3f3;
+    text-transform: uppercase;
+  }
+
+  .lattextblock {
+    margin-top: 0px;
+    flex: 1;
+    @apply w-full;
+  }
+
+  .enstamma,
+  .tvastammor,
+  .trestammor,
+  .fyrastammor {
+    display: flex;
+    margin-right: 20px;
+    margin-left: 20px;
+  }
+
+  .timestamp {
+    display: none;
+  }
+
+  @media screen and (max-width: 991px) {
+    .lattextblock {
+      flex-wrap: wrap;
+      flex: 1 0 0px;
+    }
+
+    .enstamma,
+    .tvastammor,
+    .trestammor,
+    .fyrastammor {
+      display: flex;
+    }
+  }
 }
