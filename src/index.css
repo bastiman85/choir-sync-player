@@ -100,6 +100,11 @@
     @apply hidden;
   }
 
+  /* Current section highlight */
+  .current-section {
+    @apply bg-blue-50 border-l-4 border-blue-500 pl-3;
+  }
+
   /* Responsive styles */
   @media screen and (max-width: 991px) {
     .lattextblock {
