@@ -1,5 +1,7 @@
 import { LyricLine } from "@/types/song";
 import { useEffect, useRef, useState } from "react";
+import { filterVoicePart, showVoicePart } from "./lyrics/VoicePartFilter";
+import { processHtmlContent } from "./lyrics/HtmlContentProcessor";
 
 interface LyricsDisplayProps {
   currentTime: number;
@@ -30,128 +32,6 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     return undefined;
   };
 
-  const filterVoicePart = (element: Element, voiceInitial: string): Element => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = element.outerHTML;
-    
-    const lattextblocks = tempDiv.querySelectorAll('.lattextblock');
-    const matchingBlocks: Element[] = [];
-    
-    lattextblocks.forEach(block => {
-      const classes = Array.from(block.classList);
-      if (classes.includes(voiceInitial)) {
-        matchingBlocks.push(block);
-      }
-    });
-
-    // If we found matching blocks, only keep those
-    if (matchingBlocks.length > 0) {
-      const resultDiv = document.createElement('div');
-      resultDiv.setAttribute('data-time', element.getAttribute('data-time') || '');
-      matchingBlocks.forEach(block => resultDiv.appendChild(block.cloneNode(true)));
-      return resultDiv;
-    }
-
-    // If no matching blocks found, return the original element
-    return element;
-  };
-
-  const showVoicePart = (element: Element): boolean => {
-    if (!activeVoicePart || activeVoicePart === 'all' || activeVoicePart === 'instrumental') {
-      console.log('Showing all voice parts due to activeVoicePart:', activeVoicePart);
-      return true;
-    }
-
-    const voiceInitial = activeVoicePart[0].toLowerCase();
-    const lattextblocks = element.querySelectorAll('.lattextblock');
-    console.log('Checking lattextblocks in current section:', lattextblocks.length);
-    
-    for (const block of lattextblocks) {
-      const classes = Array.from(block.classList);
-      console.log('Checking classes for voice part in section:', classes, 'looking for:', voiceInitial);
-      
-      if (classes.includes(voiceInitial)) {
-        console.log('Found matching voice part in section');
-        return true;
-      }
-    }
-    
-    console.log('No matching voice part found in section');
-    return false;
-  };
-
-  const processHtmlContent = (html: string) => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-
-    const minutes = Math.floor(currentTime / 60);
-    const seconds = Math.floor(currentTime % 60);
-    const timeString = `${minutes.toString().padStart(2, '0')}${seconds.toString().padStart(2, '0')}`;
-    
-    console.log('Processing HTML content for time:', timeString, 'activeVoicePart:', activeVoicePart);
-    
-    const divs = tempDiv.querySelectorAll('[data-time]');
-    
-    if (divs.length === 0) {
-      setError('No timed sections found in the HTML content');
-      return;
-    }
-
-    // Find the current time section
-    let currentSection: Element | null = null;
-    let nextSection: Element | null = null;
-
-    for (let i = 0; i < divs.length; i++) {
-      const div = divs[i];
-      const divTime = div.getAttribute('data-time');
-      const nextDiv = divs[i + 1];
-      const nextDivTime = nextDiv?.getAttribute('data-time');
-
-      if (divTime && divTime <= timeString && (!nextDivTime || nextDivTime > timeString)) {
-        currentSection = div;
-        nextSection = nextDiv || null;
-        break;
-      }
-    }
-
-    if (currentSection) {
-      const divTime = currentSection.getAttribute('data-time');
-      
-      if (showVoicePart(currentSection)) {
-        console.log('Found voice-part match in current section:', divTime);
-        if (divTime !== lastMatchedTimeRef.current) {
-          // Filter the content to show only the matching voice part
-          const filteredSection = activeVoicePart && 
-            activeVoicePart !== 'all' && 
-            activeVoicePart !== 'instrumental' 
-              ? filterVoicePart(currentSection, activeVoicePart[0].toLowerCase())
-              : currentSection;
-          
-          setCurrentHtmlSection(filteredSection.outerHTML);
-          lastMatchedTimeRef.current = divTime;
-          setError(null);
-        }
-      } else {
-        console.log('No voice-part match in current section, showing anyway:', divTime);
-        if (divTime !== lastMatchedTimeRef.current) {
-          setCurrentHtmlSection(currentSection.outerHTML);
-          lastMatchedTimeRef.current = divTime;
-          setError(null);
-        }
-      }
-    } else if (currentTime === 0) {
-      const firstDiv = divs[0];
-      console.log('Setting initial div display');
-      setCurrentHtmlSection(firstDiv.outerHTML);
-      lastMatchedTimeRef.current = firstDiv.getAttribute('data-time');
-      setError(null);
-    } else {
-      console.log('No matching section found for current time');
-      setCurrentHtmlSection('');
-      lastMatchedTimeRef.current = null;
-    }
-  };
-
   useEffect(() => {
     if (htmlContent && containerRef.current) {
       if (htmlContent.startsWith('blob:') || htmlContent.startsWith('http')) {
@@ -163,13 +43,31 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
             return response.text();
           })
           .then(html => {
-            processHtmlContent(html);
+            processHtmlContent(
+              html,
+              currentTime,
+              activeVoicePart,
+              lastMatchedTimeRef,
+              setCurrentHtmlSection,
+              setError,
+              filterVoicePart,
+              showVoicePart
+            );
           })
           .catch(() => {
             setError('Error loading HTML content');
           });
       } else {
-        processHtmlContent(htmlContent);
+        processHtmlContent(
+          htmlContent,
+          currentTime,
+          activeVoicePart,
+          lastMatchedTimeRef,
+          setCurrentHtmlSection,
+          setError,
+          filterVoicePart,
+          showVoicePart
+        );
       }
     }
   }, [currentTime, htmlContent, activeVoicePart]);
