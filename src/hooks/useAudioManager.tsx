@@ -67,13 +67,13 @@ export const useAudioManager = (song: Song) => {
       
       setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
       
-      const initialMute = track.voicePart === "all" || track.voicePart === "instrumental";
-      setMutedTracks((prev) => ({ ...prev, [track.id]: initialMute }));
+      // Only unmute the "all" track, mute everything else
+      const shouldBeMuted = track.voicePart !== "all";
+      setMutedTracks((prev) => ({ ...prev, [track.id]: shouldBeMuted }));
 
       audio.volume = 1;
-      audio.muted = initialMute;
+      audio.muted = shouldBeMuted;
 
-      // Remove any existing timeupdate listeners before adding a new one
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.addEventListener("timeupdate", handleTimeUpdate);
       
@@ -82,6 +82,10 @@ export const useAudioManager = (song: Song) => {
       });
       audio.addEventListener("ended", handleTrackEnd);
     });
+
+    // Set initial state for track modes
+    setAllTrackMode(true);
+    setInstrumentalMode(false);
 
     return () => {
       Object.values(audioRefs.current).forEach((audio) => {
