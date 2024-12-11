@@ -32,6 +32,7 @@ const AdminSongPage = () => {
         id: data.id,
         title: data.title,
         choirId: data.choir_id,
+        htmlContent: data.html_content,
         tracks: data.tracks.map((track: any) => ({
           id: track.id,
           url: track.url,
@@ -61,7 +62,8 @@ const AdminSongPage = () => {
         .from('songs')
         .insert([{
           title: newSong.title,
-          choir_id: newSong.choirId
+          choir_id: newSong.choirId,
+          html_content: newSong.htmlContent
         }])
         .select()
         .single();
@@ -135,7 +137,8 @@ const AdminSongPage = () => {
         .from('songs')
         .update({
           title: updatedSong.title,
-          choir_id: updatedSong.choirId
+          choir_id: updatedSong.choirId,
+          html_content: updatedSong.htmlContent
         })
         .eq('id', id);
       if (songError) throw songError;
