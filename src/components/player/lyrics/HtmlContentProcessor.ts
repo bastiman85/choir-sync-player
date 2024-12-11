@@ -41,13 +41,22 @@ export const processHtmlContent = (
     
     if (showVoicePart(currentSection, activeVoicePart)) {
       if (divTime !== lastMatchedTimeRef.current) {
-        const filteredSection = activeVoicePart && 
+        // Don't filter if activeVoicePart is 'all' or 'instrumental'
+        const shouldFilter = activeVoicePart && 
           activeVoicePart !== 'all' && 
-          activeVoicePart !== 'instrumental' 
-            ? filterVoicePart(currentSection, activeVoicePart[0].toLowerCase())
-            : currentSection;
+          activeVoicePart !== 'instrumental';
+
+        // Count active voice parts to determine if we should filter
+        const activeParts = Array.from(currentSection.querySelectorAll('.lattextblock'))
+          .filter(block => !block.classList.contains('instrumental'))
+          .length;
+
+        // Only filter if we should filter AND there's only one active part
+        const processedSection = (shouldFilter && activeParts <= 1) 
+          ? filterVoicePart(currentSection, activeVoicePart[0].toLowerCase())
+          : currentSection;
         
-        setCurrentHtmlSection(filteredSection.outerHTML);
+        setCurrentHtmlSection(processedSection.outerHTML);
         lastMatchedTimeRef.current = divTime;
         setError(null);
       }
