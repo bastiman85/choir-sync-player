@@ -15,7 +15,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/player/:id" element={<PlayerPage />} />
+          <Route path="/player/:slug" element={<PlayerPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route
             path="/admin"

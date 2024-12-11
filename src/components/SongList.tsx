@@ -2,8 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "./ui/input";
 import { Song } from "@/types/song";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 interface SongListProps {
   songs: Song[];
@@ -17,9 +15,10 @@ const SongList = ({ songs }: SongListProps) => {
     song.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleSongClick = (songId: string) => {
-    // Navigate to the player page with the song ID
-    navigate(`/player/${songId}`);
+  const handleSongClick = (song: Song) => {
+    // Create URL-friendly slug from song title
+    const slug = song.title.toLowerCase().replace(/\s+/g, '-');
+    navigate(`/player/${slug}`);
   };
 
   return (
@@ -35,7 +34,7 @@ const SongList = ({ songs }: SongListProps) => {
         {filteredSongs.map((song) => (
           <div
             key={song.id}
-            onClick={() => handleSongClick(song.id)}
+            onClick={() => handleSongClick(song)}
             className="p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
           >
             <h3 className="text-lg font-semibold text-gray-900">{song.title}</h3>

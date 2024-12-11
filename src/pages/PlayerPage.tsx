@@ -1,47 +1,72 @@
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Player from "@/components/Player";
-import { Song } from "@/types/song";
-
-// This would normally come from an API
-const mockSongs: Song[] = [
-  {
-    id: "1",
-    title: "Amazing Grace",
-    choirId: "1",
-    tracks: [
-      { id: "1", voicePart: "soprano", url: "/path/to/soprano.mp3" },
-      { id: "2", voicePart: "alto", url: "/path/to/alto.mp3" },
-      { id: "3", voicePart: "instrumental", url: "/path/to/instrumental.mp3" },
-    ],
-    lyrics: [
-      { id: "1", text: "Amazing grace, how sweet the sound", startTime: 0, endTime: 5 },
-      { id: "2", text: "That saved a wretch like me", startTime: 5, endTime: 10 },
-    ],
-    chapters: []
-  },
-  {
-    id: "2",
-    title: "Hallelujah",
-    choirId: "2",
-    tracks: [
-      { id: "3", voicePart: "soprano", url: "/path/to/soprano.mp3" },
-      { id: "4", voicePart: "alto", url: "/path/to/alto.mp3" },
-    ],
-    lyrics: [
-      { id: "3", text: "Hallelujah, Hallelujah", startTime: 0, endTime: 5 },
-      { id: "4", text: "Hallelujah, Hallelujah", startTime: 5, endTime: 10 },
-    ],
-    chapters: []
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const PlayerPage = () => {
-  const { id } = useParams();
-  const song = mockSongs.find((s) => s.id === id);
+  const { slug } = useParams();
+  const navigate = useNavigate();
+
+  const { data: song, isLoading } = useQuery({
+    queryKey: ['song', slug],
+    queryFn: async () => {
+      // First, find the song by its title (slug)
+      const { data: songData, error: songError } = await supabase
+        .from('songs')
+        .select(`
+          *,
+          tracks (*),
+          lyrics (*),
+          chapters (*)
+        `)
+        .ilike('title', slug?.replace(/-/g, ' ') || '')
+        .single();
+
+      if (songError || !songData) {
+        console.error('Error fetching song:', songError);
+        return null;
+      }
+
+      return {
+        id: songData.id,
+        title: songData.title,
+        choirId: songData.choir_id,
+        tracks: songData.tracks.map((track: any) => ({
+          id: track.id,
+          url: track.url,
+          voicePart: track.voice_part
+        })),
+        lyrics: songData.lyrics.map((lyric: any) => ({
+          id: lyric.id,
+          text: lyric.text,
+          startTime: lyric.start_time,
+          endTime: lyric.end_time
+        })),
+        chapters: songData.chapters.map((chapter: any) => ({
+          id: chapter.id,
+          title: chapter.title,
+          time: chapter.start_time,
+          type: "verse" as const
+        }))
+      };
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-gray-100 flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
 
   if (!song) {
-    return <div>Song not found</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-gray-100 flex items-center justify-center">
+        <div className="text-lg">Song not found</div>
+      </div>
+    );
   }
 
   return (
