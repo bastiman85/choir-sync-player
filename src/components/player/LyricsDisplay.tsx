@@ -33,7 +33,6 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
     if (htmlContent && containerRef.current) {
       let content = htmlContent;
       
-      // If the content starts with 'blob:' or 'http', fetch it
       if (htmlContent.startsWith('blob:') || htmlContent.startsWith('http')) {
         fetch(htmlContent)
           .then(response => {
@@ -49,7 +48,6 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
             setError('Error loading HTML content');
           });
       } else {
-        // Use the content directly if it's not a URL
         processHtmlContent(htmlContent);
       }
     }
@@ -109,7 +107,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
           ) : (
             <div 
               ref={containerRef}
-              className="prose prose-sm max-w-none w-full"
+              className="w-full text-center space-y-4"
               dangerouslySetInnerHTML={{ __html: currentHtmlSection || '' }}
             />
           )}
