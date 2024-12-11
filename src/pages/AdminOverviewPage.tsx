@@ -32,22 +32,29 @@ const AdminOverviewPage = () => {
     }
   });
 
-  const [selectedChoirId, setSelectedChoirId] = useState<string>(choirs[0]?.id || '');
+  const [selectedChoirId, setSelectedChoirId] = useState<string>("");
 
-  // Fetch songs for selected choir
+  // Fetch songs based on selected choir (or all songs if no choir selected)
   const { data: choirSongs = [] } = useQuery({
     queryKey: ['songs', selectedChoirId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('songs')
         .select(`
           *,
           tracks (*),
           lyrics (*),
           chapters (*)
-        `)
-        .eq('choir_id', selectedChoirId);
+        `);
+      
+      // Only filter by choir_id if a choir is selected
+      if (selectedChoirId) {
+        query = query.eq('choir_id', selectedChoirId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
+
       return data.map(song => ({
         id: song.id,
         title: song.title,
@@ -70,11 +77,10 @@ const AdminOverviewPage = () => {
           type: "verse" as const
         }))
       })) as Song[];
-    },
-    enabled: !!selectedChoirId
+    }
   });
 
-  // Fetch available songs (songs not in the selected choir)
+  // Fetch available songs (songs not in any choir)
   const { data: availableSongs = [] } = useQuery({
     queryKey: ['available-songs', selectedChoirId],
     queryFn: async () => {
@@ -110,8 +116,7 @@ const AdminOverviewPage = () => {
           type: "verse" as const
         }))
       })) as Song[];
-    },
-    enabled: !!selectedChoirId
+    }
   });
 
   const addSongsToChoir = useMutation({
@@ -193,6 +198,11 @@ const AdminOverviewPage = () => {
             onChoirSelect={setSelectedChoirId}
             onAddChoir={() => setIsAddChoirModalOpen(true)}
           />
+          {!selectedChoirId && (
+            <p className="text-sm text-muted-foreground">
+              Showing all songs. Select a choir to filter.
+            </p>
+          )}
         </div>
         <div className="space-x-4">
           <Button variant="outline" onClick={() => setIsAddSongsDialogOpen(true)}>
@@ -261,37 +271,44 @@ const AdminOverviewPage = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Title</TableHead>
+              <TableHead>Choir</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {choirSongs.map((song) => (
-              <TableRow key={song.id}>
-                <TableCell>{song.title}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => navigate(`/admin/songs/${song.id}/edit`)}
-                      >
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-red-600"
-                        onClick={() => removeSongFromChoir.mutate(song.id)}
-                      >
-                        Remove from Choir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+            {choirSongs.map((song) => {
+              const choir = choirs.find(c => c.id === song.choirId);
+              return (
+                <TableRow key={song.id}>
+                  <TableCell>{song.title}</TableCell>
+                  <TableCell>{choir?.name || 'No Choir'}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => navigate(`/admin/songs/${song.id}/edit`)}
+                        >
+                          Edit
+                        </DropdownMenuItem>
+                        {song.choirId && (
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => removeSongFromChoir.mutate(song.id)}
+                          >
+                            Remove from Choir
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
