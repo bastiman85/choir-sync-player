@@ -14,6 +14,7 @@ export const useAudioManager = (song: Song) => {
   const [autoRestartChapter, setAutoRestartChapter] = useState(false);
 
   const getCurrentChapter = () => {
+    if (!song.chapters?.length) return null;
     return song.chapters
       .slice()
       .reverse()
@@ -23,18 +24,22 @@ export const useAudioManager = (song: Song) => {
   const handleTrackEnd = () => {
     if (autoRestartSong) {
       handleSeek([0]);
-      Object.values(audioRefs.current).forEach(audio => audio.play());
-    } else if (autoRestartChapter && song.chapters.length > 0) {
+      setIsPlaying(true);
+      Object.values(audioRefs.current).forEach(audio => {
+        audio.currentTime = 0;
+        audio.play();
+      });
+    } else if (autoRestartChapter && song.chapters?.length > 0) {
       const currentChapter = getCurrentChapter();
       if (currentChapter) {
         const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
-        if (nextChapter) {
-          handleSeek([nextChapter.time]);
-          Object.values(audioRefs.current).forEach(audio => audio.play());
-        } else {
-          handleSeek([currentChapter.time]);
-          Object.values(audioRefs.current).forEach(audio => audio.play());
-        }
+        const seekTime = nextChapter ? nextChapter.time : currentChapter.time;
+        handleSeek([seekTime]);
+        setIsPlaying(true);
+        Object.values(audioRefs.current).forEach(audio => {
+          audio.currentTime = seekTime;
+          audio.play();
+        });
       }
     } else {
       setIsPlaying(false);
@@ -53,7 +58,7 @@ export const useAudioManager = (song: Song) => {
       const audio = new Audio(track.url);
       audioRefs.current[track.id] = audio;
       
-      // Set initial volume to 1 for all tracks but mute "all" and "instrumental"
+      // Set initial volume to 1 for all tracks
       setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
       
       // Set initial mute state for "all" and "instrumental" tracks

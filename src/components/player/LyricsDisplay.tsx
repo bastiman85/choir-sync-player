@@ -49,6 +49,11 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
         }
       });
 
+      // If no section is found or currentTime is 0, show the first section
+      if (!currentSection && sections.length > 0 && currentTime === 0) {
+        currentSection = sections[0];
+      }
+
       if (currentSection) {
         setCurrentHtmlSection(currentSection.innerHTML);
       }
@@ -63,7 +68,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
         <div 
           ref={containerRef}
           className="prose prose-sm max-w-none w-full"
-          dangerouslySetInnerHTML={{ __html: currentHtmlSection || '' }}
+          dangerouslySetInnerHTML={{ __html: currentHtmlSection || htmlContent }}
         />
       ) : (
         <p className="text-xl font-mono text-center">
