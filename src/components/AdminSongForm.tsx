@@ -34,6 +34,7 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
     initialSong?.lyrics.map((l) => `${l.startTime},${l.endTime},${l.text}`).join("\n") || ""
   );
   const [chapters, setChapters] = useState(initialSong?.chapters || []);
+  const [htmlContentUrl, setHtmlContentUrl] = useState(initialSong?.htmlContent || "");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +58,7 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
       tracks,
       lyrics: parsedLyrics,
       chapters,
+      htmlContent: htmlContentUrl,
     });
   };
 
@@ -98,6 +100,21 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
           onChange={(e) => setLyrics(e.target.value)}
           placeholder="0,5,First line of lyrics&#10;5,10,Second line of lyrics"
           rows={10}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          HTML Content URL (optional)
+          <span className="text-xs text-muted-foreground ml-2">
+            (URL to HTML file with data-time attributes)
+          </span>
+        </label>
+        <Input
+          type="url"
+          value={htmlContentUrl}
+          onChange={(e) => setHtmlContentUrl(e.target.value)}
+          placeholder="https://example.com/song-content.html"
         />
       </div>
 
