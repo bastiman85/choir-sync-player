@@ -107,26 +107,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
           ) : (
             <div 
               ref={containerRef}
-              className="prose prose-sm max-w-none w-full text-center"
-              style={{
-                '--text-color': '#333333',
-                '--text-color-light': '#666666',
-                '--text-color-lighter': '#999999',
-                '--text-color-lightest': '#CCCCCC',
-                '--text-size-base': '1rem',
-                '--text-size-lg': '1.125rem',
-                '--text-size-xl': '1.25rem',
-                '--text-size-2xl': '1.5rem',
-                '--text-size-3xl': '1.875rem',
-                '--text-size-4xl': '2.25rem',
-                '--spacing-xs': '0.25rem',
-                '--spacing-sm': '0.5rem',
-                '--spacing-md': '1rem',
-                '--spacing-lg': '1.5rem',
-                '--spacing-xl': '2rem',
-                '--font-family-base': '"Inter", sans-serif',
-                '--font-family-heading': '"Inter", sans-serif'
-              } as React.CSSProperties}
+              className="w-full text-center"
               dangerouslySetInnerHTML={{ __html: currentHtmlSection || '' }}
             />
           )}
