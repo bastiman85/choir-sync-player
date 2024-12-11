@@ -60,7 +60,7 @@
 
 /* Time-based section styles */
 [data-time] {
-  @apply border-b border-gray-200 last:border-b-0;
+  @apply last:border-b-0;
 }
 
 [data-time="ALLA"] {
