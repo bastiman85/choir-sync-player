@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -62,13 +62,24 @@ const AdminOverviewPage = () => {
     setSelectedSongs([]);
   };
 
+  const handleAddChoir = () => {
+    // In a real app, this would navigate to a choir creation form or open a modal
+    toast.success("Add choir functionality coming soon!");
+  };
+
   return (
     <div className="container py-8">
       <div className="flex justify-between items-center mb-8">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Choir Songs Management</h1>
           <div className="w-[250px]">
-            <Select value={selectedChoirId} onValueChange={setSelectedChoirId}>
+            <Select value={selectedChoirId} onValueChange={(value) => {
+              if (value === "add-choir") {
+                handleAddChoir();
+              } else {
+                setSelectedChoirId(value);
+              }
+            }}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a choir" />
               </SelectTrigger>
@@ -78,6 +89,13 @@ const AdminOverviewPage = () => {
                     {choir.name}
                   </SelectItem>
                 ))}
+                <SelectSeparator />
+                <SelectItem value="add-choir" className="text-primary">
+                  <div className="flex items-center">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add New Choir
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
