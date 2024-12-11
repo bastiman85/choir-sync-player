@@ -99,6 +99,9 @@
   .stamrubrik {
     background-color: #f3f3f3;
     text-transform: uppercase;
+    margin-bottom: 10px;
+    border: 1px solid #e5e5e5;
+    background-color: #e5e5e5;
   }
 
   .lattextblock {
