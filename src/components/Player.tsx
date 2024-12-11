@@ -12,6 +12,7 @@ const Player = ({ song }: PlayerProps) => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [volumes, setVolumes] = useState<{ [key: string]: number }>({});
   const [mutedTracks, setMutedTracks] = useState<{ [key: string]: boolean }>({});
 
@@ -21,15 +22,30 @@ const Player = ({ song }: PlayerProps) => {
       audioRefs.current[track.id] = audio;
       setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
       setMutedTracks((prev) => ({ ...prev, [track.id]: false }));
+
+      // Set up time update listener
+      audio.addEventListener("timeupdate", handleTimeUpdate);
+      audio.addEventListener("loadedmetadata", () => {
+        setDuration(audio.duration);
+      });
     });
 
     return () => {
       Object.values(audioRefs.current).forEach((audio) => {
+        audio.removeEventListener("timeupdate", handleTimeUpdate);
         audio.pause();
         audio.currentTime = 0;
       });
     };
   }, [song]);
+
+  const handleTimeUpdate = () => {
+    // Use the first track as the reference for current time
+    const firstAudio = Object.values(audioRefs.current)[0];
+    if (firstAudio) {
+      setCurrentTime(firstAudio.currentTime);
+    }
+  };
 
   const togglePlayPause = () => {
     if (isPlaying) {
@@ -52,6 +68,20 @@ const Player = ({ song }: PlayerProps) => {
       audioRefs.current[trackId].muted = newMuted[trackId];
       return newMuted;
     });
+  };
+
+  const handleSeek = (value: number[]) => {
+    const newTime = value[0];
+    Object.values(audioRefs.current).forEach((audio) => {
+      audio.currentTime = newTime;
+    });
+    setCurrentTime(newTime);
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   const currentLyric = song.lyrics.find(
@@ -83,6 +113,20 @@ const Player = ({ song }: PlayerProps) => {
               />
             </div>
           ))}
+        </div>
+
+        <div className="space-y-2 mb-6">
+          <Slider
+            value={[currentTime]}
+            onValueChange={handleSeek}
+            max={duration}
+            step={0.1}
+            className="w-full"
+          />
+          <div className="flex justify-between text-sm text-gray-500">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
         </div>
 
         <Button
