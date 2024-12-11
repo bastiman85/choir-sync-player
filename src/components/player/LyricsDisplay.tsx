@@ -68,6 +68,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     let matchFound = false;
     let latestMatchingDiv: Element | null = null;
 
+    // First pass: find the latest matching div based on time and voice part
     divs.forEach((div) => {
       const divTime = div.getAttribute('data-time');
       if (divTime && divTime <= timeString) {
@@ -78,6 +79,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
       }
     });
 
+    // If we found a matching div and it's different from the last one shown
     if (matchFound && latestMatchingDiv) {
       const divTime = latestMatchingDiv.getAttribute('data-time');
       if (divTime !== lastMatchedTimeRef.current) {
@@ -86,20 +88,34 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
         setError(null);
       }
     } else if (currentTime === 0) {
-      // Find the first div that should be shown based on voice part
+      // For initial display, find the first div that matches the voice part
       const firstShowableDiv = Array.from(divs).find(div => shouldShowLyricBlock(div));
       if (firstShowableDiv) {
         setCurrentHtmlSection(firstShowableDiv.outerHTML);
         lastMatchedTimeRef.current = firstShowableDiv.getAttribute('data-time');
         setError(null);
       } else {
-        // If no showable div is found, try to show the first div that matches the time
-        const firstDiv = Array.from(divs)[0];
-        if (firstDiv) {
-          setCurrentHtmlSection(firstDiv.outerHTML);
-          lastMatchedTimeRef.current = firstDiv.getAttribute('data-time');
-          setError(null);
+        // If no div matches the voice part, show nothing
+        setCurrentHtmlSection('');
+        lastMatchedTimeRef.current = null;
+      }
+    } else if (!matchFound) {
+      // If no matching div is found for the current time and voice part,
+      // find the last div before the current time
+      let lastValidDiv: Element | null = null;
+      for (const div of Array.from(divs)) {
+        const divTime = div.getAttribute('data-time');
+        if (divTime && divTime <= timeString) {
+          lastValidDiv = div;
+        } else {
+          break;
         }
+      }
+      
+      if (lastValidDiv) {
+        setCurrentHtmlSection(lastValidDiv.outerHTML);
+        lastMatchedTimeRef.current = lastValidDiv.getAttribute('data-time');
+        setError(null);
       }
     }
   };
