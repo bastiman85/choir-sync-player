@@ -9,6 +9,7 @@ interface PlayerControlsProps {
   onPlayPauseClick: () => void;
   onAutoRestartSongChange: (checked: boolean) => void;
   onAutoRestartChapterChange: (checked: boolean) => void;
+  hasChapters?: boolean;
 }
 
 const PlayerControls = ({
@@ -18,6 +19,7 @@ const PlayerControls = ({
   onPlayPauseClick,
   onAutoRestartSongChange,
   onAutoRestartChapterChange,
+  hasChapters = false,
 }: PlayerControlsProps) => {
   return (
     <div className="flex flex-col space-y-4 mb-6">
@@ -41,16 +43,18 @@ const PlayerControls = ({
           <Label htmlFor="auto-restart-song">Auto-restart song</Label>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="auto-restart-chapter"
-            checked={autoRestartChapter}
-            onCheckedChange={(checked) => {
-              onAutoRestartChapterChange(checked);
-            }}
-          />
-          <Label htmlFor="auto-restart-chapter">Auto-restart chapter</Label>
-        </div>
+        {hasChapters && (
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="auto-restart-chapter"
+              checked={autoRestartChapter}
+              onCheckedChange={(checked) => {
+                onAutoRestartChapterChange(checked);
+              }}
+            />
+            <Label htmlFor="auto-restart-chapter">Auto-restart chapter</Label>
+          </div>
+        )}
       </div>
     </div>
   );
