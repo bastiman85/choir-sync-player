@@ -4,7 +4,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, MoreHorizontal } from "lucide-react";
 import { Song, Choir, ChoirSong } from "@/types/song";
 import { toast } from "sonner";
 
@@ -41,6 +43,8 @@ const mockChoirSongs: ChoirSong[] = [
 const AdminOverviewPage = () => {
   const navigate = useNavigate();
   const [selectedChoirId, setSelectedChoirId] = useState<string>(mockChoirs[0].id);
+  const [isAddSongsDialogOpen, setIsAddSongsDialogOpen] = useState(false);
+  const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
 
   const choirSongs = mockChoirSongs
     .filter((cs) => cs.choirId === selectedChoirId)
@@ -51,9 +55,11 @@ const AdminOverviewPage = () => {
     (song) => !mockChoirSongs.some((cs) => cs.choirId === selectedChoirId && cs.songId === song.id)
   );
 
-  const handleAddExistingSong = (songId: string) => {
+  const handleAddSelectedSongs = () => {
     // In a real app, this would make an API call
-    toast.success("Song added to choir successfully!");
+    toast.success(`${selectedSongs.length} songs added to choir successfully!`);
+    setIsAddSongsDialogOpen(false);
+    setSelectedSongs([]);
   };
 
   return (
@@ -77,29 +83,60 @@ const AdminOverviewPage = () => {
           </div>
         </div>
         <div className="space-x-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Song
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => navigate("/admin/songs/new")}>
-                Create New Song
-              </DropdownMenuItem>
-              {availableSongs.map((song) => (
-                <DropdownMenuItem
-                  key={song.id}
-                  onClick={() => handleAddExistingSong(song.id)}
-                >
-                  Add "{song.title}"
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button variant="outline" onClick={() => setIsAddSongsDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Existing Song
+          </Button>
+          <Button onClick={() => navigate("/admin/songs/new")}>
+            Create New Song
+          </Button>
         </div>
       </div>
+
+      <Dialog open={isAddSongsDialogOpen} onOpenChange={setIsAddSongsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Existing Songs</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {availableSongs.map((song) => (
+              <div key={song.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={song.id}
+                  checked={selectedSongs.includes(song.id)}
+                  onCheckedChange={(checked) => {
+                    setSelectedSongs(
+                      checked
+                        ? [...selectedSongs, song.id]
+                        : selectedSongs.filter((id) => id !== song.id)
+                    );
+                  }}
+                />
+                <label
+                  htmlFor={song.id}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {song.title}
+                </label>
+              </div>
+            ))}
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsAddSongsDialogOpen(false);
+                  setSelectedSongs([]);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleAddSelectedSongs} disabled={selectedSongs.length === 0}>
+                Add Selected Songs
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="rounded-md border">
         <Table>
