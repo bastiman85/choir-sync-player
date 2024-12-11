@@ -44,6 +44,7 @@ export const processHtmlContent = (
         // Show all text if:
         // 1. activeVoicePart is 'all' or 'instrumental'
         // 2. No active voice part is set
+        // 3. Multiple voice parts are active
         const shouldShowAllText = 
           !activeVoicePart || 
           activeVoicePart === 'all' || 
@@ -63,9 +64,11 @@ export const processHtmlContent = (
         // Filter text only when:
         // 1. We have a single voice part (s, a, t, b) active
         // 2. It's not the 'all' or 'instrumental' track
+        // 3. There aren't multiple voice parts playing
         const shouldFilter = !shouldShowAllText && 
                            activeVoicePart && 
-                           ['soprano', 'alto', 'tenor', 'bass'].includes(activeVoicePart);
+                           ['soprano', 'alto', 'tenor', 'bass'].includes(activeVoicePart) &&
+                           !hasMultipleVoiceParts;
 
         const processedSection = shouldFilter
           ? filterVoicePart(currentSection.cloneNode(true) as Element, activeVoicePart[0].toLowerCase())
