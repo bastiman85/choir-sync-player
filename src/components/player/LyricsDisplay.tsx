@@ -30,6 +30,32 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     return undefined;
   };
 
+  const filterVoicePart = (element: Element, voiceInitial: string): Element => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = element.outerHTML;
+    
+    const lattextblocks = tempDiv.querySelectorAll('.lattextblock');
+    const matchingBlocks: Element[] = [];
+    
+    lattextblocks.forEach(block => {
+      const classes = Array.from(block.classList);
+      if (classes.includes(voiceInitial)) {
+        matchingBlocks.push(block);
+      }
+    });
+
+    // If we found matching blocks, only keep those
+    if (matchingBlocks.length > 0) {
+      const resultDiv = document.createElement('div');
+      resultDiv.setAttribute('data-time', element.getAttribute('data-time') || '');
+      matchingBlocks.forEach(block => resultDiv.appendChild(block.cloneNode(true)));
+      return resultDiv;
+    }
+
+    // If no matching blocks found, return the original element
+    return element;
+  };
+
   const showVoicePart = (element: Element): boolean => {
     if (!activeVoicePart || activeVoicePart === 'all' || activeVoicePart === 'instrumental') {
       console.log('Showing all voice parts due to activeVoicePart:', activeVoicePart);
@@ -94,7 +120,14 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
       if (showVoicePart(currentSection)) {
         console.log('Found voice-part match in current section:', divTime);
         if (divTime !== lastMatchedTimeRef.current) {
-          setCurrentHtmlSection(currentSection.outerHTML);
+          // Filter the content to show only the matching voice part
+          const filteredSection = activeVoicePart && 
+            activeVoicePart !== 'all' && 
+            activeVoicePart !== 'instrumental' 
+              ? filterVoicePart(currentSection, activeVoicePart[0].toLowerCase())
+              : currentSection;
+          
+          setCurrentHtmlSection(filteredSection.outerHTML);
           lastMatchedTimeRef.current = divTime;
           setError(null);
         }
