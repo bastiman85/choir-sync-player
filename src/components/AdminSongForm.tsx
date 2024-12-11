@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
 import { Song, LyricLine, Choir } from "@/types/song";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import TrackUrlInputs from "./admin/TrackUrlInputs";
 import ChapterMarkers from "./admin/ChapterMarkers";
+import SongBasicDetails from "./admin/SongBasicDetails";
+import HtmlContentInput from "./admin/HtmlContentInput";
+import LyricsInput from "./admin/LyricsInput";
 
 // This would normally come from an API
 const mockChoirs: Choir[] = [
@@ -64,59 +64,22 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-6">
-      <div>
-        <label className="block text-sm font-medium mb-2">Song Title</label>
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter song title"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-2">Choir</label>
-        <Select value={choirId} onValueChange={setChoirId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select a choir" />
-          </SelectTrigger>
-          <SelectContent>
-            {mockChoirs.map((choir) => (
-              <SelectItem key={choir.id} value={choir.id}>
-                {choir.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <SongBasicDetails
+        title={title}
+        onTitleChange={setTitle}
+        choirId={choirId}
+        onChoirIdChange={setChoirId}
+        choirs={mockChoirs}
+      />
 
       <TrackUrlInputs tracks={tracks} onTracksChange={setTracks} />
 
-      <div>
-        <label className="block text-sm font-medium mb-2">
-          Lyrics with Timing (format: startTime,endTime,text)
-        </label>
-        <Textarea
-          value={lyrics}
-          onChange={(e) => setLyrics(e.target.value)}
-          placeholder="0,5,First line of lyrics&#10;5,10,Second line of lyrics"
-          rows={10}
-        />
-      </div>
+      <LyricsInput lyrics={lyrics} onLyricsChange={setLyrics} />
 
-      <div>
-        <label className="block text-sm font-medium mb-2">
-          HTML Content URL (optional)
-          <span className="text-xs text-muted-foreground ml-2">
-            (URL to HTML file with data-time attributes)
-          </span>
-        </label>
-        <Input
-          type="url"
-          value={htmlContentUrl}
-          onChange={(e) => setHtmlContentUrl(e.target.value)}
-          placeholder="https://example.com/song-content.html"
-        />
-      </div>
+      <HtmlContentInput
+        htmlContentUrl={htmlContentUrl}
+        onHtmlContentUrlChange={setHtmlContentUrl}
+      />
 
       <ChapterMarkers chapters={chapters} onChaptersChange={setChapters} />
 
