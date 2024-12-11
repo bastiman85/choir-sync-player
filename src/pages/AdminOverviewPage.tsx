@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -9,8 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, MoreHorizontal } from "lucide-react";
 import { Song, Choir, ChoirSong } from "@/types/song";
 import { toast } from "sonner";
+import ChoirSelector from "@/components/admin/ChoirSelector";
+import AddChoirModal from "@/components/admin/AddChoirModal";
 
-// Mock data - would come from API in real app
 const mockChoirs: Choir[] = [
   { id: "1", name: "St. Mary's Choir", description: "Traditional church choir" },
   { id: "2", name: "Community Singers", description: "Local community choir" },
@@ -45,6 +45,7 @@ const AdminOverviewPage = () => {
   const [selectedChoirId, setSelectedChoirId] = useState<string>(mockChoirs[0].id);
   const [isAddSongsDialogOpen, setIsAddSongsDialogOpen] = useState(false);
   const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
+  const [isAddChoirModalOpen, setIsAddChoirModalOpen] = useState(false);
 
   const choirSongs = mockChoirSongs
     .filter((cs) => cs.choirId === selectedChoirId)
@@ -56,15 +57,15 @@ const AdminOverviewPage = () => {
   );
 
   const handleAddSelectedSongs = () => {
-    // In a real app, this would make an API call
     toast.success(`${selectedSongs.length} songs added to choir successfully!`);
     setIsAddSongsDialogOpen(false);
     setSelectedSongs([]);
   };
 
-  const handleAddChoir = () => {
-    // In a real app, this would navigate to a choir creation form or open a modal
-    toast.success("Add choir functionality coming soon!");
+  const handleAddChoir = (choirName: string) => {
+    // In a real app, this would make an API call to create the choir
+    toast.success(`New choir "${choirName}" created successfully!`);
+    setIsAddChoirModalOpen(false);
   };
 
   return (
@@ -72,33 +73,12 @@ const AdminOverviewPage = () => {
       <div className="flex justify-between items-center mb-8">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Choir Songs Management</h1>
-          <div className="w-[250px]">
-            <Select value={selectedChoirId} onValueChange={(value) => {
-              if (value === "add-choir") {
-                handleAddChoir();
-              } else {
-                setSelectedChoirId(value);
-              }
-            }}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a choir" />
-              </SelectTrigger>
-              <SelectContent>
-                {mockChoirs.map((choir) => (
-                  <SelectItem key={choir.id} value={choir.id}>
-                    {choir.name}
-                  </SelectItem>
-                ))}
-                <SelectSeparator />
-                <SelectItem value="add-choir" className="text-primary">
-                  <div className="flex items-center">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add New Choir
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <ChoirSelector
+            choirs={mockChoirs}
+            selectedChoirId={selectedChoirId}
+            onChoirSelect={setSelectedChoirId}
+            onAddChoir={() => setIsAddChoirModalOpen(true)}
+          />
         </div>
         <div className="space-x-4">
           <Button variant="outline" onClick={() => setIsAddSongsDialogOpen(true)}>
@@ -156,6 +136,12 @@ const AdminOverviewPage = () => {
         </DialogContent>
       </Dialog>
 
+      <AddChoirModal
+        isOpen={isAddChoirModalOpen}
+        onClose={() => setIsAddChoirModalOpen(false)}
+        onSubmit={handleAddChoir}
+      />
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -184,7 +170,6 @@ const AdminOverviewPage = () => {
                       <DropdownMenuItem
                         className="text-red-600"
                         onClick={() => {
-                          // In a real app, this would make an API call
                           toast.success("Song removed from choir!");
                         }}
                       >
