@@ -32,19 +32,26 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
 
   const showVoicePart = (element: Element): boolean => {
     if (!activeVoicePart || activeVoicePart === 'all' || activeVoicePart === 'instrumental') {
+      console.log('Showing all voice parts due to activeVoicePart:', activeVoicePart);
       return true;
     }
 
     const voiceInitial = activeVoicePart[0].toLowerCase();
     const lattextblock = element.querySelector('.lattextblock');
     
-    if (!lattextblock) return true;
+    if (!lattextblock) {
+      console.log('No lattextblock found in element');
+      return true;
+    }
 
     // Get all classes of the lattextblock
     const classes = Array.from(lattextblock.classList);
+    console.log('Checking classes for voice part:', classes, 'looking for:', voiceInitial);
     
     // Return true only if the exact voice initial class exists
-    return classes.includes(voiceInitial);
+    const hasMatchingClass = classes.includes(voiceInitial);
+    console.log('Voice part match result:', hasMatchingClass);
+    return hasMatchingClass;
   };
 
   const processHtmlContent = (html: string) => {
@@ -54,6 +61,8 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     const minutes = Math.floor(currentTime / 60);
     const seconds = Math.floor(currentTime % 60);
     const timeString = `${minutes.toString().padStart(2, '0')}${seconds.toString().padStart(2, '0')}`;
+    
+    console.log('Processing HTML content for time:', timeString, 'activeVoicePart:', activeVoicePart);
     
     const divs = tempDiv.querySelectorAll('[data-time]');
     
@@ -69,11 +78,16 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     // Find the latest matching div based on time and voice part
     divs.forEach((div) => {
       const divTime = div.getAttribute('data-time');
+      console.log('Checking div with time:', divTime, 'content:', div.textContent?.slice(0, 50));
+      
       if (divTime && divTime <= timeString) {
         latestTimeMatchingDiv = div;
+        console.log('Found time-matching div:', divTime);
+        
         if (showVoicePart(div)) {
           latestMatchingDiv = div;
           matchFound = true;
+          console.log('Found voice-part matching div:', divTime);
         }
       }
     });
@@ -82,6 +96,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     if (matchFound && latestMatchingDiv) {
       const divTime = latestMatchingDiv.getAttribute('data-time');
       if (divTime !== lastMatchedTimeRef.current) {
+        console.log('Updating section with voice-part matching div:', divTime);
         setCurrentHtmlSection(latestMatchingDiv.outerHTML);
         lastMatchedTimeRef.current = divTime;
         setError(null);
@@ -90,6 +105,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
       // If no matching div for the voice part is found, show the time-matched div
       const divTime = latestTimeMatchingDiv.getAttribute('data-time');
       if (divTime !== lastMatchedTimeRef.current) {
+        console.log('No voice-part match found, falling back to time-matched div:', divTime);
         setCurrentHtmlSection(latestTimeMatchingDiv.outerHTML);
         lastMatchedTimeRef.current = divTime;
         setError(null);
@@ -98,6 +114,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
       // For initial display, find the first div that matches the voice part
       const firstShowableDiv = Array.from(divs).find(div => showVoicePart(div)) || divs[0];
       if (firstShowableDiv) {
+        console.log('Setting initial div display');
         setCurrentHtmlSection(firstShowableDiv.outerHTML);
         lastMatchedTimeRef.current = firstShowableDiv.getAttribute('data-time');
         setError(null);
@@ -107,6 +124,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
       }
     } else {
       // If no matching div is found, show nothing
+      console.log('No matching div found for current time');
       setCurrentHtmlSection('');
       lastMatchedTimeRef.current = null;
     }
