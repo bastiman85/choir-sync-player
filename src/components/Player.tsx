@@ -5,6 +5,8 @@ import TrackControls from "./player/TrackControls";
 import Scrubber from "./player/Scrubber";
 import LyricsDisplay from "./player/LyricsDisplay";
 import ChapterMarkers from "./player/ChapterMarkers";
+import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
 
 interface PlayerProps {
   song: Song;
@@ -18,6 +20,8 @@ const Player = ({ song }: PlayerProps) => {
   const [volumes, setVolumes] = useState<{ [key: string]: number }>({});
   const [mutedTracks, setMutedTracks] = useState<{ [key: string]: boolean }>({});
   const [instrumentalMode, setInstrumentalMode] = useState(false);
+  const [autoRestartSong, setAutoRestartSong] = useState(false);
+  const [autoRestartChapter, setAutoRestartChapter] = useState(false);
 
   useEffect(() => {
     song.tracks.forEach((track) => {
@@ -30,16 +34,46 @@ const Player = ({ song }: PlayerProps) => {
       audio.addEventListener("loadedmetadata", () => {
         setDuration(audio.duration);
       });
+      audio.addEventListener("ended", handleTrackEnd);
     });
 
     return () => {
       Object.values(audioRefs.current).forEach((audio) => {
         audio.removeEventListener("timeupdate", handleTimeUpdate);
+        audio.removeEventListener("ended", handleTrackEnd);
         audio.pause();
         audio.currentTime = 0;
       });
     };
   }, [song]);
+
+  const handleTrackEnd = () => {
+    if (autoRestartSong) {
+      handleSeek([0]);
+      Object.values(audioRefs.current).forEach(audio => audio.play());
+    } else if (autoRestartChapter && song.chapters.length > 0) {
+      const currentChapter = getCurrentChapter();
+      if (currentChapter) {
+        const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
+        if (nextChapter) {
+          handleSeek([nextChapter.time]);
+          Object.values(audioRefs.current).forEach(audio => audio.play());
+        } else {
+          handleSeek([currentChapter.time]);
+          Object.values(audioRefs.current).forEach(audio => audio.play());
+        }
+      }
+    } else {
+      setIsPlaying(false);
+    }
+  };
+
+  const getCurrentChapter = () => {
+    return song.chapters
+      .slice()
+      .reverse()
+      .find(chapter => currentTime >= chapter.time);
+  };
 
   const handleTimeUpdate = () => {
     const firstAudio = Object.values(audioRefs.current)[0];
@@ -147,13 +181,41 @@ const Player = ({ song }: PlayerProps) => {
           />
         </div>
 
-        <Button
-          onClick={togglePlayPause}
-          className="w-full mb-6"
-          variant="default"
-        >
-          {isPlaying ? "Pause" : "Play"}
-        </Button>
+        <div className="flex flex-col space-y-4 mb-6">
+          <Button
+            onClick={togglePlayPause}
+            className="w-full"
+            variant="default"
+          >
+            {isPlaying ? "Pause" : "Play"}
+          </Button>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="auto-restart-song"
+                checked={autoRestartSong}
+                onCheckedChange={(checked) => {
+                  setAutoRestartSong(checked);
+                  if (checked) setAutoRestartChapter(false);
+                }}
+              />
+              <Label htmlFor="auto-restart-song">Auto-restart song</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="auto-restart-chapter"
+                checked={autoRestartChapter}
+                onCheckedChange={(checked) => {
+                  setAutoRestartChapter(checked);
+                  if (checked) setAutoRestartSong(false);
+                }}
+              />
+              <Label htmlFor="auto-restart-chapter">Auto-restart chapter</Label>
+            </div>
+          </div>
+        </div>
 
         <LyricsDisplay currentTime={currentTime} lyrics={song.lyrics} />
       </div>
