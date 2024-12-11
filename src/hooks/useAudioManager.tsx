@@ -117,7 +117,7 @@ export const useAudioManager = (song: Song) => {
       // Mute instrumental and all tracks
       song.tracks.forEach(t => {
         if (t.voicePart === "instrumental" || t.voicePart === "all") {
-          audio.muted = true;
+          audioRefs.current[t.id].muted = true;
           setMutedTracks(prev => ({ ...prev, [t.id]: true }));
         }
       });
