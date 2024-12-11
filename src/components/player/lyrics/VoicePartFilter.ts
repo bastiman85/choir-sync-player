@@ -20,6 +20,17 @@ export const showVoicePart = (element: Element, activeVoicePart: string | undefi
     return true;
   }
 
+  // Count active voice parts
+  const activeParts = Array.from(element.querySelectorAll('.lattextblock'))
+    .filter(block => block.classList.length > 1) // Has more classes than just 'lattextblock'
+    .length;
+
+  // If multiple voice parts are present, show all
+  if (activeParts > 1) {
+    return true;
+  }
+
+  // Otherwise, filter by the active voice part
   const voiceInitial = activeVoicePart[0].toLowerCase();
   const lattextblocks = element.querySelectorAll('.lattextblock');
   
