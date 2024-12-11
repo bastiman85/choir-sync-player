@@ -70,9 +70,11 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
 
     divs.forEach((div) => {
       const divTime = div.getAttribute('data-time');
-      if (divTime && divTime <= timeString && shouldShowLyricBlock(div)) {
-        latestMatchingDiv = div;
-        matchFound = true;
+      if (divTime && divTime <= timeString) {
+        if (shouldShowLyricBlock(div)) {
+          latestMatchingDiv = div;
+          matchFound = true;
+        }
       }
     });
 
@@ -90,6 +92,14 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
         setCurrentHtmlSection(firstShowableDiv.outerHTML);
         lastMatchedTimeRef.current = firstShowableDiv.getAttribute('data-time');
         setError(null);
+      } else {
+        // If no showable div is found, try to show the first div that matches the time
+        const firstDiv = Array.from(divs)[0];
+        if (firstDiv) {
+          setCurrentHtmlSection(firstDiv.outerHTML);
+          lastMatchedTimeRef.current = firstDiv.getAttribute('data-time');
+          setError(null);
+        }
       }
     }
   };
