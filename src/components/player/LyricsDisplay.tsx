@@ -40,14 +40,8 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     
     if (!lattextblock) return true;
 
-    // Check if any child of lattextblock has a class starting with the voice initial
-    const hasMatchingVoicePart = Array.from(lattextblock.children).some(child => {
-      return Array.from(child.classList).some(className => 
-        className.toLowerCase().startsWith(voiceInitial)
-      );
-    });
-
-    return hasMatchingVoicePart;
+    // Check if the lattextblock has the voice initial in its class list
+    return lattextblock.classList.contains(voiceInitial);
   };
 
   const processHtmlContent = (html: string) => {
@@ -101,14 +95,12 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
       }
     } else if (!matchFound) {
       // If no matching div is found for the current time and voice part,
-      // find the last div before the current time
+      // find the last div before the current time that matches the voice part
       let lastValidDiv: Element | null = null;
       for (const div of Array.from(divs)) {
         const divTime = div.getAttribute('data-time');
-        if (divTime && divTime <= timeString) {
+        if (divTime && divTime <= timeString && shouldShowLyricBlock(div)) {
           lastValidDiv = div;
-        } else {
-          break;
         }
       }
       
@@ -116,6 +108,10 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
         setCurrentHtmlSection(lastValidDiv.outerHTML);
         lastMatchedTimeRef.current = lastValidDiv.getAttribute('data-time');
         setError(null);
+      } else {
+        // If no matching div is found at all, show nothing
+        setCurrentHtmlSection('');
+        lastMatchedTimeRef.current = null;
       }
     }
   };
