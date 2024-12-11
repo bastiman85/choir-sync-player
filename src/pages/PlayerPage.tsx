@@ -3,6 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import Player from "@/components/Player";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { VoicePart } from "@/types/song";
+
+const isValidVoicePart = (part: string): part is VoicePart => {
+  return ["soprano", "alto", "tenor", "bass", "instrumental", "all"].includes(part);
+};
 
 const PlayerPage = () => {
   const { slug } = useParams();
@@ -47,11 +52,22 @@ const PlayerPage = () => {
         id: songData.id,
         title: songData.title,
         choirId: songData.choir_id,
-        tracks: songData.tracks.map((track) => ({
-          id: track.id,
-          url: track.url,
-          voicePart: track.voice_part
-        })),
+        tracks: songData.tracks.map((track) => {
+          const voicePart = track.voice_part.toLowerCase();
+          if (!isValidVoicePart(voicePart)) {
+            console.error(`Invalid voice part: ${voicePart}`);
+            return {
+              id: track.id,
+              url: track.url,
+              voicePart: "all" as VoicePart // fallback to "all" if invalid
+            };
+          }
+          return {
+            id: track.id,
+            url: track.url,
+            voicePart
+          };
+        }),
         lyrics: songData.lyrics.map((lyric) => ({
           id: lyric.id,
           text: lyric.text,
