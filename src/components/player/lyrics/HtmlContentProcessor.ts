@@ -44,13 +44,12 @@ export const processHtmlContent = (
         // Show all text if:
         // 1. activeVoicePart is 'all' or 'instrumental'
         // 2. No active voice part is set
-        // 3. Multiple voice parts are active
         const shouldShowAllText = 
           !activeVoicePart || 
           activeVoicePart === 'all' || 
           activeVoicePart === 'instrumental';
 
-        // Count active voice parts (s, a, t, b)
+        // Get all voice parts in the current section
         const voiceParts = Array.from(currentSection.querySelectorAll('.lattextblock'))
           .map(block => {
             const classes = Array.from(block.classList);
@@ -61,11 +60,15 @@ export const processHtmlContent = (
         const uniqueVoiceParts = new Set(voiceParts);
         const hasMultipleVoiceParts = uniqueVoiceParts.size > 1;
 
-        // Only filter if we have exactly one voice part active and it's not 'all' or 'instrumental'
-        const shouldFilter = !shouldShowAllText && !hasMultipleVoiceParts && activeVoicePart;
-        
+        // Filter text only when:
+        // 1. We have a single voice part (s, a, t, b) active
+        // 2. It's not the 'all' or 'instrumental' track
+        const shouldFilter = !shouldShowAllText && 
+                           activeVoicePart && 
+                           ['soprano', 'alto', 'tenor', 'bass'].includes(activeVoicePart);
+
         const processedSection = shouldFilter
-          ? filterVoicePart(currentSection, activeVoicePart[0].toLowerCase())
+          ? filterVoicePart(currentSection.cloneNode(true) as Element, activeVoicePart[0].toLowerCase())
           : currentSection;
         
         setCurrentHtmlSection(processedSection.outerHTML);
