@@ -46,9 +46,16 @@ export const processHtmlContent = (
           activeVoicePart !== 'all' && 
           activeVoicePart !== 'instrumental';
 
-        // Count active voice parts to determine if we should filter
+        // Count active voice parts that are currently unmuted
         const activeParts = Array.from(currentSection.querySelectorAll('.lattextblock'))
-          .filter(block => !block.classList.contains('instrumental'))
+          .filter(block => {
+            // Get the voice part class (s, a, t, b)
+            const voiceClass = Array.from(block.classList)
+              .find(cls => ['s', 'a', 't', 'b'].includes(cls));
+            
+            // If this is the active voice part or if it's not a voice part block, count it
+            return voiceClass === activeVoicePart?.[0].toLowerCase() || !voiceClass;
+          })
           .length;
 
         // Only filter if we should filter AND there's only one active part
