@@ -1,7 +1,6 @@
 import React from "react";
-import SongList from "@/components/SongList";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import Player from "@/components/Player";
 
 // This would normally come from an API
 const mockSongs = [
@@ -19,20 +18,21 @@ const mockSongs = [
   },
 ];
 
-const Index = () => {
-  const navigate = useNavigate();
+const PlayerPage = () => {
+  const { songId } = useParams();
+  const song = mockSongs.find((s) => s.id === songId);
+
+  if (!song) {
+    return <div>Song not found</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-100">
       <div className="container py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Choir Practice App</h1>
-          <Button onClick={() => navigate("/admin/songs/new")}>Add New Song</Button>
-        </div>
-        <SongList songs={mockSongs} />
+        <Player song={song} />
       </div>
     </div>
   );
 };
 
-export default Index;
+export default PlayerPage;
