@@ -53,15 +53,14 @@ export const useAudioManager = (song: Song) => {
       const audio = new Audio(track.url);
       audioRefs.current[track.id] = audio;
       
-      // Set initial volume to 0 for "all" and "instrumental" tracks
-      const initialVolume = track.voicePart === "all" || track.voicePart === "instrumental" ? 0 : 1;
-      setVolumes((prev) => ({ ...prev, [track.id]: initialVolume }));
+      // Set initial volume to 1 for all tracks but mute "all" and "instrumental"
+      setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
       
       // Set initial mute state for "all" and "instrumental" tracks
       const initialMute = track.voicePart === "all" || track.voicePart === "instrumental";
       setMutedTracks((prev) => ({ ...prev, [track.id]: initialMute }));
 
-      audio.volume = initialVolume;
+      audio.volume = 1;
       audio.muted = initialMute;
 
       audio.addEventListener("timeupdate", handleTimeUpdate);
@@ -95,7 +94,6 @@ export const useAudioManager = (song: Song) => {
     const track = song.tracks.find(t => t.id === trackId);
     
     if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && !instrumentalMode && !allTrackMode && value > 0) {
-      // Enable instrumental or all track mode
       if (track.voicePart === "instrumental") {
         setInstrumentalMode(true);
         setAllTrackMode(false);
@@ -108,23 +106,18 @@ export const useAudioManager = (song: Song) => {
       Object.entries(audioRefs.current).forEach(([id, audio]) => {
         const trackPart = song.tracks.find(t => t.id === id)?.voicePart;
         if (trackPart !== track.voicePart) {
-          audio.volume = 0;
           audio.muted = true;
-          setVolumes(prev => ({ ...prev, [id]: 0 }));
           setMutedTracks(prev => ({ ...prev, [id]: true }));
         }
       });
     } else if ((track?.voicePart !== "instrumental" && track?.voicePart !== "all") && (instrumentalMode || allTrackMode) && value > 0) {
-      // Disable instrumental and all track mode when adjusting other tracks
       setInstrumentalMode(false);
       setAllTrackMode(false);
       
       // Mute instrumental and all tracks
       song.tracks.forEach(t => {
         if (t.voicePart === "instrumental" || t.voicePart === "all") {
-          audioRefs.current[t.id].volume = 0;
-          audioRefs.current[t.id].muted = true;
-          setVolumes(prev => ({ ...prev, [t.id]: 0 }));
+          audio.muted = true;
           setMutedTracks(prev => ({ ...prev, [t.id]: true }));
         }
       });
@@ -139,7 +132,6 @@ export const useAudioManager = (song: Song) => {
     const newMuted = !mutedTracks[trackId];
     
     if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && !newMuted) {
-      // When unmuting instrumental or all track, mute all other tracks
       setInstrumentalMode(track.voicePart === "instrumental");
       setAllTrackMode(track.voicePart === "all");
       
@@ -151,7 +143,6 @@ export const useAudioManager = (song: Song) => {
         }
       });
     } else if ((track?.voicePart !== "instrumental" && track?.voicePart !== "all") && !newMuted) {
-      // When unmuting other tracks, mute instrumental and all tracks
       setInstrumentalMode(false);
       setAllTrackMode(false);
       

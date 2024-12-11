@@ -30,6 +30,7 @@ const TrackControls = ({
         max={100}
         step={1}
         className="w-48"
+        disabled={isMuted}
       />
     </div>
   );
