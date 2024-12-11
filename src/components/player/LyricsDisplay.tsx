@@ -34,7 +34,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
       fetch(htmlContent)
         .then(response => {
           if (!response.ok) {
-            throw new Error(`Failed to fetch HTML content: ${response.status}`);
+            throw new Error(`Failed to fetch HTML content`);
           }
           return response.text();
         })
@@ -80,8 +80,8 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
             }
           }
         })
-        .catch(err => {
-          setError(`Error loading HTML content: ${err.message}`);
+        .catch(() => {
+          setError('Error loading HTML content');
         });
     }
   }, [currentTime, htmlContent]);
