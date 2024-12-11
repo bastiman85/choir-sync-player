@@ -5,7 +5,7 @@ export const processHtmlContent = (
   lastMatchedTimeRef: React.MutableRefObject<string | null>,
   setCurrentHtmlSection: (html: string) => void,
   setError: (error: string | null) => void,
-  filterVoicePart: (element: Element, voiceInitial: string) => Element,
+  filterVoicePart: (element: Element, voiceInitial: string) => Element | null,
   showVoicePart: (element: Element, activeVoicePart: string | undefined) => boolean
 ) => {
   const tempDiv = document.createElement('div');
@@ -26,11 +26,23 @@ export const processHtmlContent = (
   let currentSection: Element | null = null;
   const allSections = document.createElement('div');
 
-  // First, clone all divs without any current-section class
+  // First, clone all divs and filter them based on voice part
   divs.forEach((div) => {
-    const divClone = div.cloneNode(true) as Element;
-    divClone.classList.remove('current-section'); // Ensure no section has the highlight class initially
-    allSections.appendChild(divClone);
+    if (activeVoicePart && ['soprano', 'alto', 'tenor', 'bass'].includes(activeVoicePart)) {
+      const voiceInitial = activeVoicePart[0].toLowerCase();
+      const filteredDiv = filterVoicePart(div, voiceInitial);
+      
+      // Only add the div if it has content for the active voice part
+      if (filteredDiv && showVoicePart(div, activeVoicePart)) {
+        const divClone = filteredDiv.cloneNode(true) as Element;
+        divClone.classList.remove('current-section');
+        allSections.appendChild(divClone);
+      }
+    } else {
+      const divClone = div.cloneNode(true) as Element;
+      divClone.classList.remove('current-section');
+      allSections.appendChild(divClone);
+    }
   });
 
   // Then find and highlight the current section
