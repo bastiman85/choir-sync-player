@@ -1,6 +1,5 @@
 import { ChapterMarker } from "@/types/song";
 import { Button } from "../ui/button";
-import { ScrollArea } from "../ui/scroll-area";
 
 interface ChapterMarkersProps {
   chapters: ChapterMarker[];
@@ -15,7 +14,7 @@ const ChapterMarkers = ({ chapters, onChapterClick, currentTime }: ChapterMarker
   };
 
   return (
-    <ScrollArea className="h-32 rounded-md border p-4">
+    <div className="border rounded-md p-4">
       <div className="space-y-2">
         {chapters.map((chapter) => (
           <Button
@@ -29,7 +28,7 @@ const ChapterMarkers = ({ chapters, onChapterClick, currentTime }: ChapterMarker
           </Button>
         ))}
       </div>
-    </ScrollArea>
+    </div>
   );
 };
 
