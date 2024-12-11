@@ -79,7 +79,7 @@
 .lyrics-display {
   /* Header styles */
   .stamrubrik {
-    @apply text-transform: uppercase mb-2.5 border border-gray-200 bg-gray-200;
+    @apply uppercase mb-2.5 border border-gray-200 bg-gray-200;
   }
 
   /* Text block styles */
