@@ -103,7 +103,7 @@ const PlayerPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-100">
-      <div className="container py-8">
+      <div className="container py-4 sm:py-6">
         <Player song={song} />
       </div>
     </div>
