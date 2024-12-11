@@ -73,7 +73,10 @@ export const useAudioManager = (song: Song) => {
       audio.volume = 1;
       audio.muted = initialMute;
 
+      // Remove any existing timeupdate listeners before adding a new one
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.addEventListener("timeupdate", handleTimeUpdate);
+      
       audio.addEventListener("loadedmetadata", () => {
         setDuration(audio.duration);
       });
