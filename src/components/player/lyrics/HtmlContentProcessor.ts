@@ -5,7 +5,7 @@ export const processHtmlContent = (
   lastMatchedTimeRef: React.MutableRefObject<string | null>,
   setCurrentHtmlSection: (html: string) => void,
   setError: (error: string | null) => void,
-  filterVoicePart: (element: Element, voiceInitial: string) => Element | null,
+  filterVoicePart: (element: Element, voiceInitial: string) => Element,
   showVoicePart: (element: Element, activeVoicePart: string | undefined) => boolean
 ) => {
   const tempDiv = document.createElement('div');
@@ -26,10 +26,10 @@ export const processHtmlContent = (
   let currentSection: Element | null = null;
   const allSections = document.createElement('div');
 
-  // Add all divs to allSections
+  // First, clone all divs without any current-section class
   divs.forEach((div) => {
     const divClone = div.cloneNode(true) as Element;
-    divClone.classList.remove('current-section');
+    divClone.classList.remove('current-section'); // Ensure no section has the highlight class initially
     allSections.appendChild(divClone);
   });
 
