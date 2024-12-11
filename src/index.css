@@ -93,3 +93,12 @@
 [data-time] i {
   @apply italic;
 }
+
+/* Side by side layout for lattextblock */
+div:has(.lattextblock) {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.lattextblock {
+  @apply w-full;
+}
