@@ -95,7 +95,7 @@
 }
 
 /* Side by side layout for lattextblock */
-div:has(.lattextblock) {
+.bg-gray-100:has(.lattextblock) {
   @apply grid grid-cols-1 md:grid-cols-2 gap-4;
 }
 
