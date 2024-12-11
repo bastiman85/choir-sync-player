@@ -27,6 +27,8 @@ export const useAudioManager = (song: Song) => {
     setAutoRestartSong,
     autoRestartChapter,
     setAutoRestartChapter,
+    activeVoicePart,
+    setActiveVoicePart,
   } = useAudioState(song);
 
   const { getCurrentChapter } = useChapterManagement(currentTime, song);
@@ -40,6 +42,7 @@ export const useAudioManager = (song: Song) => {
     setMutedTracks,
     setInstrumentalMode,
     setAllTrackMode,
+    setActiveVoicePart,
   });
 
   const { handleTrackEnd, togglePlayPause, handleSeek } = usePlaybackControls({
@@ -86,6 +89,7 @@ export const useAudioManager = (song: Song) => {
     // Set initial state for track modes
     setAllTrackMode(true);
     setInstrumentalMode(false);
+    setActiveVoicePart("all");
 
     return () => {
       Object.values(audioRefs.current).forEach((audio) => {
@@ -111,5 +115,6 @@ export const useAudioManager = (song: Song) => {
     handleVolumeChange,
     handleMuteToggle,
     handleSeek,
+    activeVoicePart,
   };
 };

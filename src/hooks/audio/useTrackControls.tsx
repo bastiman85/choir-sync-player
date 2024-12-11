@@ -10,6 +10,7 @@ interface TrackControlsProps {
   setMutedTracks: (value: React.SetStateAction<{ [key: string]: boolean }>) => void;
   setInstrumentalMode: (value: boolean) => void;
   setAllTrackMode: (value: boolean) => void;
+  setActiveVoicePart: (value: string) => void;
 }
 
 export const useTrackControls = ({
@@ -21,6 +22,7 @@ export const useTrackControls = ({
   setMutedTracks,
   setInstrumentalMode,
   setAllTrackMode,
+  setActiveVoicePart,
 }: TrackControlsProps) => {
   const handleVolumeChange = (trackId: string, value: number) => {
     const newVolume = value / 100;
@@ -30,9 +32,11 @@ export const useTrackControls = ({
       if (track.voicePart === "instrumental") {
         setInstrumentalMode(true);
         setAllTrackMode(false);
+        setActiveVoicePart("instrumental");
       } else {
         setAllTrackMode(true);
         setInstrumentalMode(false);
+        setActiveVoicePart("all");
       }
       
       Object.entries(audioRefs.current).forEach(([id, audio]) => {
@@ -45,6 +49,7 @@ export const useTrackControls = ({
     } else if ((track?.voicePart !== "instrumental" && track?.voicePart !== "all") && value > 0) {
       setInstrumentalMode(false);
       setAllTrackMode(false);
+      setActiveVoicePart(track?.voicePart || "all");
       
       song.tracks.forEach(t => {
         if (t.voicePart === "instrumental" || t.voicePart === "all") {
@@ -67,6 +72,7 @@ export const useTrackControls = ({
     if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && !newMuted) {
       setInstrumentalMode(track.voicePart === "instrumental");
       setAllTrackMode(track.voicePart === "all");
+      setActiveVoicePart(track.voicePart);
       
       Object.entries(audioRefs.current).forEach(([id, audio]) => {
         const otherTrack = song.tracks.find(t => t.id === id);
@@ -78,6 +84,7 @@ export const useTrackControls = ({
     } else if ((track?.voicePart !== "instrumental" && track?.voicePart !== "all") && !newMuted) {
       setInstrumentalMode(false);
       setAllTrackMode(false);
+      setActiveVoicePart(track?.voicePart || "all");
       
       song.tracks.forEach(t => {
         if (t.voicePart === "instrumental" || t.voicePart === "all") {

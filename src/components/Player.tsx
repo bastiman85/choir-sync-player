@@ -25,6 +25,7 @@ const Player = ({ song }: PlayerProps) => {
     handleVolumeChange,
     handleMuteToggle,
     handleSeek,
+    activeVoicePart,
   } = useAudioManager(song);
 
   const handleChapterClick = (time: number) => {
@@ -91,6 +92,7 @@ const Player = ({ song }: PlayerProps) => {
           currentTime={currentTime} 
           lyrics={song.lyrics} 
           htmlContent={song.htmlContent}
+          activeVoicePart={activeVoicePart}
         />
       </div>
     </div>
