@@ -100,5 +100,5 @@
 }
 
 .lattextblock {
-  @apply w-full;
+  @apply w-full md:col-span-1;
 }
