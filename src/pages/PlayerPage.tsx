@@ -11,14 +11,14 @@ const PlayerPage = () => {
   const { data: song, isLoading } = useQuery({
     queryKey: ['song', slug],
     queryFn: async () => {
-      // First, find the song by its title (slug)
       const { data: songData, error: songError } = await supabase
         .from('songs')
         .select(`
           *,
           tracks (*),
           lyrics (*),
-          chapters (*)
+          chapters (*),
+          html_content
         `)
         .ilike('title', slug?.replace(/-/g, ' ') || '')
         .single();
@@ -48,7 +48,8 @@ const PlayerPage = () => {
           title: chapter.title,
           time: chapter.start_time,
           type: "verse" as const
-        }))
+        })),
+        htmlContent: songData.html_content
       };
     }
   });
