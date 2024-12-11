@@ -1,50 +1,57 @@
-import { useState, useRef, useEffect } from "react";
-import { Song, Track } from "@/types/song";
+import { useRef, useEffect } from "react";
+import { Song } from "@/types/song";
+import { useAudioState } from "./audio/useAudioState";
+import { useChapterManagement } from "./audio/useChapterManagement";
+import { useTrackControls } from "./audio/useTrackControls";
+import { usePlaybackControls } from "./audio/usePlaybackControls";
 
 export const useAudioManager = (song: Song) => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volumes, setVolumes] = useState<{ [key: string]: number }>({});
-  const [mutedTracks, setMutedTracks] = useState<{ [key: string]: boolean }>({});
-  const [instrumentalMode, setInstrumentalMode] = useState(false);
-  const [allTrackMode, setAllTrackMode] = useState(false);
-  const [autoRestartSong, setAutoRestartSong] = useState(false);
-  const [autoRestartChapter, setAutoRestartChapter] = useState(false);
+  
+  const {
+    isPlaying,
+    setIsPlaying,
+    currentTime,
+    setCurrentTime,
+    duration,
+    setDuration,
+    volumes,
+    setVolumes,
+    mutedTracks,
+    setMutedTracks,
+    instrumentalMode,
+    setInstrumentalMode,
+    allTrackMode,
+    setAllTrackMode,
+    autoRestartSong,
+    setAutoRestartSong,
+    autoRestartChapter,
+    setAutoRestartChapter,
+  } = useAudioState(song);
 
-  const getCurrentChapter = () => {
-    if (!song.chapters?.length) return null;
-    return song.chapters
-      .slice()
-      .reverse()
-      .find(chapter => currentTime >= chapter.time);
-  };
+  const { getCurrentChapter } = useChapterManagement(currentTime, song);
 
-  const handleTrackEnd = () => {
-    if (autoRestartSong) {
-      handleSeek([0]);
-      setIsPlaying(true);
-      Object.values(audioRefs.current).forEach(audio => {
-        audio.currentTime = 0;
-        audio.play();
-      });
-    } else if (autoRestartChapter && song.chapters?.length > 0) {
-      const currentChapter = getCurrentChapter();
-      if (currentChapter) {
-        const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
-        const seekTime = nextChapter ? nextChapter.time : currentChapter.time;
-        handleSeek([seekTime]);
-        setIsPlaying(true);
-        Object.values(audioRefs.current).forEach(audio => {
-          audio.currentTime = seekTime;
-          audio.play();
-        });
-      }
-    } else {
-      setIsPlaying(false);
-    }
-  };
+  const { handleVolumeChange, handleMuteToggle } = useTrackControls({
+    audioRefs,
+    song,
+    volumes,
+    mutedTracks,
+    setVolumes,
+    setMutedTracks,
+    setInstrumentalMode,
+    setAllTrackMode,
+  });
+
+  const { handleTrackEnd, togglePlayPause, handleSeek } = usePlaybackControls({
+    audioRefs,
+    song,
+    isPlaying,
+    setIsPlaying,
+    setCurrentTime,
+    autoRestartSong,
+    autoRestartChapter,
+    getCurrentChapter,
+  });
 
   const handleTimeUpdate = () => {
     const firstAudio = Object.values(audioRefs.current)[0];
@@ -58,10 +65,8 @@ export const useAudioManager = (song: Song) => {
       const audio = new Audio(track.url);
       audioRefs.current[track.id] = audio;
       
-      // Set initial volume to 1 for all tracks
       setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
       
-      // Set initial mute state for "all" and "instrumental" tracks
       const initialMute = track.voicePart === "all" || track.voicePart === "instrumental";
       setMutedTracks((prev) => ({ ...prev, [track.id]: initialMute }));
 
@@ -84,92 +89,6 @@ export const useAudioManager = (song: Song) => {
       });
     };
   }, [song]);
-
-  const togglePlayPause = () => {
-    if (isPlaying) {
-      Object.values(audioRefs.current).forEach((audio) => audio.pause());
-    } else {
-      Object.values(audioRefs.current).forEach((audio) => audio.play());
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleVolumeChange = (trackId: string, value: number) => {
-    const newVolume = value / 100;
-    const track = song.tracks.find(t => t.id === trackId);
-    
-    if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && !instrumentalMode && !allTrackMode && value > 0) {
-      if (track.voicePart === "instrumental") {
-        setInstrumentalMode(true);
-        setAllTrackMode(false);
-      } else {
-        setAllTrackMode(true);
-        setInstrumentalMode(false);
-      }
-      
-      // Mute all other tracks
-      Object.entries(audioRefs.current).forEach(([id, audio]) => {
-        const trackPart = song.tracks.find(t => t.id === id)?.voicePart;
-        if (trackPart !== track.voicePart) {
-          audio.muted = true;
-          setMutedTracks(prev => ({ ...prev, [id]: true }));
-        }
-      });
-    } else if ((track?.voicePart !== "instrumental" && track?.voicePart !== "all") && (instrumentalMode || allTrackMode) && value > 0) {
-      setInstrumentalMode(false);
-      setAllTrackMode(false);
-      
-      // Mute instrumental and all tracks
-      song.tracks.forEach(t => {
-        if (t.voicePart === "instrumental" || t.voicePart === "all") {
-          audioRefs.current[t.id].muted = true;
-          setMutedTracks(prev => ({ ...prev, [t.id]: true }));
-        }
-      });
-    }
-
-    setVolumes((prev) => ({ ...prev, [trackId]: newVolume }));
-    audioRefs.current[trackId].volume = newVolume;
-  };
-
-  const handleMuteToggle = (trackId: string) => {
-    const track = song.tracks.find(t => t.id === trackId);
-    const newMuted = !mutedTracks[trackId];
-    
-    if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && !newMuted) {
-      setInstrumentalMode(track.voicePart === "instrumental");
-      setAllTrackMode(track.voicePart === "all");
-      
-      Object.entries(audioRefs.current).forEach(([id, audio]) => {
-        const otherTrack = song.tracks.find(t => t.id === id);
-        if (otherTrack?.voicePart !== track.voicePart) {
-          audio.muted = true;
-          setMutedTracks(prev => ({ ...prev, [id]: true }));
-        }
-      });
-    } else if ((track?.voicePart !== "instrumental" && track?.voicePart !== "all") && !newMuted) {
-      setInstrumentalMode(false);
-      setAllTrackMode(false);
-      
-      song.tracks.forEach(t => {
-        if (t.voicePart === "instrumental" || t.voicePart === "all") {
-          audioRefs.current[t.id].muted = true;
-          setMutedTracks(prev => ({ ...prev, [t.id]: true }));
-        }
-      });
-    }
-
-    setMutedTracks((prev) => ({ ...prev, [trackId]: newMuted }));
-    audioRefs.current[trackId].muted = newMuted;
-  };
-
-  const handleSeek = (value: number[]) => {
-    const newTime = value[0];
-    Object.values(audioRefs.current).forEach((audio) => {
-      audio.currentTime = newTime;
-    });
-    setCurrentTime(newTime);
-  };
 
   return {
     isPlaying,
