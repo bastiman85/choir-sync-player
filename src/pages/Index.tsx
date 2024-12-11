@@ -4,58 +4,58 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Song, Choir } from "@/types/song";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-// This would normally come from an API
-const mockChoirs: Choir[] = [
-  {
-    id: "1",
-    name: "St. Mary's Choir",
-    description: "Traditional church choir"
-  },
-  {
-    id: "2",
-    name: "Community Singers",
-    description: "Local community choir"
-  }
-];
-
-// This would normally come from an API
-const mockSongs: Song[] = [
-  {
-    id: "1",
-    title: "Amazing Grace",
-    choirId: "1",
-    tracks: [
-      { id: "1", voicePart: "soprano", url: "/path/to/soprano.mp3" },
-      { id: "2", voicePart: "alto", url: "/path/to/alto.mp3" },
-    ],
-    lyrics: [
-      { id: "1", text: "Amazing grace, how sweet the sound", startTime: 0, endTime: 5 },
-      { id: "2", text: "That saved a wretch like me", startTime: 5, endTime: 10 },
-    ],
-    chapters: [] // Added empty chapters array
-  },
-  {
-    id: "2",
-    title: "Hallelujah",
-    choirId: "2",
-    tracks: [
-      { id: "3", voicePart: "soprano", url: "/path/to/soprano.mp3" },
-      { id: "4", voicePart: "alto", url: "/path/to/alto.mp3" },
-    ],
-    lyrics: [
-      { id: "3", text: "Hallelujah, Hallelujah", startTime: 0, endTime: 5 },
-      { id: "4", text: "Hallelujah, Hallelujah", startTime: 5, endTime: 10 },
-    ],
-    chapters: [] // Added empty chapters array
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [selectedChoirId, setSelectedChoirId] = useState<string>(mockChoirs[0].id);
+  const [selectedChoirId, setSelectedChoirId] = useState<string>("");
 
-  const filteredSongs = mockSongs.filter(song => song.choirId === selectedChoirId);
+  const { data: choirs = [] } = useQuery({
+    queryKey: ['choirs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('choirs')
+        .select('*');
+      if (error) throw error;
+      return data as Choir[];
+    }
+  });
+
+  // Set initial selected choir when data is loaded
+  React.useEffect(() => {
+    if (choirs.length > 0 && !selectedChoirId) {
+      setSelectedChoirId(choirs[0].id);
+    }
+  }, [choirs, selectedChoirId]);
+
+  const { data: songs = [] } = useQuery({
+    queryKey: ['songs', selectedChoirId],
+    queryFn: async () => {
+      if (!selectedChoirId) return [];
+      const { data, error } = await supabase
+        .from('songs')
+        .select(`
+          *,
+          tracks (*)
+        `)
+        .eq('choir_id', selectedChoirId);
+      if (error) throw error;
+      return data.map(song => ({
+        id: song.id,
+        title: song.title,
+        choirId: song.choir_id,
+        tracks: song.tracks.map((track: any) => ({
+          id: track.id,
+          url: track.url,
+          voicePart: track.voice_part
+        })),
+        lyrics: [], // These will be loaded in the player if needed
+        chapters: [] // These will be loaded in the player if needed
+      })) as Song[];
+    },
+    enabled: !!selectedChoirId
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-100">
@@ -72,7 +72,7 @@ const Index = () => {
                   <SelectValue placeholder="Select a choir" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockChoirs.map((choir) => (
+                  {choirs.map((choir) => (
                     <SelectItem key={choir.id} value={choir.id}>
                       {choir.name}
                     </SelectItem>
@@ -83,7 +83,7 @@ const Index = () => {
           </div>
           <Button onClick={() => navigate("/admin/songs/new")}>Add New Song</Button>
         </div>
-        <SongList songs={filteredSongs} />
+        <SongList songs={songs} />
       </div>
     </div>
   );
