@@ -1,8 +1,5 @@
-import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
-import { useState } from "react";
-import { Button } from "../ui/button";
-import { Upload } from "lucide-react";
 
 interface HtmlContentInputProps {
   htmlContentUrl: string;
@@ -13,14 +10,28 @@ const HtmlContentInput = ({
   htmlContentUrl,
   onHtmlContentUrlChange,
 }: HtmlContentInputProps) => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const handleContentChange = (content: string) => {
+    // Create a blob from the HTML content and generate an object URL
+    const blob = new Blob([content], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    onHtmlContentUrlChange(url);
+  };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type === 'text/html') {
-      setSelectedFile(file);
-      const fileUrl = URL.createObjectURL(file);
-      onHtmlContentUrlChange(fileUrl);
+  // Convert object URL back to content for editing
+  const getContentFromUrl = (url: string): string => {
+    if (!url) return '';
+    try {
+      // Extract content from blob URL if it exists
+      const match = url.match(/^blob:/);
+      if (match) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, false);  // Synchronous request
+        xhr.send(null);
+        return xhr.responseText;
+      }
+      return '';
+    } catch (error) {
+      return '';
     }
   };
 
@@ -28,48 +39,17 @@ const HtmlContentInput = ({
     <div className="space-y-4">
       <div>
         <Label className="block text-sm font-medium mb-2">
-          HTML Content URL
+          HTML Content
           <span className="text-xs text-muted-foreground ml-2">
-            (URL to HTML file with data-time attributes)
+            (Paste HTML content with data-time attributes)
           </span>
         </Label>
-        <Input
-          type="url"
-          value={htmlContentUrl}
-          onChange={(e) => onHtmlContentUrlChange(e.target.value)}
-          placeholder="https://example.com/song-content.html"
+        <Textarea
+          value={getContentFromUrl(htmlContentUrl)}
+          onChange={(e) => handleContentChange(e.target.value)}
+          placeholder="<div data-time='0000'>First verse...</div>"
+          className="min-h-[200px] font-mono text-sm"
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label className="block text-sm font-medium">
-          Or upload HTML file directly
-        </Label>
-        <div className="flex items-center gap-4">
-          <Input
-            type="file"
-            accept=".html"
-            onChange={handleFileChange}
-            className="flex-1"
-          />
-          {selectedFile && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSelectedFile(null);
-                onHtmlContentUrlChange('');
-              }}
-            >
-              Clear
-            </Button>
-          )}
-        </div>
-        {selectedFile && (
-          <p className="text-sm text-muted-foreground">
-            Selected file: {selectedFile.name}
-          </p>
-        )}
       </div>
     </div>
   );
