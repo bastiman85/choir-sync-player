@@ -102,7 +102,7 @@
 
   /* Current section highlight */
   .current-section {
-    @apply bg-blue-50 border-l-4 border-blue-500 pl-3;
+    @apply bg-blue-50/50 border-l-2 border-blue-300 pl-2;
   }
 
   /* Responsive styles */

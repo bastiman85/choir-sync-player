@@ -22,7 +22,7 @@ export const processHtmlContent = (
     return;
   }
 
-  // Show all sections but highlight the current one
+  // Find current section and show all sections
   let currentSection: Element | null = null;
   const allSections = document.createElement('div');
 
@@ -30,7 +30,7 @@ export const processHtmlContent = (
     const divTime = div.getAttribute('data-time');
     const divClone = div.cloneNode(true) as Element;
     
-    // Add highlight class to current section
+    // Only highlight if this is the current section
     if (divTime && divTime <= timeString) {
       const nextDiv = Array.from(divs).find(d => {
         const nextTime = d.getAttribute('data-time');
@@ -54,9 +54,8 @@ export const processHtmlContent = (
       setError(null);
     }
   } else if (currentTime === 0) {
-    const firstDiv = divs[0];
     setCurrentHtmlSection(tempDiv.innerHTML);
-    lastMatchedTimeRef.current = firstDiv.getAttribute('data-time');
+    lastMatchedTimeRef.current = divs[0].getAttribute('data-time');
     setError(null);
   } else {
     setCurrentHtmlSection(tempDiv.innerHTML);
