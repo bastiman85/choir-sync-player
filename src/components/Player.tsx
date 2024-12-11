@@ -82,7 +82,11 @@ const Player = ({ song }: PlayerProps) => {
           }}
         />
 
-        <LyricsDisplay currentTime={currentTime} lyrics={song.lyrics} />
+        <LyricsDisplay 
+          currentTime={currentTime} 
+          lyrics={song.lyrics} 
+          htmlContent={song.htmlContent}
+        />
       </div>
     </div>
   );

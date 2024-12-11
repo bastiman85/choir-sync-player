@@ -27,6 +27,7 @@ export interface Song {
   lyrics: LyricLine[];
   choirId: string;
   chapters: ChapterMarker[];
+  htmlContent?: string; // New field for HTML content
 }
 
 export interface Choir {
