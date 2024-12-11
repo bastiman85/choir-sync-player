@@ -27,11 +27,17 @@ export interface Song {
   lyrics: LyricLine[];
   choirId: string;
   chapters: ChapterMarker[];
-  htmlContent?: string; // New field for HTML content
+  htmlContent?: string;
 }
 
 export interface Choir {
   id: string;
   name: string;
   description?: string;
+}
+
+export interface ChoirSong {
+  id: string;
+  choirId: string;
+  songId: string;
 }
