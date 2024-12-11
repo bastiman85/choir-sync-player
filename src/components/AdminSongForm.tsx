@@ -7,20 +7,6 @@ import SongBasicDetails from "./admin/SongBasicDetails";
 import HtmlContentInput from "./admin/HtmlContentInput";
 import LyricsInput from "./admin/LyricsInput";
 
-// This would normally come from an API
-const mockChoirs: Choir[] = [
-  {
-    id: "1",
-    name: "St. Mary's Choir",
-    description: "Traditional church choir"
-  },
-  {
-    id: "2",
-    name: "Community Singers",
-    description: "Local community choir"
-  }
-];
-
 interface AdminSongFormProps {
   onSubmit: (song: Partial<Song>) => void;
   initialSong?: Song;
@@ -28,7 +14,7 @@ interface AdminSongFormProps {
 
 const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
   const [title, setTitle] = useState(initialSong?.title || "");
-  const [choirId, setChoirId] = useState(initialSong?.choirId || mockChoirs[0].id);
+  const [choirId, setChoirId] = useState(initialSong?.choirId || "");
   const [tracks, setTracks] = useState(initialSong?.tracks || []);
   const [lyrics, setLyrics] = useState(
     initialSong?.lyrics.map((l) => `${l.startTime},${l.endTime},${l.text}`).join("\n") || ""
@@ -69,7 +55,6 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
         onTitleChange={setTitle}
         choirId={choirId}
         onChoirIdChange={setChoirId}
-        choirs={mockChoirs}
       />
 
       <TrackUrlInputs tracks={tracks} onTracksChange={setTracks} />
