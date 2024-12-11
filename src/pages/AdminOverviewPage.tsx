@@ -6,66 +6,132 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, MoreHorizontal } from "lucide-react";
-import { Song, Choir, ChoirSong } from "@/types/song";
+import { Song, Choir } from "@/types/song";
 import { toast } from "sonner";
 import ChoirSelector from "@/components/admin/ChoirSelector";
 import AddChoirModal from "@/components/admin/AddChoirModal";
-
-const mockChoirs: Choir[] = [
-  { id: "1", name: "St. Mary's Choir", description: "Traditional church choir" },
-  { id: "2", name: "Community Singers", description: "Local community choir" },
-];
-
-const mockSongs: Song[] = [
-  {
-    id: "1",
-    title: "Amazing Grace",
-    choirId: "1",
-    tracks: [],
-    lyrics: [],
-    chapters: [],
-  },
-  {
-    id: "2",
-    title: "Hallelujah",
-    choirId: "2",
-    tracks: [],
-    lyrics: [],
-    chapters: [],
-  },
-];
-
-const mockChoirSongs: ChoirSong[] = [
-  { id: "1", choirId: "1", songId: "1" },
-  { id: "2", choirId: "2", songId: "2" },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminOverviewPage = () => {
   const navigate = useNavigate();
-  const [selectedChoirId, setSelectedChoirId] = useState<string>(mockChoirs[0].id);
+  const queryClient = useQueryClient();
   const [isAddSongsDialogOpen, setIsAddSongsDialogOpen] = useState(false);
   const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
   const [isAddChoirModalOpen, setIsAddChoirModalOpen] = useState(false);
 
-  const choirSongs = mockChoirSongs
-    .filter((cs) => cs.choirId === selectedChoirId)
-    .map((cs) => mockSongs.find((s) => s.id === cs.songId))
-    .filter((s): s is Song => s !== undefined);
+  // Fetch choirs
+  const { data: choirs = [] } = useQuery({
+    queryKey: ['choirs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('choirs')
+        .select('*');
+      if (error) throw error;
+      return data as Choir[];
+    }
+  });
 
-  const availableSongs = mockSongs.filter(
-    (song) => !mockChoirSongs.some((cs) => cs.choirId === selectedChoirId && cs.songId === song.id)
-  );
+  const [selectedChoirId, setSelectedChoirId] = useState<string>(choirs[0]?.id || '');
+
+  // Fetch songs for selected choir
+  const { data: choirSongs = [] } = useQuery({
+    queryKey: ['songs', selectedChoirId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('songs')
+        .select(`
+          *,
+          tracks (*)
+        `)
+        .eq('choir_id', selectedChoirId);
+      if (error) throw error;
+      return data as Song[];
+    },
+    enabled: !!selectedChoirId
+  });
+
+  // Fetch available songs (songs not in the selected choir)
+  const { data: availableSongs = [] } = useQuery({
+    queryKey: ['available-songs', selectedChoirId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('songs')
+        .select('*')
+        .is('choir_id', null);
+      if (error) throw error;
+      return data as Song[];
+    },
+    enabled: !!selectedChoirId
+  });
+
+  // Mutation to add songs to choir
+  const addSongsToChoir = useMutation({
+    mutationFn: async (songIds: string[]) => {
+      const { error } = await supabase
+        .from('songs')
+        .update({ choir_id: selectedChoirId })
+        .in('id', songIds);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['songs', selectedChoirId] });
+      queryClient.invalidateQueries({ queryKey: ['available-songs', selectedChoirId] });
+      toast.success(`${selectedSongs.length} songs added to choir successfully!`);
+      setIsAddSongsDialogOpen(false);
+      setSelectedSongs([]);
+    },
+    onError: (error) => {
+      toast.error('Failed to add songs to choir');
+      console.error('Error adding songs to choir:', error);
+    }
+  });
+
+  // Mutation to add new choir
+  const addChoir = useMutation({
+    mutationFn: async (choirName: string) => {
+      const { error } = await supabase
+        .from('choirs')
+        .insert([{ name: choirName }]);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['choirs'] });
+      setIsAddChoirModalOpen(false);
+      toast.success('New choir created successfully!');
+    },
+    onError: (error) => {
+      toast.error('Failed to create choir');
+      console.error('Error creating choir:', error);
+    }
+  });
+
+  // Mutation to remove song from choir
+  const removeSongFromChoir = useMutation({
+    mutationFn: async (songId: string) => {
+      const { error } = await supabase
+        .from('songs')
+        .update({ choir_id: null })
+        .eq('id', songId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['songs', selectedChoirId] });
+      queryClient.invalidateQueries({ queryKey: ['available-songs', selectedChoirId] });
+      toast.success('Song removed from choir!');
+    },
+    onError: (error) => {
+      toast.error('Failed to remove song from choir');
+      console.error('Error removing song from choir:', error);
+    }
+  });
 
   const handleAddSelectedSongs = () => {
-    toast.success(`${selectedSongs.length} songs added to choir successfully!`);
-    setIsAddSongsDialogOpen(false);
-    setSelectedSongs([]);
+    addSongsToChoir.mutate(selectedSongs);
   };
 
   const handleAddChoir = (choirName: string) => {
-    // In a real app, this would make an API call to create the choir
-    toast.success(`New choir "${choirName}" created successfully!`);
-    setIsAddChoirModalOpen(false);
+    addChoir.mutate(choirName);
   };
 
   return (
@@ -74,7 +140,7 @@ const AdminOverviewPage = () => {
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Choir Songs Management</h1>
           <ChoirSelector
-            choirs={mockChoirs}
+            choirs={choirs}
             selectedChoirId={selectedChoirId}
             onChoirSelect={setSelectedChoirId}
             onAddChoir={() => setIsAddChoirModalOpen(true)}
@@ -169,9 +235,7 @@ const AdminOverviewPage = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600"
-                        onClick={() => {
-                          toast.success("Song removed from choir!");
-                        }}
+                        onClick={() => removeSongFromChoir.mutate(song.id)}
                       >
                         Remove from Choir
                       </DropdownMenuItem>
