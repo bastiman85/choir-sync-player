@@ -23,7 +23,6 @@ const ChapterMarkers = ({ chapters, onChapterClick, currentTime }: ChapterMarker
             className="w-full justify-start"
             onClick={() => onChapterClick(chapter.time)}
           >
-            <span className="mr-2">{chapter.type === "verse" ? "V" : chapter.type === "chorus" ? "C" : chapter.type === "bridge" ? "B" : "•"}</span>
             {chapter.title}
           </Button>
         ))}
