@@ -85,24 +85,15 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
     if (matchFound && latestMatchingDiv) {
       const divTime = latestMatchingDiv.getAttribute('data-time');
       if (divTime !== lastMatchedTimeRef.current) {
-        // Instead of replacing content, we'll add a class to highlight the current section
-        const allDivs = tempDiv.querySelectorAll('[data-time]');
-        allDivs.forEach(div => {
-          if (div === latestMatchingDiv) {
-            div.classList.add('current-section');
-          } else {
-            div.classList.remove('current-section');
-          }
-        });
-        setCurrentHtmlSection(tempDiv.innerHTML);
+        // Get the outerHTML to include the div with its attributes
+        setCurrentHtmlSection(latestMatchingDiv.outerHTML);
         lastMatchedTimeRef.current = divTime;
         setError(null);
       }
     } else if (currentTime === 0) {
       const firstDiv = divs[0];
       if (firstDiv) {
-        firstDiv.classList.add('current-section');
-        setCurrentHtmlSection(tempDiv.innerHTML);
+        setCurrentHtmlSection(firstDiv.outerHTML);
         lastMatchedTimeRef.current = firstDiv.getAttribute('data-time');
         setError(null);
       }
@@ -121,7 +112,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
             <div 
               ref={containerRef}
               className="w-full text-center"
-              dangerouslySetInnerHTML={{ __html: currentHtmlSection || fullHtmlContent }}
+              dangerouslySetInnerHTML={{ __html: currentHtmlSection || "" }}
             />
           )}
         </div>
