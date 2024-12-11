@@ -38,24 +38,31 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent }: LyricsDisplayProps)
       const seconds = Math.floor(currentTime % 60);
       const timeString = `${minutes.toString().padStart(2, '0')}${seconds.toString().padStart(2, '0')}`;
 
-      // Find the section that matches the current time
-      const sections = tempDiv.querySelectorAll('[data-time]');
-      let currentSection: Element | null = null;
+      console.log('Current HTML content length:', htmlContent.length);
+      console.log('Current time string:', timeString);
 
-      sections.forEach((section) => {
-        const sectionTime = section.getAttribute('data-time');
-        if (sectionTime && sectionTime <= timeString) {
-          currentSection = section;
+      // Find the div that matches the current time
+      const divs = tempDiv.querySelectorAll('[data-time]');
+      console.log('Found divs with data-time:', divs.length);
+      
+      let currentDiv: Element | null = null;
+
+      divs.forEach((div) => {
+        const divTime = div.getAttribute('data-time');
+        console.log('Checking div with time:', divTime);
+        if (divTime && divTime <= timeString) {
+          currentDiv = div;
         }
       });
 
-      // If no section is found or currentTime is 0, show the first section
-      if (!currentSection && sections.length > 0 && currentTime === 0) {
-        currentSection = sections[0];
+      // If no div is found or currentTime is 0, show the first div
+      if (!currentDiv && divs.length > 0 && currentTime === 0) {
+        currentDiv = divs[0];
       }
 
-      if (currentSection) {
-        setCurrentHtmlSection(currentSection.innerHTML);
+      if (currentDiv) {
+        console.log('Selected div content length:', currentDiv.innerHTML.length);
+        setCurrentHtmlSection(currentDiv.innerHTML);
       }
     }
   }, [currentTime, htmlContent]);
