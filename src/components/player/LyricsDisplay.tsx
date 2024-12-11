@@ -38,7 +38,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
         fetch(htmlContent)
           .then(response => {
             if (!response.ok) {
-              throw new Error('Failed to fetch HTML content');
+              throw new Error('Kunde inte hämta HTML-innehåll');
             }
             return response.text();
           })
@@ -55,7 +55,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
             );
           })
           .catch(() => {
-            setError('Error loading HTML content');
+            setError('Fel vid laddning av HTML-innehåll');
           });
       } else {
         processHtmlContent(

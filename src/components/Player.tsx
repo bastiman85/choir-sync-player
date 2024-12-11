@@ -54,7 +54,7 @@ const Player = ({ song }: PlayerProps) => {
           </div>
           {hasChapters && (
             <div className="md:col-span-1">
-              <h3 className="text-sm font-medium mb-2">Chapters</h3>
+              <h3 className="text-sm font-medium mb-2">Kapitel</h3>
               <ChapterMarkers
                 chapters={song.chapters}
                 onChapterClick={handleChapterClick}

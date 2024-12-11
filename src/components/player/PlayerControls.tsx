@@ -1,6 +1,6 @@
-import { Button } from "../ui/button";
-import { Switch } from "../ui/switch";
-import { Label } from "../ui/label";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Play, Pause } from "lucide-react";
 
 interface PlayerControlsProps {
   isPlaying: boolean;
@@ -9,7 +9,7 @@ interface PlayerControlsProps {
   onPlayPauseClick: () => void;
   onAutoRestartSongChange: (checked: boolean) => void;
   onAutoRestartChapterChange: (checked: boolean) => void;
-  hasChapters?: boolean;
+  hasChapters: boolean;
 }
 
 const PlayerControls = ({
@@ -19,41 +19,32 @@ const PlayerControls = ({
   onPlayPauseClick,
   onAutoRestartSongChange,
   onAutoRestartChapterChange,
-  hasChapters = false,
+  hasChapters,
 }: PlayerControlsProps) => {
   return (
-    <div className="flex flex-col space-y-4 mb-6">
-      <Button
-        onClick={onPlayPauseClick}
-        className="w-full"
-        variant="default"
-      >
-        {isPlaying ? "Pause" : "Play"}
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+      <Button onClick={onPlayPauseClick} variant="outline">
+        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        <span className="ml-2">{isPlaying ? "Pausa" : "Spela"}</span>
       </Button>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+      <div className="flex flex-col sm:flex-row gap-4">
+        <label className="flex items-center gap-2">
           <Switch
-            id="auto-restart-song"
             checked={autoRestartSong}
-            onCheckedChange={(checked) => {
-              onAutoRestartSongChange(checked);
-            }}
+            onCheckedChange={onAutoRestartSongChange}
           />
-          <Label htmlFor="auto-restart-song">Auto-restart song</Label>
-        </div>
+          <span className="text-sm">Upprepa sång</span>
+        </label>
 
         {hasChapters && (
-          <div className="flex items-center space-x-2">
+          <label className="flex items-center gap-2">
             <Switch
-              id="auto-restart-chapter"
               checked={autoRestartChapter}
-              onCheckedChange={(checked) => {
-                onAutoRestartChapterChange(checked);
-              }}
+              onCheckedChange={onAutoRestartChapterChange}
             />
-            <Label htmlFor="auto-restart-chapter">Auto-restart chapter</Label>
-          </div>
+            <span className="text-sm">Upprepa kapitel</span>
+          </label>
         )}
       </div>
     </div>
