@@ -9,7 +9,155 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      chapters: {
+        Row: {
+          created_at: string
+          id: string
+          song_id: string | null
+          start_time: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          song_id?: string | null
+          start_time: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          song_id?: string | null
+          start_time?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapters_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      choirs: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      lyrics: {
+        Row: {
+          created_at: string
+          end_time: number
+          id: string
+          song_id: string | null
+          start_time: number
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: number
+          id?: string
+          song_id?: string | null
+          start_time: number
+          text: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: number
+          id?: string
+          song_id?: string | null
+          start_time?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lyrics_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      songs: {
+        Row: {
+          choir_id: string | null
+          created_at: string
+          id: string
+          title: string
+        }
+        Insert: {
+          choir_id?: string | null
+          created_at?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          choir_id?: string | null
+          created_at?: string
+          id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "songs_choir_id_fkey"
+            columns: ["choir_id"]
+            isOneToOne: false
+            referencedRelation: "choirs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tracks: {
+        Row: {
+          created_at: string
+          id: string
+          song_id: string | null
+          url: string
+          voice_part: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          song_id?: string | null
+          url: string
+          voice_part: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          song_id?: string | null
+          url?: string
+          voice_part?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracks_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
