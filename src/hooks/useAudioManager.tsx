@@ -52,8 +52,17 @@ export const useAudioManager = (song: Song) => {
     song.tracks.forEach((track) => {
       const audio = new Audio(track.url);
       audioRefs.current[track.id] = audio;
-      setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
-      setMutedTracks((prev) => ({ ...prev, [track.id]: false }));
+      
+      // Set initial volume to 0 for "all" and "instrumental" tracks
+      const initialVolume = track.voicePart === "all" || track.voicePart === "instrumental" ? 0 : 1;
+      setVolumes((prev) => ({ ...prev, [track.id]: initialVolume }));
+      
+      // Set initial mute state for "all" and "instrumental" tracks
+      const initialMute = track.voicePart === "all" || track.voicePart === "instrumental";
+      setMutedTracks((prev) => ({ ...prev, [track.id]: initialMute }));
+
+      audio.volume = initialVolume;
+      audio.muted = initialMute;
 
       audio.addEventListener("timeupdate", handleTimeUpdate);
       audio.addEventListener("loadedmetadata", () => {
@@ -95,27 +104,30 @@ export const useAudioManager = (song: Song) => {
         setInstrumentalMode(false);
       }
       
+      // Mute all other tracks
       Object.entries(audioRefs.current).forEach(([id, audio]) => {
         const trackPart = song.tracks.find(t => t.id === id)?.voicePart;
         if (trackPart !== track.voicePart) {
           audio.volume = 0;
+          audio.muted = true;
           setVolumes(prev => ({ ...prev, [id]: 0 }));
+          setMutedTracks(prev => ({ ...prev, [id]: true }));
         }
       });
     } else if ((track?.voicePart !== "instrumental" && track?.voicePart !== "all") && (instrumentalMode || allTrackMode) && value > 0) {
       // Disable instrumental and all track mode when adjusting other tracks
       setInstrumentalMode(false);
       setAllTrackMode(false);
-      const instrumentalTrack = song.tracks.find(t => t.voicePart === "instrumental");
-      const allTrack = song.tracks.find(t => t.voicePart === "all");
-      if (instrumentalTrack) {
-        audioRefs.current[instrumentalTrack.id].volume = 0;
-        setVolumes(prev => ({ ...prev, [instrumentalTrack.id]: 0 }));
-      }
-      if (allTrack) {
-        audioRefs.current[allTrack.id].volume = 0;
-        setVolumes(prev => ({ ...prev, [allTrack.id]: 0 }));
-      }
+      
+      // Mute instrumental and all tracks
+      song.tracks.forEach(t => {
+        if (t.voicePart === "instrumental" || t.voicePart === "all") {
+          audioRefs.current[t.id].volume = 0;
+          audioRefs.current[t.id].muted = true;
+          setVolumes(prev => ({ ...prev, [t.id]: 0 }));
+          setMutedTracks(prev => ({ ...prev, [t.id]: true }));
+        }
+      });
     }
 
     setVolumes((prev) => ({ ...prev, [trackId]: newVolume }));
@@ -124,17 +136,35 @@ export const useAudioManager = (song: Song) => {
 
   const handleMuteToggle = (trackId: string) => {
     const track = song.tracks.find(t => t.id === trackId);
+    const newMuted = !mutedTracks[trackId];
     
-    if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && !mutedTracks[trackId]) {
+    if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && !newMuted) {
+      // When unmuting instrumental or all track, mute all other tracks
+      setInstrumentalMode(track.voicePart === "instrumental");
+      setAllTrackMode(track.voicePart === "all");
+      
+      Object.entries(audioRefs.current).forEach(([id, audio]) => {
+        const otherTrack = song.tracks.find(t => t.id === id);
+        if (otherTrack?.voicePart !== track.voicePart) {
+          audio.muted = true;
+          setMutedTracks(prev => ({ ...prev, [id]: true }));
+        }
+      });
+    } else if ((track?.voicePart !== "instrumental" && track?.voicePart !== "all") && !newMuted) {
+      // When unmuting other tracks, mute instrumental and all tracks
       setInstrumentalMode(false);
       setAllTrackMode(false);
+      
+      song.tracks.forEach(t => {
+        if (t.voicePart === "instrumental" || t.voicePart === "all") {
+          audioRefs.current[t.id].muted = true;
+          setMutedTracks(prev => ({ ...prev, [t.id]: true }));
+        }
+      });
     }
 
-    setMutedTracks((prev) => {
-      const newMuted = { ...prev, [trackId]: !prev[trackId] };
-      audioRefs.current[trackId].muted = newMuted[trackId];
-      return newMuted;
-    });
+    setMutedTracks((prev) => ({ ...prev, [trackId]: newMuted }));
+    audioRefs.current[trackId].muted = newMuted;
   };
 
   const handleSeek = (value: number[]) => {
