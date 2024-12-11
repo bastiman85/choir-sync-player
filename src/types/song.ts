@@ -13,12 +13,20 @@ export interface LyricLine {
   endTime: number;
 }
 
+export interface ChapterMarker {
+  id: string;
+  title: string;
+  time: number;
+  type: "verse" | "chorus" | "bridge" | "other";
+}
+
 export interface Song {
   id: string;
   title: string;
   tracks: Track[];
   lyrics: LyricLine[];
   choirId: string;
+  chapters: ChapterMarker[];
 }
 
 export interface Choir {

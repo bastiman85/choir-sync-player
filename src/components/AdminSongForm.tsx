@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-import { Song, Track, LyricLine, VoicePart, Choir } from "@/types/song";
+import { Song, Track, LyricLine, VoicePart, Choir, ChapterMarker } from "@/types/song";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Trash2 } from "lucide-react";
 
 // This would normally come from an API
 const mockChoirs: Choir[] = [
@@ -31,6 +32,9 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
   const [lyrics, setLyrics] = useState<string>(
     initialSong?.lyrics.map((l) => `${l.startTime},${l.endTime},${l.text}`).join("\n") || ""
   );
+  const [chapters, setChapters] = useState<ChapterMarker[]>(
+    initialSong?.chapters || []
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +57,7 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
       choirId,
       tracks,
       lyrics: parsedLyrics,
+      chapters,
     });
   };
 
@@ -70,7 +75,28 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
     }
   };
 
+  const addChapter = () => {
+    const newChapter: ChapterMarker = {
+      id: Math.random().toString(),
+      title: "",
+      time: 0,
+      type: "verse",
+    };
+    setChapters([...chapters, newChapter]);
+  };
+
+  const updateChapter = (id: string, field: keyof ChapterMarker, value: string | number) => {
+    setChapters(chapters.map(chapter => 
+      chapter.id === id ? { ...chapter, [field]: value } : chapter
+    ));
+  };
+
+  const removeChapter = (id: string) => {
+    setChapters(chapters.filter(chapter => chapter.id !== id));
+  };
+
   const voiceParts: VoicePart[] = ["soprano", "alto", "tenor", "bass"];
+  const chapterTypes = ["verse", "chorus", "bridge", "other"];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-6">
@@ -125,6 +151,58 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
           placeholder="0,5,First line of lyrics&#10;5,10,Second line of lyrics"
           rows={10}
         />
+      </div>
+
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <label className="block text-sm font-medium">Chapter Markers</label>
+          <Button type="button" onClick={addChapter} size="sm" variant="outline">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Chapter
+          </Button>
+        </div>
+        <div className="space-y-4">
+          {chapters.map((chapter) => (
+            <div key={chapter.id} className="flex gap-4 items-center">
+              <Input
+                placeholder="Chapter title"
+                value={chapter.title}
+                onChange={(e) => updateChapter(chapter.id, "title", e.target.value)}
+                className="flex-1"
+              />
+              <Input
+                type="number"
+                placeholder="Time (seconds)"
+                value={chapter.time}
+                onChange={(e) => updateChapter(chapter.id, "time", parseFloat(e.target.value))}
+                className="w-32"
+              />
+              <Select 
+                value={chapter.type} 
+                onValueChange={(value) => updateChapter(chapter.id, "type", value)}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {chapterTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon"
+                onClick={() => removeChapter(chapter.id)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
       </div>
 
       <Button type="submit">Save Song</Button>
