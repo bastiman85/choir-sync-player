@@ -26,13 +26,9 @@ export const usePlaybackControls = ({
     if (autoRestartSong) {
       Object.values(audioRefs.current).forEach(audio => {
         audio.currentTime = 0;
+        audio.play().catch(console.error);
       });
-      handleSeek([0]);
-      if (isPlaying) {
-        Object.values(audioRefs.current).forEach(audio => {
-          audio.play();
-        });
-      }
+      setCurrentTime(0);
     } else {
       setIsPlaying(false);
     }
@@ -45,13 +41,9 @@ export const usePlaybackControls = ({
     if (autoRestartSong && firstAudio.currentTime >= (firstAudio.duration - 0.1)) {
       Object.values(audioRefs.current).forEach(audio => {
         audio.currentTime = 0;
+        audio.play().catch(console.error);
       });
-      handleSeek([0]);
-      if (isPlaying) {
-        Object.values(audioRefs.current).forEach(audio => {
-          audio.play();
-        });
-      }
+      setCurrentTime(0);
       return;
     }
 
@@ -64,13 +56,9 @@ export const usePlaybackControls = ({
         if (firstAudio.currentTime >= chapterEndTime - 0.1) {
           Object.values(audioRefs.current).forEach(audio => {
             audio.currentTime = currentChapter.time;
+            audio.play().catch(console.error);
           });
-          handleSeek([currentChapter.time]);
-          if (isPlaying) {
-            Object.values(audioRefs.current).forEach(audio => {
-              audio.play();
-            });
-          }
+          setCurrentTime(currentChapter.time);
         }
       }
     }
@@ -84,7 +72,7 @@ export const usePlaybackControls = ({
       });
     } else {
       Object.values(audioRefs.current).forEach((audio) => {
-        audio.play();
+        audio.play().catch(console.error);
         audio.addEventListener('timeupdate', checkAndHandleLooping);
       });
     }
