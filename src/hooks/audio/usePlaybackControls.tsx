@@ -24,13 +24,15 @@ export const usePlaybackControls = ({
 }: PlaybackControlsProps) => {
   const handleTrackEnd = () => {
     if (autoRestartSong) {
-      handleSeek([0]);
       Object.values(audioRefs.current).forEach(audio => {
         audio.currentTime = 0;
-        if (isPlaying) {
-          audio.play();
-        }
       });
+      handleSeek([0]);
+      if (isPlaying) {
+        Object.values(audioRefs.current).forEach(audio => {
+          audio.play();
+        });
+      }
     } else {
       setIsPlaying(false);
     }
@@ -41,13 +43,15 @@ export const usePlaybackControls = ({
     if (!firstAudio) return;
 
     if (autoRestartSong && firstAudio.currentTime >= (firstAudio.duration - 0.1)) {
-      handleSeek([0]);
       Object.values(audioRefs.current).forEach(audio => {
         audio.currentTime = 0;
-        if (isPlaying) {
-          audio.play();
-        }
       });
+      handleSeek([0]);
+      if (isPlaying) {
+        Object.values(audioRefs.current).forEach(audio => {
+          audio.play();
+        });
+      }
       return;
     }
 
@@ -58,13 +62,15 @@ export const usePlaybackControls = ({
         const chapterEndTime = nextChapter ? nextChapter.time : firstAudio.duration;
         
         if (firstAudio.currentTime >= chapterEndTime - 0.1) {
-          handleSeek([currentChapter.time]);
           Object.values(audioRefs.current).forEach(audio => {
             audio.currentTime = currentChapter.time;
-            if (isPlaying) {
-              audio.play();
-            }
           });
+          handleSeek([currentChapter.time]);
+          if (isPlaying) {
+            Object.values(audioRefs.current).forEach(audio => {
+              audio.play();
+            });
+          }
         }
       }
     }
