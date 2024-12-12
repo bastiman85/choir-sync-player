@@ -25,13 +25,12 @@ export const usePlaybackControls = ({
   const handleTrackEnd = () => {
     if (autoRestartSong) {
       handleSeek([0]);
-      if (isPlaying) {
-        Object.values(audioRefs.current).forEach(audio => {
-          audio.currentTime = 0;
+      Object.values(audioRefs.current).forEach(audio => {
+        audio.currentTime = 0;
+        if (isPlaying) {
           audio.play();
-        });
-      }
-      setCurrentTime(0); // Ensure UI is updated when track ends
+        }
+      });
     } else {
       setIsPlaying(false);
     }
@@ -41,35 +40,31 @@ export const usePlaybackControls = ({
     const firstAudio = Object.values(audioRefs.current)[0];
     if (!firstAudio) return;
 
-    // Check for song loop
     if (autoRestartSong && firstAudio.currentTime >= (firstAudio.duration - 0.1)) {
       handleSeek([0]);
-      if (isPlaying) {
-        Object.values(audioRefs.current).forEach(audio => {
-          audio.currentTime = 0;
+      Object.values(audioRefs.current).forEach(audio => {
+        audio.currentTime = 0;
+        if (isPlaying) {
           audio.play();
-        });
-      }
-      setCurrentTime(0); // Ensure UI is updated when looping
-      return; // Don't check for chapter loop if we're looping the song
+        }
+      });
+      return;
     }
 
-    // Check for chapter loop
     if (autoRestartChapter && song.chapters?.length > 0) {
       const currentChapter = getCurrentChapter();
       if (currentChapter) {
         const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
         const chapterEndTime = nextChapter ? nextChapter.time : firstAudio.duration;
         
-        if (firstAudio.currentTime >= chapterEndTime) {
+        if (firstAudio.currentTime >= chapterEndTime - 0.1) {
           handleSeek([currentChapter.time]);
-          if (isPlaying) {
-            Object.values(audioRefs.current).forEach(audio => {
-              audio.currentTime = currentChapter.time;
+          Object.values(audioRefs.current).forEach(audio => {
+            audio.currentTime = currentChapter.time;
+            if (isPlaying) {
               audio.play();
-            });
-          }
-          setCurrentTime(currentChapter.time); // Ensure UI is updated when looping chapter
+            }
+          });
         }
       }
     }
@@ -96,10 +91,6 @@ export const usePlaybackControls = ({
       audio.currentTime = newTime;
     });
     setCurrentTime(newTime);
-    
-    if (isPlaying) {
-      checkAndHandleLooping();
-    }
   };
 
   return {
