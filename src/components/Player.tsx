@@ -65,7 +65,7 @@ const Player = ({ song }: PlayerProps) => {
               <div className="md:hidden">
                 <details className="group">
                   <summary className="list-none flex items-center justify-between cursor-pointer border rounded-md p-2 hover:bg-gray-50">
-                    <span>Visa kapitel</span>
+                    <span>Visa delar</span>
                     <svg 
                       className="w-5 h-5 transition-transform group-open:rotate-180" 
                       fill="none" 
@@ -96,21 +96,25 @@ const Player = ({ song }: PlayerProps) => {
           />
         </div>
 
-        <PlayerControls
-          isPlaying={isPlaying}
-          autoRestartSong={autoRestartSong}
-          autoRestartChapter={autoRestartChapter}
-          onPlayPauseClick={togglePlayPause}
-          onAutoRestartSongChange={(checked) => {
-            setAutoRestartSong(checked);
-            if (checked) setAutoRestartChapter(false);
-          }}
-          onAutoRestartChapterChange={(checked) => {
-            setAutoRestartChapter(checked);
-            if (checked) setAutoRestartSong(false);
-          }}
-          hasChapters={hasChapters}
-        />
+        <div className="grid grid-cols-2 sm:block gap-4">
+          <div className="flex items-center justify-center sm:block">
+            <PlayerControls
+              isPlaying={isPlaying}
+              autoRestartSong={autoRestartSong}
+              autoRestartChapter={autoRestartChapter}
+              onPlayPauseClick={togglePlayPause}
+              onAutoRestartSongChange={(checked) => {
+                setAutoRestartSong(checked);
+                if (checked) setAutoRestartChapter(false);
+              }}
+              onAutoRestartChapterChange={(checked) => {
+                setAutoRestartChapter(checked);
+                if (checked) setAutoRestartSong(false);
+              }}
+              hasChapters={hasChapters}
+            />
+          </div>
+        </div>
 
         <LyricsDisplay 
           currentTime={currentTime} 

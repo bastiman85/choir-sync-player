@@ -75,7 +75,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
   const currentLyric = getCurrentLyric(currentTime, lyrics);
 
   return (
-    <div className="min-h-[100px] flex items-center justify-center">
+    <div className="min-h-[100px] flex items-center justify-center px-0">
       {htmlContent ? (
         <div className="w-full">
           {error ? (
