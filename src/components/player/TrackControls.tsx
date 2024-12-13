@@ -28,9 +28,14 @@ const TrackControls = ({
   };
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-4 text-gray-100">
       <span className="w-20 font-semibold">{voicePartLabels[track.voicePart] || track.voicePart}</span>
-      <Button variant="ghost" size="icon" onClick={onMuteToggle}>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={onMuteToggle}
+        className="text-gray-300 hover:text-white hover:bg-gray-700"
+      >
         {isMuted ? <VolumeX /> : <Volume2 />}
       </Button>
       <Slider

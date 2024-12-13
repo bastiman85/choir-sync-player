@@ -64,11 +64,11 @@
 }
 
 [data-time="ALLA"] {
-  @apply font-bold uppercase text-sm tracking-wider bg-gray-50 py-2;
+  @apply font-bold uppercase text-sm tracking-wider bg-[#4a90e2] text-white py-2;
 }
 
 [data-time="SOLO"] {
-  @apply font-bold uppercase text-sm tracking-wider bg-gray-50 py-2;
+  @apply font-bold uppercase text-sm tracking-wider bg-[#4a90e2] text-white py-2;
 }
 
 [data-time] i {
@@ -79,7 +79,7 @@
 .lyrics-display {
   /* Header styles */
   .stamrubrik {
-    @apply uppercase mb-2.5 border border-gray-200 bg-gray-200;
+    @apply uppercase mb-2.5 border border-gray-700 bg-gray-800 text-white;
   }
 
   /* Text block styles */
@@ -102,7 +102,7 @@
 
   /* Current section highlight */
   .current-section {
-    @apply bg-gray-50;
+    @apply bg-gray-800;
   }
 
   /* Responsive styles */

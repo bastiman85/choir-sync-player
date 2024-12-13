@@ -35,11 +35,11 @@ const Player = ({ song }: PlayerProps) => {
   const hasChapters = Boolean(song.chapters?.length);
 
   return (
-    <div className="p-3 sm:p-4 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">{song.title}</h2>
+    <div className="px-0 sm:p-4 max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4 px-3 sm:px-0">{song.title}</h2>
       
-      <div className="bg-white rounded-lg p-3 sm:p-4 shadow-lg">
-        <div className={`grid grid-cols-1 ${hasChapters ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
+      <div className="bg-[#1a1d21] text-white rounded-lg overflow-hidden">
+        <div className={`grid grid-cols-1 ${hasChapters ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4 p-3 sm:p-4`}>
           <div className={`${hasChapters ? 'md:col-span-2' : 'md:col-span-2'} space-y-3`}>
             {song.tracks.map((track) => (
               <TrackControls
@@ -54,7 +54,7 @@ const Player = ({ song }: PlayerProps) => {
           </div>
           {hasChapters && (
             <div className="md:col-span-1">
-              <h3 className="text-sm font-medium mb-2">Hoppa direkt</h3>
+              <h3 className="text-sm font-medium mb-2 text-gray-300">Hoppa direkt</h3>
               <ChapterMarkers
                 chapters={song.chapters}
                 onChapterClick={handleChapterClick}
@@ -64,7 +64,7 @@ const Player = ({ song }: PlayerProps) => {
           )}
         </div>
 
-        <div className="my-4">
+        <div className="px-3 sm:px-4 pb-4">
           <Scrubber
             currentTime={currentTime}
             duration={duration}
