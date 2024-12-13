@@ -36,11 +36,11 @@ const Player = ({ song }: PlayerProps) => {
 
   return (
     <div className="p-3 sm:p-4 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">{song.title}</h2>
+      <h2 className="text-2xl font-bold mb-4 text-center sm:text-left">{song.title}</h2>
       
       <div className="bg-white rounded-lg p-3 sm:p-4 shadow-lg">
         <div className={`grid grid-cols-1 ${hasChapters ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
-          <div className={`${hasChapters ? 'md:col-span-2' : 'md:col-span-2'} space-y-3`}>
+          <div className={`${hasChapters ? 'md:col-span-2' : 'md:col-span-2'} space-y-3 md:mt-[30px]`}>
             {song.tracks.map((track) => (
               <TrackControls
                 key={track.id}
@@ -53,13 +53,37 @@ const Player = ({ song }: PlayerProps) => {
             ))}
           </div>
           {hasChapters && (
-            <div className="md:col-span-1">
+            <div className="md:col-span-1 md:block">
               <h3 className="text-sm font-medium mb-2">Hoppa direkt</h3>
-              <ChapterMarkers
-                chapters={song.chapters}
-                onChapterClick={handleChapterClick}
-                currentTime={currentTime}
-              />
+              <div className="md:block hidden">
+                <ChapterMarkers
+                  chapters={song.chapters}
+                  onChapterClick={handleChapterClick}
+                  currentTime={currentTime}
+                />
+              </div>
+              <div className="md:hidden">
+                <details className="group">
+                  <summary className="list-none flex items-center justify-between cursor-pointer border rounded-md p-2 hover:bg-gray-50">
+                    <span>Visa kapitel</span>
+                    <svg 
+                      className="w-5 h-5 transition-transform group-open:rotate-180" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </summary>
+                  <div className="mt-2">
+                    <ChapterMarkers
+                      chapters={song.chapters}
+                      onChapterClick={handleChapterClick}
+                      currentTime={currentTime}
+                    />
+                  </div>
+                </details>
+              </div>
             </div>
           )}
         </div>
