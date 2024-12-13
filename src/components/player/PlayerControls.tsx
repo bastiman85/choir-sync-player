@@ -46,7 +46,7 @@ const PlayerControls = ({
             <span className="text-sm">Upprepa del</span>
             <Switch
               checked={autoRestartChapter}
-              onCheckedChange={onAutoRestartChapter}
+              onCheckedChange={onAutoRestartChapterChange}
             />
           </label>
         )}
