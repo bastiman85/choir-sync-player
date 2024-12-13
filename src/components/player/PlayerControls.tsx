@@ -22,18 +22,18 @@ const PlayerControls = ({
   hasChapters,
 }: PlayerControlsProps) => {
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between mb-4">
+    <div className="flex flex-col gap-4 mb-4">
       <Button 
         onClick={onPlayPauseClick} 
         variant="outline"
-        className="bg-white text-black hover:bg-gray-100 border-gray-200"
+        className="bg-white text-black hover:bg-gray-100 border-gray-200 w-full"
       >
         {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         <span className="ml-2">{isPlaying ? "Pausa" : "Spela"}</span>
       </Button>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <label className="flex items-center justify-between gap-2 w-full sm:w-auto">
+      <div className="flex flex-col gap-4">
+        <label className="flex items-center justify-between gap-2">
           <span className="text-sm">Upprepa sång</span>
           <Switch
             checked={autoRestartSong}
@@ -42,7 +42,7 @@ const PlayerControls = ({
         </label>
 
         {hasChapters && (
-          <label className="flex items-center justify-between gap-2 w-full sm:w-auto">
+          <label className="flex items-center justify-between gap-2">
             <span className="text-sm">Upprepa del</span>
             <Switch
               checked={autoRestartChapter}
