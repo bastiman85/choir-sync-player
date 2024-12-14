@@ -33,43 +33,45 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
   };
 
   useEffect(() => {
-    if (htmlContent && containerRef.current) {
-      if (htmlContent.startsWith('blob:') || htmlContent.startsWith('http')) {
-        fetch(htmlContent)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Kunde inte hämta HTML-innehåll');
-            }
-            return response.text();
-          })
-          .then(html => {
-            processHtmlContent(
-              html,
-              currentTime,
-              activeVoicePart,
-              lastMatchedTimeRef,
-              setCurrentHtmlSection,
-              setError,
-              filterVoicePart,
-              showVoicePart
-            );
-          })
-          .catch(() => {
-            setError('Fel vid laddning av HTML-innehåll');
-          });
-      } else {
-        processHtmlContent(
-          htmlContent,
-          currentTime,
-          activeVoicePart,
-          lastMatchedTimeRef,
-          setCurrentHtmlSection,
-          setError,
-          filterVoicePart,
-          showVoicePart
-        );
+    if (!htmlContent) return;
+
+    const processContent = async () => {
+      try {
+        if (htmlContent.startsWith('blob:') || htmlContent.startsWith('http')) {
+          const response = await fetch(htmlContent);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch HTML content: ${response.status} ${response.statusText}`);
+          }
+          const html = await response.text();
+          processHtmlContent(
+            html,
+            currentTime,
+            activeVoicePart,
+            lastMatchedTimeRef,
+            setCurrentHtmlSection,
+            setError,
+            filterVoicePart,
+            showVoicePart
+          );
+        } else {
+          processHtmlContent(
+            htmlContent,
+            currentTime,
+            activeVoicePart,
+            lastMatchedTimeRef,
+            setCurrentHtmlSection,
+            setError,
+            filterVoicePart,
+            showVoicePart
+          );
+        }
+      } catch (err) {
+        console.error('Error processing HTML content:', err);
+        setError(err instanceof Error ? err.message : 'Ett fel uppstod vid laddning av innehållet');
       }
-    }
+    };
+
+    processContent();
   }, [currentTime, htmlContent, activeVoicePart]);
 
   const currentLyric = getCurrentLyric(currentTime, lyrics);
