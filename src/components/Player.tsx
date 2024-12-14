@@ -5,11 +5,10 @@ import LyricsDisplay from "./player/LyricsDisplay";
 import ChapterMarkers from "./player/ChapterMarkers";
 import PlayerControls from "./player/PlayerControls";
 import { useAudioManager } from "@/hooks/useAudioManager";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
-import { FileText } from "lucide-react";
 
 interface PlayerProps {
   song: Song;
@@ -17,6 +16,12 @@ interface PlayerProps {
 
 const Player = ({ song }: PlayerProps) => {
   const [showChapters, setShowChapters] = useState(false);
+  
+  useEffect(() => {
+    // Update page title
+    document.title = song.title;
+  }, [song.title]);
+
   const {
     isPlaying,
     currentTime,
@@ -106,14 +111,7 @@ const Player = ({ song }: PlayerProps) => {
           hasChapters={hasChapters}
         />
 
-        <LyricsDisplay 
-          currentTime={currentTime} 
-          lyrics={song.lyrics} 
-          htmlContent={song.htmlContent}
-          activeVoicePart={activeVoicePart}
-        />
-
-        <div className="flex justify-center items-center gap-4 mt-6">
+        <div className="flex justify-center items-center gap-4 mt-6 mb-6">
           <ToggleGroup type="single" defaultValue="all">
             <ToggleGroupItem value="all" className="bg-primary text-primary-foreground hover:bg-primary/90">
               Alla
@@ -132,11 +130,20 @@ const Player = ({ song }: PlayerProps) => {
             </ToggleGroupItem>
           </ToggleGroup>
 
-          <Button variant="outline" className="gap-2">
-            <FileText className="h-4 w-4" />
-            PDF
-          </Button>
+          {song.pdf_url && (
+            <Button variant="outline" className="gap-2" onClick={() => window.open(song.pdf_url, '_blank')}>
+              <FileText className="h-4 w-4" />
+              PDF
+            </Button>
+          )}
         </div>
+
+        <LyricsDisplay 
+          currentTime={currentTime} 
+          lyrics={song.lyrics} 
+          htmlContent={song.htmlContent}
+          activeVoicePart={activeVoicePart}
+        />
       </div>
     </div>
   );

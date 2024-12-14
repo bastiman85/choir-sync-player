@@ -9,6 +9,8 @@ interface SongBasicDetailsProps {
   onTitleChange: (title: string) => void;
   choirId: string;
   onChoirIdChange: (choirId: string) => void;
+  pdfUrl: string;
+  onPdfUrlChange: (pdfUrl: string) => void;
 }
 
 const SongBasicDetails = ({
@@ -16,6 +18,8 @@ const SongBasicDetails = ({
   onTitleChange,
   choirId,
   onChoirIdChange,
+  pdfUrl,
+  onPdfUrlChange,
 }: SongBasicDetailsProps) => {
   const { data: choirs = [] } = useQuery({
     queryKey: ['choirs'],
@@ -53,6 +57,16 @@ const SongBasicDetails = ({
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">PDF URL</label>
+        <Input
+          type="url"
+          value={pdfUrl}
+          onChange={(e) => onPdfUrlChange(e.target.value)}
+          placeholder="Ange URL till PDF-fil"
+        />
       </div>
     </div>
   );

@@ -103,6 +103,7 @@ export type Database = {
           created_at: string
           html_content: string | null
           id: string
+          pdf_url: string | null
           title: string
         }
         Insert: {
@@ -110,6 +111,7 @@ export type Database = {
           created_at?: string
           html_content?: string | null
           id?: string
+          pdf_url?: string | null
           title: string
         }
         Update: {
@@ -117,6 +119,7 @@ export type Database = {
           created_at?: string
           html_content?: string | null
           id?: string
+          pdf_url?: string | null
           title?: string
         }
         Relationships: [

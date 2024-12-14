@@ -15,6 +15,7 @@ interface AdminSongFormProps {
 const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
   const [title, setTitle] = useState(initialSong?.title || "");
   const [choirId, setChoirId] = useState(initialSong?.choirId || "");
+  const [pdfUrl, setPdfUrl] = useState(initialSong?.pdf_url || "");
   const [tracks, setTracks] = useState(initialSong?.tracks || []);
   const [lyrics, setLyrics] = useState(
     initialSong?.lyrics.map((l) => `${l.startTime},${l.endTime},${l.text}`).join("\n") || ""
@@ -41,6 +42,7 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
     onSubmit({
       title,
       choirId,
+      pdf_url: pdfUrl,
       tracks,
       lyrics: parsedLyrics,
       chapters,
@@ -55,6 +57,8 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
         onTitleChange={setTitle}
         choirId={choirId}
         onChoirIdChange={setChoirId}
+        pdfUrl={pdfUrl}
+        onPdfUrlChange={setPdfUrl}
       />
 
       <TrackUrlInputs tracks={tracks} onTracksChange={setTracks} />
