@@ -8,6 +8,8 @@ import { useAudioManager } from "@/hooks/useAudioManager";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import { FileText } from "lucide-react";
 
 interface PlayerProps {
   song: Song;
@@ -110,6 +112,31 @@ const Player = ({ song }: PlayerProps) => {
           htmlContent={song.htmlContent}
           activeVoicePart={activeVoicePart}
         />
+
+        <div className="flex justify-center items-center gap-4 mt-6">
+          <ToggleGroup type="single" defaultValue="all">
+            <ToggleGroupItem value="all" className="bg-primary text-primary-foreground hover:bg-primary/90">
+              Alla
+            </ToggleGroupItem>
+            <ToggleGroupItem value="sop" className="bg-primary text-primary-foreground hover:bg-primary/90">
+              SOP
+            </ToggleGroupItem>
+            <ToggleGroupItem value="alt" className="bg-primary text-primary-foreground hover:bg-primary/90">
+              ALT
+            </ToggleGroupItem>
+            <ToggleGroupItem value="ten" className="bg-primary text-primary-foreground hover:bg-primary/90">
+              TEN
+            </ToggleGroupItem>
+            <ToggleGroupItem value="bas" className="bg-primary text-primary-foreground hover:bg-primary/90">
+              BAS
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          <Button variant="outline" className="gap-2">
+            <FileText className="h-4 w-4" />
+            PDF
+          </Button>
+        </div>
       </div>
     </div>
   );
