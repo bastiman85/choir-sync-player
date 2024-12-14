@@ -92,7 +92,7 @@
   .tvastammor,
   .trestammor,
   .fyrastammor {
-    @apply flex mx-0 sm:mx-5;
+    @apply flex mx-0;
   }
 
   /* Hide timestamp */
