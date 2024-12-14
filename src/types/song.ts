@@ -28,6 +28,7 @@ export interface Song {
   choirId: string;
   chapters: ChapterMarker[];
   htmlContent?: string;
+  pdf_url?: string;
 }
 
 export interface Choir {
