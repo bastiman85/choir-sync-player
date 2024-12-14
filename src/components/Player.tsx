@@ -5,12 +5,16 @@ import LyricsDisplay from "./player/LyricsDisplay";
 import ChapterMarkers from "./player/ChapterMarkers";
 import PlayerControls from "./player/PlayerControls";
 import { useAudioManager } from "@/hooks/useAudioManager";
+import { useState } from "react";
+import { Button } from "./ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface PlayerProps {
   song: Song;
 }
 
 const Player = ({ song }: PlayerProps) => {
+  const [showChapters, setShowChapters] = useState(false);
   const {
     isPlaying,
     currentTime,
@@ -30,17 +34,18 @@ const Player = ({ song }: PlayerProps) => {
 
   const handleChapterClick = (time: number) => {
     handleSeek([time]);
+    setShowChapters(false);
   };
 
   const hasChapters = Boolean(song.chapters?.length);
 
   return (
     <div className="p-3 sm:p-4 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">{song.title}</h2>
+      <h2 className="text-2xl font-bold mb-4 text-center sm:text-left">{song.title}</h2>
       
       <div className="bg-white rounded-lg p-3 sm:p-4 shadow-lg">
         <div className={`grid grid-cols-1 ${hasChapters ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
-          <div className={`${hasChapters ? 'md:col-span-2' : 'md:col-span-2'} space-y-3`}>
+          <div className={`${hasChapters ? 'md:col-span-2' : 'md:col-span-2'} space-y-3 md:mt-8`}>
             {song.tracks.map((track) => (
               <TrackControls
                 key={track.id}
@@ -54,12 +59,23 @@ const Player = ({ song }: PlayerProps) => {
           </div>
           {hasChapters && (
             <div className="md:col-span-1">
-              <h3 className="text-sm font-medium mb-2">Hoppa direkt</h3>
-              <ChapterMarkers
-                chapters={song.chapters}
-                onChapterClick={handleChapterClick}
-                currentTime={currentTime}
-              />
+              <div className="md:hidden">
+                <Button 
+                  variant="outline" 
+                  className="w-full mb-2"
+                  onClick={() => setShowChapters(!showChapters)}
+                >
+                  Visa delar {showChapters ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                </Button>
+              </div>
+              <div className={`${showChapters ? 'block' : 'hidden'} md:block`}>
+                <h3 className="text-sm font-medium mb-2 hidden md:block">Hoppa direkt</h3>
+                <ChapterMarkers
+                  chapters={song.chapters}
+                  onChapterClick={handleChapterClick}
+                  currentTime={currentTime}
+                />
+              </div>
             </div>
           )}
         </div>
