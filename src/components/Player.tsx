@@ -16,6 +16,7 @@ interface PlayerProps {
 
 const Player = ({ song }: PlayerProps) => {
   const [showChapters, setShowChapters] = useState(false);
+  const [activeVoicePart, setActiveVoicePart] = useState<string>('all');
   
   useEffect(() => {
     // Update page title
@@ -36,12 +37,15 @@ const Player = ({ song }: PlayerProps) => {
     handleVolumeChange,
     handleMuteToggle,
     handleSeek,
-    activeVoicePart,
   } = useAudioManager(song);
 
   const handleChapterClick = (time: number) => {
     handleSeek([time]);
     setShowChapters(false);
+  };
+
+  const handleVoicePartChange = (value: string) => {
+    setActiveVoicePart(value === 'all' ? 'all' : value.toLowerCase());
   };
 
   const hasChapters = Boolean(song.chapters?.length);
@@ -112,20 +116,20 @@ const Player = ({ song }: PlayerProps) => {
         />
 
         <div className="flex justify-center items-center gap-4 mt-6 mb-6">
-          <ToggleGroup type="single" defaultValue="all">
+          <ToggleGroup type="single" value={activeVoicePart} onValueChange={handleVoicePartChange}>
             <ToggleGroupItem value="all" className="bg-primary text-primary-foreground hover:bg-primary/90">
               Alla
             </ToggleGroupItem>
-            <ToggleGroupItem value="sop" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <ToggleGroupItem value="s" className="bg-primary text-primary-foreground hover:bg-primary/90">
               SOP
             </ToggleGroupItem>
-            <ToggleGroupItem value="alt" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <ToggleGroupItem value="a" className="bg-primary text-primary-foreground hover:bg-primary/90">
               ALT
             </ToggleGroupItem>
-            <ToggleGroupItem value="ten" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <ToggleGroupItem value="t" className="bg-primary text-primary-foreground hover:bg-primary/90">
               TEN
             </ToggleGroupItem>
-            <ToggleGroupItem value="bas" className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <ToggleGroupItem value="b" className="bg-primary text-primary-foreground hover:bg-primary/90">
               BAS
             </ToggleGroupItem>
           </ToggleGroup>
