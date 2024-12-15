@@ -32,6 +32,7 @@ const AdminSongPage = () => {
         id: data.id,
         title: data.title,
         choirId: data.choir_id,
+        pdf_url: data.pdf_url,
         htmlContent: data.html_content,
         tracks: data.tracks.map((track: any) => ({
           id: track.id,
@@ -57,13 +58,16 @@ const AdminSongPage = () => {
 
   const createSong = useMutation({
     mutationFn: async (newSong: Partial<Song>) => {
+      console.log('Creating song with PDF URL:', newSong.pdf_url);
+      
       // First, create the song
       const { data: songData, error: songError } = await supabase
         .from('songs')
         .insert([{
           title: newSong.title,
           choir_id: newSong.choirId,
-          html_content: newSong.htmlContent
+          html_content: newSong.htmlContent,
+          pdf_url: newSong.pdf_url // Make sure to include pdf_url
         }])
         .select()
         .single();
@@ -131,6 +135,7 @@ const AdminSongPage = () => {
   const updateSong = useMutation({
     mutationFn: async (updatedSong: Partial<Song>) => {
       if (!id) throw new Error('No song ID provided');
+      console.log('Updating song with PDF URL:', updatedSong.pdf_url);
 
       // Update song details
       const { error: songError } = await supabase
@@ -138,7 +143,8 @@ const AdminSongPage = () => {
         .update({
           title: updatedSong.title,
           choir_id: updatedSong.choirId,
-          html_content: updatedSong.htmlContent
+          html_content: updatedSong.htmlContent,
+          pdf_url: updatedSong.pdf_url // Make sure to include pdf_url
         })
         .eq('id', id);
       if (songError) throw songError;
@@ -205,6 +211,7 @@ const AdminSongPage = () => {
   });
 
   const handleSubmit = (songData: Partial<Song>) => {
+    console.log('Handling submit with song data:', songData);
     if (isEditMode) {
       updateSong.mutate(songData);
     } else {
