@@ -33,6 +33,9 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
   };
 
   useEffect(() => {
+    console.log('LyricsDisplay - Active voice part:', activeVoicePart);
+    console.log('LyricsDisplay - HTML content:', htmlContent);
+    
     if (!htmlContent) return;
 
     const processContent = async () => {
@@ -43,6 +46,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
             throw new Error(`Failed to fetch HTML content: ${response.status} ${response.statusText}`);
           }
           const html = await response.text();
+          console.log('Fetched HTML content:', html.substring(0, 200) + '...');
           processHtmlContent(
             html,
             currentTime,
@@ -54,6 +58,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
             showVoicePart
           );
         } else {
+          console.log('Processing inline HTML content');
           processHtmlContent(
             htmlContent,
             currentTime,

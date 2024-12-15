@@ -25,6 +25,7 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submitting form with PDF URL:', pdfUrl);
     
     const parsedLyrics: LyricLine[] = lyrics
       .split("\n")
