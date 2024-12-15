@@ -58,31 +58,24 @@ const AdminSongPage = () => {
 
   const createSong = useMutation({
     mutationFn: async (newSong: Partial<Song>) => {
-      console.log('Creating song with PDF URL:', newSong.pdf_url);
-      
-      // First, create the song
       const { data: songData, error: songError } = await supabase
         .from('songs')
         .insert([{
           title: newSong.title,
           choir_id: newSong.choirId,
           html_content: newSong.htmlContent,
-          pdf_url: newSong.pdf_url // Make sure to include pdf_url
+          pdf_url: newSong.pdf_url
         }])
         .select()
         .single();
       if (songError) throw songError;
 
-      // Then create related records
-      const songId = songData.id;
-
-      // Create tracks
       if (newSong.tracks?.length) {
         const { error: tracksError } = await supabase
           .from('tracks')
           .insert(
             newSong.tracks.map(track => ({
-              song_id: songId,
+              song_id: songData.id,
               voice_part: track.voicePart,
               url: track.url
             }))
@@ -90,13 +83,12 @@ const AdminSongPage = () => {
         if (tracksError) throw tracksError;
       }
 
-      // Create lyrics
       if (newSong.lyrics?.length) {
         const { error: lyricsError } = await supabase
           .from('lyrics')
           .insert(
             newSong.lyrics.map(lyric => ({
-              song_id: songId,
+              song_id: songData.id,
               text: lyric.text,
               start_time: lyric.startTime,
               end_time: lyric.endTime || lyric.startTime
@@ -105,13 +97,12 @@ const AdminSongPage = () => {
         if (lyricsError) throw lyricsError;
       }
 
-      // Create chapters
       if (newSong.chapters?.length) {
         const { error: chaptersError } = await supabase
           .from('chapters')
           .insert(
             newSong.chapters.map(chapter => ({
-              song_id: songId,
+              song_id: songData.id,
               title: chapter.title,
               start_time: chapter.time
             }))
@@ -135,21 +126,18 @@ const AdminSongPage = () => {
   const updateSong = useMutation({
     mutationFn: async (updatedSong: Partial<Song>) => {
       if (!id) throw new Error('No song ID provided');
-      console.log('Updating song with PDF URL:', updatedSong.pdf_url);
 
-      // Update song details
       const { error: songError } = await supabase
         .from('songs')
         .update({
           title: updatedSong.title,
           choir_id: updatedSong.choirId,
           html_content: updatedSong.htmlContent,
-          pdf_url: updatedSong.pdf_url // Make sure to include pdf_url
+          pdf_url: updatedSong.pdf_url
         })
         .eq('id', id);
       if (songError) throw songError;
 
-      // Delete existing related records
       const deletePromises = [
         supabase.from('tracks').delete().eq('song_id', id),
         supabase.from('lyrics').delete().eq('song_id', id),
@@ -157,7 +145,6 @@ const AdminSongPage = () => {
       ];
       await Promise.all(deletePromises);
 
-      // Create new related records
       if (updatedSong.tracks?.length) {
         const { error: tracksError } = await supabase
           .from('tracks')
@@ -211,7 +198,6 @@ const AdminSongPage = () => {
   });
 
   const handleSubmit = (songData: Partial<Song>) => {
-    console.log('Handling submit with song data:', songData);
     if (isEditMode) {
       updateSong.mutate(songData);
     } else {
