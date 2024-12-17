@@ -8,6 +8,8 @@ export const processHtmlContent = (
   filterVoicePart: (element: Element, voiceInitial: string) => Element,
   showVoicePart: (element: Element, activeVoicePart: string | undefined) => boolean
 ) => {
+  console.log('processHtmlContent called with voice part:', activeVoicePart);
+  
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
 
@@ -47,6 +49,13 @@ export const processHtmlContent = (
       }
     }
   });
+
+  // Apply voice part filtering if needed
+  if (activeVoicePart && activeVoicePart !== 'all') {
+    console.log('Filtering content for voice part:', activeVoicePart);
+    const filteredContent = filterVoicePart(allSections, activeVoicePart);
+    allSections.innerHTML = filteredContent.outerHTML;
+  }
 
   if (currentSection) {
     const divTime = currentSection.getAttribute('data-time');

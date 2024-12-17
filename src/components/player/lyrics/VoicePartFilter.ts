@@ -1,16 +1,25 @@
 export const filterVoicePart = (element: Element, voiceInitial: string): Element => {
+  console.log('filterVoicePart called with voice part:', voiceInitial);
+  
   const parser = new DOMParser();
   const doc = parser.parseFromString(element.outerHTML, 'text/html');
   const clonedElement = doc.body.firstChild as Element;
   
   if (voiceInitial === 'all') {
+    console.log('Returning all voice parts');
     return clonedElement;
   }
 
+  console.log('Processing sections for voice part:', voiceInitial);
+  
   // First, hide all sections that don't contain the selected voice part
   const sections = clonedElement.querySelectorAll('[data-time]');
+  console.log('Found sections:', sections.length);
+  
   sections.forEach((section) => {
     const hasVoicePart = section.querySelector(`.lattextblock.${voiceInitial.toLowerCase()}, .lattextblock.${voiceInitial.toLowerCase()}.b, .lattextblock.s.a.t.b`);
+    console.log('Section has voice part:', Boolean(hasVoicePart));
+    
     if (!hasVoicePart) {
       (section as HTMLElement).style.cssText = 'display: none !important';
     } else {
@@ -23,6 +32,8 @@ export const filterVoicePart = (element: Element, voiceInitial: string): Element
                            block.classList.contains('b');
         
         const isRelevantBlock = block.classList.contains(voiceInitial.toLowerCase()) || isAllVoices;
+        console.log('Block classes:', block.classList.toString());
+        console.log('Is relevant block:', isRelevantBlock);
         
         if (!isRelevantBlock) {
           (block as HTMLElement).style.cssText = 'display: none !important';
@@ -40,6 +51,8 @@ export const filterVoicePart = (element: Element, voiceInitial: string): Element
 };
 
 export const showVoicePart = (element: Element, activeVoicePart: string | undefined): boolean => {
+  console.log('showVoicePart called with voice part:', activeVoicePart);
+  
   if (!activeVoicePart || activeVoicePart === 'all') {
     return true;
   }
