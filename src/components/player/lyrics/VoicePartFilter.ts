@@ -35,6 +35,7 @@ export const filterVoicePart = (element: Element, voiceInitial: string): Element
 
   // Create a new document with the modified content
   const finalDoc = parser.parseFromString(clonedElement.outerHTML, 'text/html');
+  console.log('Final filtered HTML content:', finalDoc.body.innerHTML);
   return finalDoc.body.firstChild as Element;
 };
 
