@@ -22,9 +22,7 @@ export const filterVoicePart = (element: Element, voiceInitial: string): Element
                            block.classList.contains('t') && 
                            block.classList.contains('b');
         
-        const isRelevantBlock = block.classList.contains(voiceInitial.toLowerCase()) || 
-                               (block.classList.contains(voiceInitial.toLowerCase()) && block.classList.contains('b')) ||
-                               isAllVoices;
+        const isRelevantBlock = block.classList.contains(voiceInitial.toLowerCase()) || isAllVoices;
         
         if (!isRelevantBlock) {
           (block as HTMLElement).style.cssText = 'display: none !important';
