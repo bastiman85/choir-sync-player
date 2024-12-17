@@ -13,29 +13,31 @@ export const filterVoicePart = (element: Element, voiceInitial: string): Element
     const hasVoicePart = section.querySelector(`.lattextblock.${voiceInitial.toLowerCase()}, .lattextblock.${voiceInitial.toLowerCase()}.b, .lattextblock.s.a.t.b`);
     if (!hasVoicePart) {
       (section as HTMLElement).style.cssText = 'display: none !important';
-    }
-  });
-
-  // Then, within visible sections, hide text blocks that don't match the voice part
-  const textBlocks = clonedElement.querySelectorAll('.lattextblock');
-  textBlocks.forEach((block) => {
-    const isAllVoices = block.classList.contains('s') && 
-                       block.classList.contains('a') && 
-                       block.classList.contains('t') && 
-                       block.classList.contains('b');
-    
-    const isRelevantBlock = block.classList.contains(voiceInitial.toLowerCase()) || 
-                           (block.classList.contains(voiceInitial.toLowerCase()) && block.classList.contains('b')) ||
-                           isAllVoices;
-    
-    if (!isRelevantBlock) {
-      (block as HTMLElement).style.cssText = 'display: none !important';
     } else {
-      (block as HTMLElement).style.cssText = 'display: flex !important';
+      // For sections that have the voice part, hide other voice parts
+      const textBlocks = section.querySelectorAll('.lattextblock');
+      textBlocks.forEach((block) => {
+        const isAllVoices = block.classList.contains('s') && 
+                           block.classList.contains('a') && 
+                           block.classList.contains('t') && 
+                           block.classList.contains('b');
+        
+        const isRelevantBlock = block.classList.contains(voiceInitial.toLowerCase()) || 
+                               (block.classList.contains(voiceInitial.toLowerCase()) && block.classList.contains('b')) ||
+                               isAllVoices;
+        
+        if (!isRelevantBlock) {
+          (block as HTMLElement).style.cssText = 'display: none !important';
+        } else {
+          (block as HTMLElement).style.cssText = 'display: flex !important';
+        }
+      });
     }
   });
 
-  return clonedElement;
+  // Create a new document with the modified content
+  const finalDoc = parser.parseFromString(clonedElement.outerHTML, 'text/html');
+  return finalDoc.body.firstChild as Element;
 };
 
 export const showVoicePart = (element: Element, activeVoicePart: string | undefined): boolean => {
