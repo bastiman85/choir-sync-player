@@ -92,6 +92,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
               ref={containerRef}
               className="lyrics-display w-full text-center space-y-4"
               dangerouslySetInnerHTML={{ __html: currentHtmlSection || '' }}
+              key={`${activeVoicePart}-${currentTime}`} // Force re-render when voice part changes
             />
           )}
         </div>
