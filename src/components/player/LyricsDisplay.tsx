@@ -12,6 +12,7 @@ interface LyricsDisplayProps {
 
 const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: LyricsDisplayProps) => {
   const [currentHtmlSection, setCurrentHtmlSection] = useState<string | null>(null);
+  const [processedContent, setProcessedContent] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastMatchedTimeRef = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +80,13 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     processContent();
   }, [currentTime, htmlContent, activeVoicePart]);
 
+  // Update processed content when currentHtmlSection changes
+  useEffect(() => {
+    if (currentHtmlSection) {
+      setProcessedContent(currentHtmlSection);
+    }
+  }, [currentHtmlSection]);
+
   const currentLyric = getCurrentLyric(currentTime, lyrics);
 
   return (
@@ -91,8 +99,8 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
             <div 
               ref={containerRef}
               className="lyrics-display w-full text-center space-y-4"
-              dangerouslySetInnerHTML={{ __html: currentHtmlSection || '' }}
-              key={`${activeVoicePart}-${currentTime}`} // Force re-render when voice part changes
+              dangerouslySetInnerHTML={{ __html: processedContent || '' }}
+              key={`${activeVoicePart}-${currentTime}-${processedContent?.length}`}
             />
           )}
         </div>
