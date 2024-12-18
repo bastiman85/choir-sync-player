@@ -51,11 +51,11 @@ export const processHtmlContent = (
   });
 
   // Apply voice part filtering if needed
-  let finalContent = allSections;
+  let finalContent: HTMLDivElement = allSections;
   if (activeVoicePart && activeVoicePart !== 'all') {
     console.log('Filtering content for voice part:', activeVoicePart);
     const filteredContent = filterVoicePart(allSections, activeVoicePart);
-    finalContent = filteredContent;
+    finalContent = filteredContent as HTMLDivElement;
     console.log('Final filtered HTML content:', finalContent.outerHTML);
   }
 
