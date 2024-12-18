@@ -51,25 +51,27 @@ export const processHtmlContent = (
   });
 
   // Apply voice part filtering if needed
+  let finalContent = allSections;
   if (activeVoicePart && activeVoicePart !== 'all') {
     console.log('Filtering content for voice part:', activeVoicePart);
     const filteredContent = filterVoicePart(allSections, activeVoicePart);
-    allSections.innerHTML = filteredContent.outerHTML;
+    finalContent = filteredContent;
+    console.log('Final filtered HTML content:', finalContent.outerHTML);
   }
 
   if (currentSection) {
     const divTime = currentSection.getAttribute('data-time');
     if (divTime !== lastMatchedTimeRef.current) {
-      setCurrentHtmlSection(allSections.innerHTML);
+      setCurrentHtmlSection(finalContent.outerHTML);
       lastMatchedTimeRef.current = divTime;
       setError(null);
     }
   } else if (currentTime === 0) {
-    setCurrentHtmlSection(tempDiv.innerHTML);
+    setCurrentHtmlSection(finalContent.outerHTML);
     lastMatchedTimeRef.current = divs[0].getAttribute('data-time');
     setError(null);
   } else {
-    setCurrentHtmlSection(allSections.innerHTML);
+    setCurrentHtmlSection(finalContent.outerHTML);
     lastMatchedTimeRef.current = null;
   }
 };
