@@ -8,9 +8,6 @@ export const processHtmlContent = (
   filterVoicePart: (element: Element, voiceInitial: string) => Element,
   showVoicePart: (element: Element, activeVoicePart: string | undefined) => boolean
 ) => {
-  console.log('processHtmlContent called with voice part:', activeVoicePart);
-  console.log('Current time:', currentTime);
-  
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
 
@@ -25,60 +22,26 @@ export const processHtmlContent = (
     return;
   }
 
-  // Find current section and show all sections
-  let currentSection: Element | null = null;
-  const allSections = document.createElement('div');
-
-  // First, clone all divs without any current-section class
+  // Find current section
   divs.forEach((div) => {
-    const divClone = div.cloneNode(true) as Element;
-    divClone.classList.remove('current-section'); // Ensure no section has the highlight class initially
-    allSections.appendChild(divClone);
-  });
-
-  // Then find and highlight the current section
-  const allClonedDivs = allSections.querySelectorAll('[data-time]');
-  allClonedDivs.forEach((div, index) => {
+    div.classList.remove('current-section');
     const divTime = div.getAttribute('data-time');
     if (divTime && divTime <= timeString) {
-      const nextDiv = allClonedDivs[index + 1];
-      const nextTime = nextDiv?.getAttribute('data-time');
+      const nextDiv = Array.from(divs).find(d => {
+        const nextTime = d.getAttribute('data-time');
+        return nextTime && nextTime > timeString;
+      });
       
-      if (!nextDiv || (nextTime && timeString < nextTime)) {
+      if (!nextDiv) {
         div.classList.add('current-section');
-        currentSection = div;
       }
     }
   });
 
-  // Apply voice part filtering if needed
-  let finalContent: HTMLDivElement = allSections;
-  if (activeVoicePart && activeVoicePart !== 'all') {
-    console.log('Starting voice part filtering for:', activeVoicePart);
-    console.log('Content before filtering:', allSections.outerHTML);
-    const filteredContent = filterVoicePart(allSections, activeVoicePart);
-    finalContent = filteredContent as HTMLDivElement;
-    console.log('Content after filtering:', finalContent.outerHTML);
-  } else {
-    console.log('No filtering needed, using all sections');
+  if (currentTime === 0) {
+    divs[0].classList.add('current-section');
   }
 
-  if (currentSection) {
-    const divTime = currentSection.getAttribute('data-time');
-    if (divTime !== lastMatchedTimeRef.current) {
-      console.log('Updating section with time:', divTime);
-      setCurrentHtmlSection(finalContent.outerHTML);
-      lastMatchedTimeRef.current = divTime;
-      setError(null);
-    }
-  } else if (currentTime === 0) {
-    console.log('Setting initial content');
-    setCurrentHtmlSection(finalContent.outerHTML);
-    lastMatchedTimeRef.current = divs[0].getAttribute('data-time');
-    setError(null);
-  } else {
-    console.log('Setting content without current section');
-    setCurrentHtmlSection(finalContent.outerHTML);
-    lastMatchedTimeRef.current = null;
-  }
+  setCurrentHtmlSection(tempDiv.innerHTML);
+  setError(null);
 };

@@ -15,7 +15,6 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
   const containerRef = useRef<HTMLDivElement>(null);
   const lastMatchedTimeRef = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [key, setKey] = useState(0); // Add a key state to force re-renders
 
   const getCurrentLyric = (time: number, lyrics: LyricLine[]): LyricLine | undefined => {
     const sortedLyrics = [...lyrics].sort((a, b) => a.startTime - b.startTime);
@@ -34,9 +33,6 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
   };
 
   useEffect(() => {
-    console.log('LyricsDisplay - Active voice part:', activeVoicePart);
-    console.log('LyricsDisplay - HTML content:', htmlContent);
-    
     if (!htmlContent) return;
 
     const processContent = async () => {
@@ -47,31 +43,23 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
             throw new Error(`Failed to fetch HTML content: ${response.status} ${response.statusText}`);
           }
           const html = await response.text();
-          console.log('Fetched HTML content:', html.substring(0, 200) + '...');
           processHtmlContent(
             html,
             currentTime,
             activeVoicePart,
             lastMatchedTimeRef,
-            (html) => {
-              setCurrentHtmlSection(html);
-              setKey(prev => prev + 1); // Increment key to force re-render
-            },
+            setCurrentHtmlSection,
             setError,
             filterVoicePart,
             showVoicePart
           );
         } else {
-          console.log('Processing inline HTML content');
           processHtmlContent(
             htmlContent,
             currentTime,
             activeVoicePart,
             lastMatchedTimeRef,
-            (html) => {
-              setCurrentHtmlSection(html);
-              setKey(prev => prev + 1); // Increment key to force re-render
-            },
+            setCurrentHtmlSection,
             setError,
             filterVoicePart,
             showVoicePart
@@ -99,7 +87,6 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
               ref={containerRef}
               className="lyrics-display w-full text-center space-y-4"
               dangerouslySetInnerHTML={{ __html: currentHtmlSection || '' }}
-              key={key} // Use the key state to force re-render
             />
           )}
         </div>
