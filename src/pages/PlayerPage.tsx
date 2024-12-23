@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Player from "@/components/Player";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +12,18 @@ const isValidVoicePart = (part: string): part is VoicePart => {
 const PlayerPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Load player-specific script
+    const script = document.createElement('script');
+    script.src = '/src/pages/player.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   const { data: song, isLoading } = useQuery({
     queryKey: ['song', slug],

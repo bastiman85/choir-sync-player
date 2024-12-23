@@ -1,7 +1,10 @@
 import { LyricLine } from "@/types/song";
-import { useEffect, useRef, useState } from "react";
-import { filterVoicePart, showVoicePart } from "./lyrics/VoicePartFilter";
+import { useEffect, useState } from "react";
 import { processHtmlContent } from "./lyrics/HtmlContentProcessor";
+import { filterVoicePart, showVoicePart } from "./lyrics/VoicePartFilter";
+import { getCurrentLyric } from "./lyrics/LyricsProcessor";
+import { PlainLyricsView } from "./lyrics/PlainLyricsView";
+import { HtmlLyricsView } from "./lyrics/HtmlLyricsView";
 
 interface LyricsDisplayProps {
   currentTime: number;
@@ -12,25 +15,8 @@ interface LyricsDisplayProps {
 
 const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: LyricsDisplayProps) => {
   const [currentHtmlSection, setCurrentHtmlSection] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const lastMatchedTimeRef = useRef<string | null>(null);
+  const lastMatchedTimeRef = { current: null };
   const [error, setError] = useState<string | null>(null);
-
-  const getCurrentLyric = (time: number, lyrics: LyricLine[]): LyricLine | undefined => {
-    const sortedLyrics = [...lyrics].sort((a, b) => a.startTime - b.startTime);
-    
-    for (let i = 0; i < sortedLyrics.length; i++) {
-      const currentLine = sortedLyrics[i];
-      const nextLine = sortedLyrics[i + 1];
-      
-      if (time >= currentLine.startTime && 
-          (!nextLine || time < nextLine.startTime)) {
-        return currentLine;
-      }
-    }
-    
-    return undefined;
-  };
 
   useEffect(() => {
     if (!htmlContent) return;
@@ -81,20 +67,10 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     <div className="rounded-lg min-h-[100px] flex items-center justify-center">
       {htmlContent ? (
         <div className="w-full">
-          {error ? (
-            <p className="text-red-500 text-center">{error}</p>
-          ) : (
-            <div 
-              ref={containerRef}
-              className="lyrics-display w-full text-center space-y-4"
-              dangerouslySetInnerHTML={{ __html: currentHtmlSection || '' }}
-            />
-          )}
+          <HtmlLyricsView htmlContent={currentHtmlSection || ''} error={error} />
         </div>
       ) : (
-        <p className="text-xl font-mono text-center">
-          {currentLyric?.text || "♪ ♫ ♪ ♫"}
-        </p>
+        <PlainLyricsView currentLyric={currentLyric} />
       )}
     </div>
   );
