@@ -37,7 +37,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
 
     const processContent = async () => {
       try {
-        if (htmlContent.startsWith('blob:') || htmlContent.startsWith('http')) {
+        if (htmlContent.startsWith('blob:') || (htmlContent.startsWith('http') && /^https?:\/\/[^\s/$.?#].[^\s]*$/.test(htmlContent))) {
           const response = await fetch(htmlContent);
           if (!response.ok) {
             throw new Error(`Failed to fetch HTML content: ${response.status} ${response.statusText}`);
@@ -54,6 +54,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
             showVoicePart
           );
         } else {
+          // Handle inline HTML content
           processHtmlContent(
             htmlContent,
             currentTime,
