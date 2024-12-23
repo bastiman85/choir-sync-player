@@ -22,23 +22,27 @@ export const processHtmlContent = (
     return;
   }
 
-  // Find current section
-  divs.forEach((div) => {
+  // Remove current-section class from all divs first
+  divs.forEach(div => {
     div.classList.remove('current-section');
-    const divTime = div.getAttribute('data-time');
-    if (divTime && divTime <= timeString) {
-      const nextDiv = Array.from(divs).find(d => {
-        const nextTime = d.getAttribute('data-time');
-        return nextTime && nextTime > timeString;
-      });
-      
-      if (!nextDiv) {
-        div.classList.add('current-section');
-      }
-    }
   });
 
-  if (currentTime === 0) {
+  // Find the current section
+  let currentDiv = null;
+  for (const div of divs) {
+    const divTime = div.getAttribute('data-time');
+    if (divTime && divTime <= timeString) {
+      currentDiv = div;
+    } else {
+      break;
+    }
+  }
+
+  // Add current-section class to the found div
+  if (currentDiv) {
+    currentDiv.classList.add('current-section');
+  } else if (currentTime === 0 && divs.length > 0) {
+    // If at the start, highlight first section
     divs[0].classList.add('current-section');
   }
 
