@@ -123,16 +123,34 @@
 /* Filter button styles */
 [role="tab"][data-state="on"],
 [role="radio"][data-state="checked"] {
-  @apply bg-black text-white font-bold text-[1.3em];
+  @apply bg-black text-white font-bold text-[1.4em];
 }
 
 /* Voice part filter buttons */
 [class^="voice-part-"] {
-  @apply font-bold text-[1.3em];
+  @apply font-bold text-[1.4em];
 }
 
 /* Slider and toggle styles */
 .slider-thumb,
 [role="switch"][data-state="checked"] {
-  @apply bg-secondary border-secondary;
+  @apply bg-secondary border-0;
+}
+
+/* Override slider thumb styles */
+[type="range"]::-webkit-slider-thumb {
+  @apply bg-secondary;
+}
+
+[type="range"]::-moz-range-thumb {
+  @apply bg-secondary;
+}
+
+/* Override switch thumb styles */
+[role="switch"][data-state="checked"] {
+  @apply bg-primary;
+}
+
+[role="switch"][data-state="checked"] span {
+  @apply bg-secondary;
 }
