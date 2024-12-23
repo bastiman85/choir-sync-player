@@ -32,7 +32,7 @@ export default {
           foreground: "#000000",
         },
         secondary: {
-          DEFAULT: "#7C3AED",
+          DEFAULT: "#17212b",
           foreground: "#ffffff",
         },
         destructive: {

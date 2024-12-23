@@ -123,16 +123,16 @@
 /* Filter button styles */
 [role="tab"][data-state="on"],
 [role="radio"][data-state="checked"] {
-  @apply bg-black text-white font-bold text-[1.2em];
+  @apply bg-black text-white font-bold text-[1.3em];
 }
 
 /* Voice part filter buttons */
 [class^="voice-part-"] {
-  @apply font-bold text-[1.2em];
+  @apply font-bold text-[1.3em];
 }
 
 /* Slider and toggle styles */
 .slider-thumb,
 [role="switch"][data-state="checked"] {
-  @apply bg-primary border-primary;
+  @apply bg-secondary border-secondary;
 }
