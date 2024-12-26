@@ -9,10 +9,13 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
+// Get the base URL from the environment or default to '/'
+const basename = import.meta.env.BASE_URL || '/';
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
+      <Router basename={basename}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/player/:slug" element={<PlayerPage />} />
