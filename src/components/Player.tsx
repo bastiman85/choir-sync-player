@@ -161,6 +161,7 @@ const Player = ({ song }: PlayerProps) => {
           currentTime={currentTime} 
           lyrics={song.lyrics} 
           htmlContent={song.htmlContent}
+          htmlFileUrl={song.html_file_url}
           activeVoicePart={activeVoicePart}
         />
       </div>

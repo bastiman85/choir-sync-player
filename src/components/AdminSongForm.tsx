@@ -22,6 +22,7 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
   );
   const [chapters, setChapters] = useState(initialSong?.chapters || []);
   const [htmlContentUrl, setHtmlContentUrl] = useState(initialSong?.htmlContent || "");
+  const [htmlFileUrl, setHtmlFileUrl] = useState(initialSong?.html_file_url || "");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +49,7 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
       lyrics: parsedLyrics,
       chapters,
       htmlContent: htmlContentUrl,
+      html_file_url: htmlFileUrl,
     });
   };
 
@@ -69,11 +71,13 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
       <HtmlContentInput
         htmlContentUrl={htmlContentUrl}
         onHtmlContentUrlChange={setHtmlContentUrl}
+        htmlFileUrl={htmlFileUrl}
+        onHtmlFileUrlChange={setHtmlFileUrl}
       />
 
       <ChapterMarkers chapters={chapters} onChaptersChange={setChapters} />
 
-      <Button type="submit">Save Song</Button>
+      <Button type="submit">Spara sång</Button>
     </form>
   );
 };

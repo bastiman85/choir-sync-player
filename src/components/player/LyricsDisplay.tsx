@@ -10,22 +10,30 @@ interface LyricsDisplayProps {
   currentTime: number;
   lyrics: LyricLine[];
   htmlContent?: string;
+  htmlFileUrl?: string;
   activeVoicePart?: string;
 }
 
-const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: LyricsDisplayProps) => {
+const LyricsDisplay = ({ currentTime, lyrics, htmlContent, htmlFileUrl, activeVoicePart }: LyricsDisplayProps) => {
   const [currentHtmlSection, setCurrentHtmlSection] = useState<string | null>(null);
   const lastMatchedTimeRef = { current: null };
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!htmlContent) return;
+    if (!htmlContent && !htmlFileUrl) return;
 
     const processContent = async () => {
       try {
-        if (htmlContent.startsWith('blob:') || htmlContent.startsWith('http')) {
+        const contentToProcess = htmlFileUrl || htmlContent;
+        
+        if (!contentToProcess) {
+          setError('Inget HTML-innehåll tillgängligt');
+          return;
+        }
+
+        if (contentToProcess.startsWith('blob:') || contentToProcess.startsWith('http')) {
           try {
-            const response = await fetch(htmlContent);
+            const response = await fetch(contentToProcess);
             if (!response.ok) {
               throw new Error(`Kunde inte hämta HTML-innehållet: ${response.status} ${response.statusText}`);
             }
@@ -48,7 +56,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
         } else {
           // Handle inline HTML content
           processHtmlContent(
-            htmlContent,
+            contentToProcess,
             currentTime,
             activeVoicePart,
             lastMatchedTimeRef,
@@ -65,13 +73,13 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
     };
 
     processContent();
-  }, [currentTime, htmlContent, activeVoicePart]);
+  }, [currentTime, htmlContent, htmlFileUrl, activeVoicePart]);
 
   const currentLyric = getCurrentLyric(currentTime, lyrics);
 
   return (
     <div className="rounded-lg min-h-[100px] flex items-center justify-center">
-      {htmlContent ? (
+      {(htmlContent || htmlFileUrl) ? (
         <div className="w-full">
           <HtmlLyricsView htmlContent={currentHtmlSection || ''} error={error} />
         </div>
