@@ -23,22 +23,28 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
 
     const processContent = async () => {
       try {
-        if (htmlContent.startsWith('blob:') || (htmlContent.startsWith('http') && /^https?:\/\/[^\s/$.?#].[^\s]*$/.test(htmlContent))) {
-          const response = await fetch(htmlContent);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch HTML content: ${response.status} ${response.statusText}`);
+        if (htmlContent.startsWith('blob:') || htmlContent.startsWith('http')) {
+          try {
+            const response = await fetch(htmlContent);
+            if (!response.ok) {
+              throw new Error(`Kunde inte hämta HTML-innehållet: ${response.status} ${response.statusText}`);
+            }
+            const html = await response.text();
+            processHtmlContent(
+              html,
+              currentTime,
+              activeVoicePart,
+              lastMatchedTimeRef,
+              setCurrentHtmlSection,
+              setError,
+              filterVoicePart,
+              showVoicePart
+            );
+          } catch (err) {
+            console.error('Error fetching HTML content:', err);
+            setError(err instanceof Error ? err.message : 'Ett fel uppstod vid hämtning av innehållet');
+            return;
           }
-          const html = await response.text();
-          processHtmlContent(
-            html,
-            currentTime,
-            activeVoicePart,
-            lastMatchedTimeRef,
-            setCurrentHtmlSection,
-            setError,
-            filterVoicePart,
-            showVoicePart
-          );
         } else {
           // Handle inline HTML content
           processHtmlContent(
@@ -54,7 +60,7 @@ const LyricsDisplay = ({ currentTime, lyrics, htmlContent, activeVoicePart }: Ly
         }
       } catch (err) {
         console.error('Error processing HTML content:', err);
-        setError(err instanceof Error ? err.message : 'Ett fel uppstod vid laddning av innehållet');
+        setError(err instanceof Error ? err.message : 'Ett fel uppstod vid bearbetning av innehållet');
       }
     };
 
