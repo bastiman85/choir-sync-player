@@ -34,6 +34,7 @@ const AdminSongPage = () => {
         choirId: data.choir_id,
         pdf_url: data.pdf_url,
         htmlContent: data.html_content,
+        html_file_url: data.html_file_url,
         tracks: data.tracks.map((track: any) => ({
           id: track.id,
           url: track.url,
@@ -64,6 +65,7 @@ const AdminSongPage = () => {
           title: newSong.title,
           choir_id: newSong.choirId,
           html_content: newSong.htmlContent,
+          html_file_url: newSong.html_file_url,
           pdf_url: newSong.pdf_url
         }])
         .select()
@@ -133,6 +135,7 @@ const AdminSongPage = () => {
           title: updatedSong.title,
           choir_id: updatedSong.choirId,
           html_content: updatedSong.htmlContent,
+          html_file_url: updatedSong.html_file_url,
           pdf_url: updatedSong.pdf_url
         })
         .eq('id', id);
