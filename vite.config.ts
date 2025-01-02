@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' && componentTagger(),
     {
       name: 'html-transform',
-      transformIndexHtml(html) {
+      transformIndexHtml(html: string) {
         if (mode === 'development') {
           return html.replace(
             '</body>',
