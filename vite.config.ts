@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: "./", // This ensures assets are loaded relative to the HTML file
+  base: "", // Changed from "./" to "" to support both relative and absolute paths
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
   }
