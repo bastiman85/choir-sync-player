@@ -11,6 +11,18 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
+    {
+      name: 'html-transform',
+      transformIndexHtml(html) {
+        if (mode === 'development') {
+          return html.replace(
+            '</body>',
+            `<script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script></body>`
+          );
+        }
+        return html;
+      },
+    },
   ].filter(Boolean),
   resolve: {
     alias: {
