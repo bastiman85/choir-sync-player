@@ -31,7 +31,7 @@ const TrackControls = ({
     <div className="flex items-center gap-4">
       <span className="w-20 font-semibold">{voicePartLabels[track.voicePart] || track.voicePart}</span>
       <Button variant="ghost" size="icon" onClick={onMuteToggle}>
-        {isMuted ? <VolumeX /> : <Volume2 />}
+        {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
       </Button>
       <Slider
         value={[volume * 100]}
