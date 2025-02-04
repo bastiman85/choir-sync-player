@@ -32,7 +32,6 @@ export const useAudioSync = ({
     lastUpdateTime.current = now;
 
     // Only force sync tracks during specific events (not continuously)
-    const SYNC_THRESHOLD = 0.05;
     tracks.forEach((track) => {
       if (!track.muted) {
         // Ensure track is playing if it should be
@@ -45,17 +44,9 @@ export const useAudioSync = ({
         }
       }
     });
-  };
 
-  // Separate function for UI updates
-  const updateUI = () => {
-    const now = performance.now();
-    if (now - lastUIUpdate.current >= 100) {
-      if (Math.abs(currentTime - truePosition.current) > 0.05) {
-        setCurrentTime(truePosition.current);
-        lastUIUpdate.current = now;
-      }
-    }
+    // Always update UI with the true position to avoid jumpiness
+    setCurrentTime(truePosition.current);
   };
 
   const resetTruePosition = (time: number) => {
@@ -72,10 +63,20 @@ export const useAudioSync = ({
   };
 
   useEffect(() => {
-    // Only start UI update interval when playing
-    if (isPlaying && !uiUpdateInterval.current) {
+    // Only start sync interval when playing
+    if (isPlaying) {
       synchronizeTracks(); // Initial sync
-      uiUpdateInterval.current = window.setInterval(updateUI, 100);
+      
+      // Update UI more frequently but only while playing
+      uiUpdateInterval.current = window.setInterval(() => {
+        const now = performance.now();
+        const timeDelta = (now - lastUpdateTime.current) / 1000;
+        truePosition.current += timeDelta;
+        lastUpdateTime.current = now;
+        
+        // Update UI with true position
+        setCurrentTime(truePosition.current);
+      }, 50); // More frequent updates for smoother UI
     }
     
     return () => {
