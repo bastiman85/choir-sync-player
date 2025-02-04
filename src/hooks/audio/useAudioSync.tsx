@@ -15,6 +15,7 @@ export const useAudioSync = ({
 }: UseAudioSyncProps) => {
   const lastUpdateTime = useRef<number>(performance.now());
   const truePosition = useRef<number>(0);
+  const updateThreshold = useRef<number>(100); // Minimum time between UI updates in ms
   const lastUIUpdate = useRef<number>(0);
   const uiUpdateInterval = useRef<number | null>(null);
 
@@ -31,9 +32,28 @@ export const useAudioSync = ({
     
     lastUpdateTime.current = now;
 
-    // Only force sync tracks during specific events (not continuously)
+    // Only update UI if enough time has passed since the last update
+    if (now - lastUIUpdate.current >= updateThreshold.current) {
+      lastUIUpdate.current = now;
+      
+      // Find the first non-muted track to use as reference
+      const referenceTrack = tracks.find(track => !track.muted && !track.paused);
+      if (referenceTrack) {
+        truePosition.current = referenceTrack.currentTime;
+      }
+
+      // Update UI with the true position
+      setCurrentTime(truePosition.current);
+    }
+
+    // Sync tracks that are significantly out of sync (more than 0.1 seconds)
     tracks.forEach((track) => {
       if (!track.muted) {
+        const drift = Math.abs(track.currentTime - truePosition.current);
+        if (drift > 0.1) {
+          track.currentTime = truePosition.current;
+        }
+
         // Ensure track is playing if it should be
         if (isPlaying && track.paused) {
           track.currentTime = truePosition.current;
@@ -44,9 +64,6 @@ export const useAudioSync = ({
         }
       }
     });
-
-    // Always update UI with the true position to avoid jumpiness
-    setCurrentTime(truePosition.current);
   };
 
   const resetTruePosition = (time: number) => {
@@ -70,12 +87,16 @@ export const useAudioSync = ({
       // Update UI more frequently but only while playing
       uiUpdateInterval.current = window.setInterval(() => {
         const now = performance.now();
-        const timeDelta = (now - lastUpdateTime.current) / 1000;
-        truePosition.current += timeDelta;
-        lastUpdateTime.current = now;
-        
-        // Update UI with true position
-        setCurrentTime(truePosition.current);
+        if (now - lastUIUpdate.current >= updateThreshold.current) {
+          const tracks = Object.values(audioRefs.current);
+          const referenceTrack = tracks.find(track => !track.muted && !track.paused);
+          
+          if (referenceTrack) {
+            truePosition.current = referenceTrack.currentTime;
+            lastUIUpdate.current = now;
+            setCurrentTime(truePosition.current);
+          }
+        }
       }, 50); // More frequent updates for smoother UI
     }
     
