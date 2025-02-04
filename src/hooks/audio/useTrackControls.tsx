@@ -1,7 +1,7 @@
-import { Song } from "@/types/song";
 import { RefObject } from "react";
+import { Song } from "@/types/song";
 
-interface TrackControlsProps {
+interface UseTrackControlsProps {
   audioRefs: RefObject<{ [key: string]: HTMLAudioElement }>;
   song: Song;
   volumes: { [key: string]: number };
@@ -11,6 +11,7 @@ interface TrackControlsProps {
   setInstrumentalMode: (value: boolean) => void;
   setAllTrackMode: (value: boolean) => void;
   setActiveVoicePart: (value: string) => void;
+  synchronizeTracks: () => void;
 }
 
 export const useTrackControls = ({
@@ -23,24 +24,8 @@ export const useTrackControls = ({
   setInstrumentalMode,
   setAllTrackMode,
   setActiveVoicePart,
-}: TrackControlsProps) => {
-  const synchronizeTracks = () => {
-    const tracks = Object.values(audioRefs.current);
-    if (tracks.length === 0) return;
-
-    const referenceTrack = tracks.find(track => !track.muted) || tracks[0];
-    const referenceTime = referenceTrack.currentTime;
-
-    tracks.forEach((track) => {
-      if (track !== referenceTrack) {
-        const timeDiff = Math.abs(track.currentTime - referenceTime);
-        if (timeDiff > 0.1) {
-          track.currentTime = referenceTime;
-        }
-      }
-    });
-  };
-
+  synchronizeTracks,
+}: UseTrackControlsProps) => {
   const handleVolumeChange = (trackId: string, value: number) => {
     const newVolume = value / 100;
     const track = song.tracks.find(t => t.id === trackId);
@@ -114,7 +99,6 @@ export const useTrackControls = ({
     setMutedTracks(prev => ({ ...prev, [trackId]: newMuted }));
     if (audioRefs.current[trackId]) {
       audioRefs.current[trackId].muted = newMuted;
-      // Synchronize tracks after mute/unmute
       synchronizeTracks();
     }
   };

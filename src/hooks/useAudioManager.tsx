@@ -3,11 +3,11 @@ import { Song } from "@/types/song";
 import { useAudioState } from "./audio/useAudioState";
 import { useChapterManagement } from "./audio/useChapterManagement";
 import { useTrackControls } from "./audio/useTrackControls";
-import { usePlaybackControls } from "./audio/usePlaybackControls";
+import { useAudioControls } from "./audio/useAudioControls";
+import { useAudioSync } from "./audio/useAudioSync";
 
 export const useAudioManager = (song: Song) => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
-  const syncCheckInterval = useRef<number | null>(null);
   
   const {
     isPlaying,
@@ -34,29 +34,19 @@ export const useAudioManager = (song: Song) => {
 
   const { getCurrentChapter } = useChapterManagement(currentTime, song);
 
-  const synchronizeTracks = () => {
-    const tracks = Object.values(audioRefs.current);
-    if (tracks.length === 0) return;
+  const { synchronizeTracks } = useAudioSync({
+    audioRefs,
+    isPlaying,
+    currentTime,
+    setCurrentTime,
+  });
 
-    // Find the first unmuted track to use as a reference
-    const referenceTrack = tracks.find(track => !track.muted) || tracks[0];
-    const referenceTime = referenceTrack.currentTime;
-
-    // Update currentTime state to match the actual playback position
-    if (Math.abs(currentTime - referenceTime) > 0.1) {
-      setCurrentTime(referenceTime);
-    }
-
-    // Only sync tracks that are significantly out of sync
-    tracks.forEach((track) => {
-      if (track !== referenceTrack) {
-        const timeDiff = Math.abs(track.currentTime - referenceTime);
-        if (timeDiff > 0.1) {
-          track.currentTime = referenceTime;
-        }
-      }
-    });
-  };
+  const { togglePlayPause, handleSeek, handleTrackEnd } = useAudioControls({
+    audioRefs,
+    setIsPlaying,
+    setCurrentTime,
+    autoRestartSong,
+  });
 
   const { handleVolumeChange, handleMuteToggle } = useTrackControls({
     audioRefs,
@@ -68,57 +58,13 @@ export const useAudioManager = (song: Song) => {
     setInstrumentalMode,
     setAllTrackMode,
     setActiveVoicePart,
+    synchronizeTracks,
   });
 
   const handleTimeUpdate = () => {
     const firstAudio = Object.values(audioRefs.current)[0];
     if (firstAudio) {
       setCurrentTime(firstAudio.currentTime);
-    }
-  };
-
-  const togglePlayPause = () => {
-    if (isPlaying) {
-      Object.values(audioRefs.current).forEach((audio) => {
-        audio.pause();
-      });
-      if (syncCheckInterval.current) {
-        clearInterval(syncCheckInterval.current);
-        syncCheckInterval.current = null;
-      }
-    } else {
-      Object.values(audioRefs.current).forEach((audio) => {
-        audio.play().catch(console.error);
-      });
-      // Start periodic sync check when playing
-      if (!syncCheckInterval.current) {
-        syncCheckInterval.current = window.setInterval(synchronizeTracks, 1000);
-      }
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleSeek = (value: number[]) => {
-    const newTime = value[0];
-    setCurrentTime(newTime);
-    Object.values(audioRefs.current).forEach((audio) => {
-      audio.currentTime = newTime;
-    });
-  };
-
-  const handleTrackEnd = () => {
-    if (autoRestartSong) {
-      setCurrentTime(0);
-      Object.values(audioRefs.current).forEach(audio => {
-        audio.currentTime = 0;
-        audio.play().catch(console.error);
-      });
-    } else {
-      setIsPlaying(false);
-      if (syncCheckInterval.current) {
-        clearInterval(syncCheckInterval.current);
-        syncCheckInterval.current = null;
-      }
     }
   };
 
@@ -154,11 +100,6 @@ export const useAudioManager = (song: Song) => {
     setActiveVoicePart("all");
 
     return () => {
-      // Clean up event listeners and interval
-      if (syncCheckInterval.current) {
-        clearInterval(syncCheckInterval.current);
-      }
-      
       Object.values(audioRefs.current).forEach((audio) => {
         audio.removeEventListener("timeupdate", handleTimeUpdate);
         audio.removeEventListener("ended", handleTrackEnd);
@@ -178,7 +119,7 @@ export const useAudioManager = (song: Song) => {
     autoRestartChapter,
     setAutoRestartSong,
     setAutoRestartChapter,
-    togglePlayPause,
+    togglePlayPause: () => togglePlayPause(isPlaying),
     handleVolumeChange,
     handleMuteToggle,
     handleSeek,
