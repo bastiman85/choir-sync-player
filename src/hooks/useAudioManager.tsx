@@ -70,7 +70,6 @@ export const useAudioManager = (song: Song) => {
       return;
     }
 
-    // Get the actual duration from the first audio element
     const actualDuration = firstAudio.duration;
     const currentPosition = firstAudio.currentTime;
     
@@ -79,41 +78,20 @@ export const useAudioManager = (song: Song) => {
     console.log("Auto restart song:", autoRestartSong);
     console.log("Auto restart chapter:", autoRestartChapter);
 
-    // Check if we're near the end (within 0.5 seconds)
-    const timeRemaining = actualDuration - currentPosition;
-    console.log("Time remaining:", timeRemaining);
-    
-    const isNearEnd = timeRemaining <= 0.5;
-
-    if (autoRestartSong && isNearEnd) {
-      console.log("Restarting song...");
-      Object.values(audioRefs.current).forEach(audio => {
-        audio.currentTime = 0;
-      });
-      setCurrentTime(0);
-      if (isPlaying) {
-        Object.values(audioRefs.current).forEach(audio => {
-          if (!audio.muted) {
-            audio.play().catch(error => console.error("Error playing audio:", error));
-          }
-        });
-      }
-      return;
-    }
-
     if (autoRestartChapter && song.chapters?.length > 0) {
       const currentChapter = getCurrentChapter();
       if (currentChapter) {
         const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
         const chapterEndTime = nextChapter ? nextChapter.time : actualDuration;
-        
-        // Check if we're near the chapter end (within 0.5 seconds)
         const timeToChapterEnd = chapterEndTime - currentPosition;
+        
         console.log("Current chapter:", currentChapter.title);
+        console.log("Chapter end time:", chapterEndTime);
         console.log("Time to chapter end:", timeToChapterEnd);
         
+        // If we're within 0.5 seconds of the chapter end
         if (timeToChapterEnd <= 0.5) {
-          console.log("Restarting chapter...");
+          console.log("Restarting chapter at time:", currentChapter.time);
           Object.values(audioRefs.current).forEach(audio => {
             audio.currentTime = currentChapter.time;
           });
@@ -125,6 +103,28 @@ export const useAudioManager = (song: Song) => {
               }
             });
           }
+          return; // Exit early since we handled chapter loop
+        }
+      }
+    }
+
+    // Handle song loop only if chapter loop didn't trigger
+    if (autoRestartSong) {
+      const timeRemaining = actualDuration - currentPosition;
+      console.log("Time remaining for song:", timeRemaining);
+      
+      if (timeRemaining <= 0.5) {
+        console.log("Restarting song from beginning");
+        Object.values(audioRefs.current).forEach(audio => {
+          audio.currentTime = 0;
+        });
+        setCurrentTime(0);
+        if (isPlaying) {
+          Object.values(audioRefs.current).forEach(audio => {
+            if (!audio.muted) {
+              audio.play().catch(error => console.error("Error playing audio:", error));
+            }
+          });
         }
       }
     }
