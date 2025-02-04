@@ -1,11 +1,11 @@
 import { RefObject } from "react";
-import { Song } from "@/types/song";
 
 interface UseAudioControlsProps {
   audioRefs: RefObject<{ [key: string]: HTMLAudioElement }>;
   setIsPlaying: (playing: boolean) => void;
   setCurrentTime: (time: number) => void;
   autoRestartSong: boolean;
+  resetTruePosition: (time: number) => void;
 }
 
 export const useAudioControls = ({
@@ -13,6 +13,7 @@ export const useAudioControls = ({
   setIsPlaying,
   setCurrentTime,
   autoRestartSong,
+  resetTruePosition,
 }: UseAudioControlsProps) => {
   const togglePlayPause = (isPlaying: boolean) => {
     if (isPlaying) {
@@ -30,6 +31,7 @@ export const useAudioControls = ({
   const handleSeek = (value: number[]) => {
     const newTime = value[0];
     setCurrentTime(newTime);
+    resetTruePosition(newTime);
     Object.values(audioRefs.current).forEach((audio) => {
       audio.currentTime = newTime;
     });
@@ -38,6 +40,7 @@ export const useAudioControls = ({
   const handleTrackEnd = () => {
     if (autoRestartSong) {
       setCurrentTime(0);
+      resetTruePosition(0);
       Object.values(audioRefs.current).forEach(audio => {
         audio.currentTime = 0;
         audio.play().catch(console.error);

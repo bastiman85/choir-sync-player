@@ -34,7 +34,7 @@ export const useAudioManager = (song: Song) => {
 
   const { getCurrentChapter } = useChapterManagement(currentTime, song);
 
-  const { synchronizeTracks } = useAudioSync({
+  const { synchronizeTracks, resetTruePosition } = useAudioSync({
     audioRefs,
     isPlaying,
     currentTime,
@@ -46,6 +46,7 @@ export const useAudioManager = (song: Song) => {
     setIsPlaying,
     setCurrentTime,
     autoRestartSong,
+    resetTruePosition,
   });
 
   const { handleVolumeChange, handleMuteToggle } = useTrackControls({

@@ -1,5 +1,4 @@
 import { RefObject, useEffect, useRef } from "react";
-import { Song } from "@/types/song";
 
 interface UseAudioSyncProps {
   audioRefs: RefObject<{ [key: string]: HTMLAudioElement }>;
@@ -15,34 +14,44 @@ export const useAudioSync = ({
   setCurrentTime,
 }: UseAudioSyncProps) => {
   const syncCheckInterval = useRef<number | null>(null);
+  const lastUpdateTime = useRef<number>(Date.now());
+  const truePosition = useRef<number>(0);
 
   const synchronizeTracks = () => {
     const tracks = Object.values(audioRefs.current);
     if (tracks.length === 0) return;
 
-    // Find the first unmuted track to use as a reference
-    const referenceTrack = tracks.find(track => !track.muted) || tracks[0];
-    const referenceTime = referenceTrack.currentTime;
+    const now = Date.now();
+    const timeDelta = (now - lastUpdateTime.current) / 1000;
+    
+    if (isPlaying) {
+      truePosition.current += timeDelta;
+    }
+    
+    lastUpdateTime.current = now;
 
-    // Update currentTime state to match the actual playback position
-    if (Math.abs(currentTime - referenceTime) > 0.1) {
-      setCurrentTime(referenceTime);
+    // Update currentTime state to match the true position
+    if (Math.abs(currentTime - truePosition.current) > 0.1) {
+      setCurrentTime(truePosition.current);
     }
 
-    // Only sync tracks that are significantly out of sync
+    // Sync all tracks to the true position
     tracks.forEach((track) => {
-      if (track !== referenceTrack) {
-        const timeDiff = Math.abs(track.currentTime - referenceTime);
-        if (timeDiff > 0.1) {
-          track.currentTime = referenceTime;
-        }
+      if (!track.muted && Math.abs(track.currentTime - truePosition.current) > 0.1) {
+        track.currentTime = truePosition.current;
       }
     });
   };
 
+  // Reset true position when seeking
+  const resetTruePosition = (time: number) => {
+    truePosition.current = time;
+    lastUpdateTime.current = Date.now();
+  };
+
   useEffect(() => {
     if (isPlaying && !syncCheckInterval.current) {
-      syncCheckInterval.current = window.setInterval(synchronizeTracks, 1000);
+      syncCheckInterval.current = window.setInterval(synchronizeTracks, 50); // More frequent updates
     }
     return () => {
       if (syncCheckInterval.current) {
@@ -52,5 +61,5 @@ export const useAudioSync = ({
     };
   }, [isPlaying]);
 
-  return { synchronizeTracks };
+  return { synchronizeTracks, resetTruePosition };
 };
