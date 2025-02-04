@@ -9,11 +9,11 @@ export const HtmlLyricsView = ({ htmlContent, error }: HtmlLyricsViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Only set innerHTML if container is empty or error state changes
-    if (containerRef.current && (!containerRef.current.innerHTML || error)) {
+    // Always set innerHTML on initial load or when content changes
+    if (containerRef.current) {
       containerRef.current.innerHTML = htmlContent || '';
     }
-  }, [htmlContent, error]);
+  }, [htmlContent]);
 
   if (error) {
     return <p className="text-red-500 text-center">{error}</p>;

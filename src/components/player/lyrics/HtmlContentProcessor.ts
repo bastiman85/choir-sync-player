@@ -9,8 +9,9 @@ export const processHtmlContent = (
   showVoicePart: (element: Element, activeVoicePart: string | undefined) => boolean
 ) => {
   try {
-    // Only process the HTML content once on initial load
-    if (!document.querySelector('.lyrics-display')) {
+    // Check if we need to do initial HTML processing
+    const lyricsDisplay = document.querySelector('.lyrics-display');
+    if (!lyricsDisplay || !lyricsDisplay.children.length) {
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = html;
       setCurrentHtmlSection(tempDiv.innerHTML);
