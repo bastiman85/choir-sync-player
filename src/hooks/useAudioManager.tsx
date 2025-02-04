@@ -72,8 +72,10 @@ export const useAudioManager = (song: Song) => {
 
     const actualDuration = firstAudio.duration;
     const currentPosition = firstAudio.currentTime;
+    const roundedPosition = Math.floor(currentPosition); // Round down to nearest second
     
     console.log("Current position:", currentPosition);
+    console.log("Rounded position:", roundedPosition);
     console.log("Duration:", actualDuration);
     console.log("Auto restart song:", autoRestartSong);
     console.log("Auto restart chapter:", autoRestartChapter);
@@ -83,14 +85,14 @@ export const useAudioManager = (song: Song) => {
       if (currentChapter) {
         const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
         const chapterEndTime = nextChapter ? nextChapter.time : actualDuration;
-        const timeToChapterEnd = chapterEndTime - currentPosition;
+        const roundedChapterEnd = Math.floor(chapterEndTime); // Round down chapter end time
         
         console.log("Current chapter:", currentChapter.title);
         console.log("Chapter end time:", chapterEndTime);
-        console.log("Time to chapter end:", timeToChapterEnd);
+        console.log("Rounded chapter end:", roundedChapterEnd);
         
-        // If we're within 0.5 seconds of the chapter end
-        if (timeToChapterEnd <= 0.5) {
+        // Check if we're at the rounded second of the chapter end
+        if (roundedPosition === roundedChapterEnd) {
           console.log("Restarting chapter at time:", currentChapter.time);
           Object.values(audioRefs.current).forEach(audio => {
             audio.currentTime = currentChapter.time;
@@ -110,10 +112,10 @@ export const useAudioManager = (song: Song) => {
 
     // Handle song loop only if chapter loop didn't trigger
     if (autoRestartSong) {
-      const timeRemaining = actualDuration - currentPosition;
-      console.log("Time remaining for song:", timeRemaining);
+      const roundedDuration = Math.floor(actualDuration); // Round down duration
+      console.log("Rounded duration:", roundedDuration);
       
-      if (timeRemaining <= 0.5) {
+      if (roundedPosition === roundedDuration) {
         console.log("Restarting song from beginning");
         Object.values(audioRefs.current).forEach(audio => {
           audio.currentTime = 0;
