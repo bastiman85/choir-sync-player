@@ -80,6 +80,12 @@ export const useTrackControls = ({
       setAllTrackMode(track.voicePart === "all");
       setActiveVoicePart(track.voicePart);
       
+      // First sync the track we're about to unmute with other playing tracks
+      const playingTrack = Object.values(audioRefs.current).find(a => !a.paused);
+      if (playingTrack) {
+        audio.currentTime = playingTrack.currentTime;
+      }
+      
       Object.entries(audioRefs.current).forEach(([id, otherAudio]) => {
         const otherTrack = song.tracks.find(t => t.id === id);
         if (otherTrack?.voicePart !== track.voicePart) {
@@ -92,6 +98,12 @@ export const useTrackControls = ({
       setInstrumentalMode(false);
       setAllTrackMode(false);
       setActiveVoicePart(track?.voicePart || "all");
+      
+      // First sync the track we're about to unmute with other playing tracks
+      const playingTrack = Object.values(audioRefs.current).find(a => !a.paused);
+      if (playingTrack) {
+        audio.currentTime = playingTrack.currentTime;
+      }
       
       song.tracks.forEach(t => {
         if (t.voicePart === "instrumental" || t.voicePart === "all") {
@@ -109,8 +121,9 @@ export const useTrackControls = ({
       if (newMuted) {
         audio.pause();
       } else {
-        audio.play().catch(console.error);
+        // Ensure the track is at the correct position before playing
         synchronizeTracks();
+        audio.play().catch(console.error);
       }
     }
   };
