@@ -128,39 +128,41 @@ const Player = ({ song }: PlayerProps) => {
           hasChapters={hasChapters}
         />
 
-        <div className="flex justify-center items-center gap-4 mt-6 mb-6">
-          <ToggleGroup type="single" value={activeVoicePart} onValueChange={handleVoicePartChange}>
-            <ToggleGroupItem 
-              value="all" 
-              className="voice-part-alla bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              Alla
-            </ToggleGroupItem>
-            <ToggleGroupItem 
-              value="s" 
-              className="voice-part-sopran bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              SOP
-            </ToggleGroupItem>
-            <ToggleGroupItem 
-              value="a" 
-              className="voice-part-alt bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              ALT
-            </ToggleGroupItem>
-            <ToggleGroupItem 
-              value="t" 
-              className="voice-part-tenor bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              TEN
-            </ToggleGroupItem>
-            <ToggleGroupItem 
-              value="b" 
-              className="voice-part-bas bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              BAS
-            </ToggleGroupItem>
-          </ToggleGroup>
+        <div className="flex flex-wrap justify-center items-center gap-4 mt-6 mb-6">
+          <div className="flex-none w-full flex justify-center">
+            <ToggleGroup type="single" value={activeVoicePart} onValueChange={handleVoicePartChange}>
+              <ToggleGroupItem 
+                value="all" 
+                className="voice-part-alla bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Alla
+              </ToggleGroupItem>
+              <ToggleGroupItem 
+                value="s" 
+                className="voice-part-sopran bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                SOP
+              </ToggleGroupItem>
+              <ToggleGroupItem 
+                value="a" 
+                className="voice-part-alt bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                ALT
+              </ToggleGroupItem>
+              <ToggleGroupItem 
+                value="t" 
+                className="voice-part-tenor bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                TEN
+              </ToggleGroupItem>
+              <ToggleGroupItem 
+                value="b" 
+                className="voice-part-bas bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                BAS
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
 
           {song.pdf_url && song.pdf_url.trim() !== '' && (
             <Button 
