@@ -18,7 +18,7 @@ export default defineConfig({
       }
     }
   ],
-  base: "", // Changed from "./" to "" to support both relative and absolute paths
+  base: "/", // Changed to "/" for proper asset loading
   server: {
     port: 8080,
     host: "::",
@@ -30,6 +30,8 @@ export default defineConfig({
       },
     },
     sourcemap: true,
+    target: 'es2015',
+    minify: 'terser',
   },
   resolve: {
     alias: {
