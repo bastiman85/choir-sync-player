@@ -9,26 +9,28 @@ export const processHtmlContent = (
   showVoicePart: (element: Element, activeVoicePart: string | undefined) => boolean
 ) => {
   try {
-    // Initial load of HTML content
-    if (!lastMatchedTimeRef.current) {
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = html;
-      setCurrentHtmlSection(tempDiv.innerHTML);
-      lastMatchedTimeRef.current = '0000';
+    // Check if it's a URL that needs to be fetched
+    if (html.startsWith('blob:') || html.startsWith('http')) {
+      // Validate URL format
+      try {
+        const url = new URL(html);
+        if (!url.protocol || !url.host) {
+          throw new Error('Invalid URL format');
+        }
+      } catch (e) {
+        setError('Invalid URL format for HTML content');
+        return;
+      }
     }
 
-    // Get all sections with data-time attributes from the live DOM
-    const lyricsDisplay = document.querySelector('.lyrics-display');
-    if (!lyricsDisplay) {
-      console.error('Lyrics display container not found');
-      return;
-    }
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
 
     const minutes = Math.floor(currentTime / 60);
     const seconds = Math.floor(currentTime % 60);
     const timeString = `${minutes.toString().padStart(2, '0')}${seconds.toString().padStart(2, '0')}`;
     
-    const divs = lyricsDisplay.querySelectorAll('[data-time]');
+    const divs = tempDiv.querySelectorAll('[data-time]');
     
     if (divs.length === 0) {
       setError('No timed sections found in the HTML content');
@@ -40,7 +42,7 @@ export const processHtmlContent = (
       div.classList.remove('current-section');
     });
 
-    // Find and highlight the current section
+    // Find the current section
     let currentDiv = null;
     for (const div of divs) {
       const divTime = div.getAttribute('data-time');
@@ -59,6 +61,7 @@ export const processHtmlContent = (
       divs[0].classList.add('current-section');
     }
 
+    setCurrentHtmlSection(tempDiv.innerHTML);
     setError(null);
   } catch (err) {
     console.error('Error processing HTML content:', err);
