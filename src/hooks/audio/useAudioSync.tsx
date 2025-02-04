@@ -36,21 +36,29 @@ export const useAudioSync = ({
     if (now - lastUIUpdate.current >= updateThreshold.current) {
       lastUIUpdate.current = now;
       
-      // Find the first non-muted track to use as reference
-      const referenceTrack = tracks.find(track => !track.muted && !track.paused);
-      if (referenceTrack) {
-        truePosition.current = referenceTrack.currentTime;
+      // Find the earliest position among non-muted playing tracks
+      let earliestPosition = Infinity;
+      tracks.forEach(track => {
+        if (!track.muted && !track.paused) {
+          earliestPosition = Math.min(earliestPosition, track.currentTime);
+        }
+      });
+
+      // If we found a valid position, use it
+      if (earliestPosition !== Infinity) {
+        truePosition.current = earliestPosition;
       }
 
       // Update UI with the true position
       setCurrentTime(truePosition.current);
     }
 
-    // Sync tracks that are significantly out of sync (more than 0.1 seconds)
+    // Sync tracks that are out of sync
     tracks.forEach((track) => {
       if (!track.muted) {
         const drift = Math.abs(track.currentTime - truePosition.current);
         if (drift > 0.1) {
+          // Always set to the earliest position to avoid skipping content
           track.currentTime = truePosition.current;
         }
 
@@ -89,10 +97,17 @@ export const useAudioSync = ({
         const now = performance.now();
         if (now - lastUIUpdate.current >= updateThreshold.current) {
           const tracks = Object.values(audioRefs.current);
-          const referenceTrack = tracks.find(track => !track.muted && !track.paused);
           
-          if (referenceTrack) {
-            truePosition.current = referenceTrack.currentTime;
+          // Find earliest position among playing tracks
+          let earliestPosition = Infinity;
+          tracks.forEach(track => {
+            if (!track.muted && !track.paused) {
+              earliestPosition = Math.min(earliestPosition, track.currentTime);
+            }
+          });
+          
+          if (earliestPosition !== Infinity) {
+            truePosition.current = earliestPosition;
             lastUIUpdate.current = now;
             setCurrentTime(truePosition.current);
           }
