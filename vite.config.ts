@@ -30,6 +30,14 @@ export default defineConfig(({ mode }) => ({
     },
   },
   base: "", // Changed from "./" to "" to support both relative and absolute paths
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+    sourcemap: true,
+  },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
   }

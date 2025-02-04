@@ -18,10 +18,18 @@ export default defineConfig({
       }
     }
   ],
-  base: "./", // This ensures assets are loaded relative to the HTML file
+  base: "", // Changed from "./" to "" to support both relative and absolute paths
   server: {
     port: 8080,
     host: "::",
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+    sourcemap: true,
   },
   resolve: {
     alias: {
