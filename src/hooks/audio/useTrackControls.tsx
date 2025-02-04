@@ -45,6 +45,7 @@ export const useTrackControls = ({
         const trackPart = song.tracks.find(t => t.id === id)?.voicePart;
         if (trackPart !== track.voicePart) {
           audio.muted = true;
+          audio.pause();
           setMutedTracks(prev => ({ ...prev, [id]: true }));
         }
       });
@@ -55,7 +56,9 @@ export const useTrackControls = ({
       
       song.tracks.forEach(t => {
         if (t.voicePart === "instrumental" || t.voicePart === "all") {
-          audioRefs.current[t.id].muted = true;
+          const audio = audioRefs.current[t.id];
+          audio.muted = true;
+          audio.pause();
           setMutedTracks(prev => ({ ...prev, [t.id]: true }));
         }
       });
@@ -70,16 +73,18 @@ export const useTrackControls = ({
   const handleMuteToggle = (trackId: string) => {
     const track = song.tracks.find(t => t.id === trackId);
     const newMuted = !mutedTracks[trackId];
+    const audio = audioRefs.current[trackId];
     
     if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && !newMuted) {
       setInstrumentalMode(track.voicePart === "instrumental");
       setAllTrackMode(track.voicePart === "all");
       setActiveVoicePart(track.voicePart);
       
-      Object.entries(audioRefs.current).forEach(([id, audio]) => {
+      Object.entries(audioRefs.current).forEach(([id, otherAudio]) => {
         const otherTrack = song.tracks.find(t => t.id === id);
         if (otherTrack?.voicePart !== track.voicePart) {
-          audio.muted = true;
+          otherAudio.muted = true;
+          otherAudio.pause();
           setMutedTracks(prev => ({ ...prev, [id]: true }));
         }
       });
@@ -90,16 +95,23 @@ export const useTrackControls = ({
       
       song.tracks.forEach(t => {
         if (t.voicePart === "instrumental" || t.voicePart === "all") {
-          audioRefs.current[t.id].muted = true;
+          const otherAudio = audioRefs.current[t.id];
+          otherAudio.muted = true;
+          otherAudio.pause();
           setMutedTracks(prev => ({ ...prev, [t.id]: true }));
         }
       });
     }
 
     setMutedTracks(prev => ({ ...prev, [trackId]: newMuted }));
-    if (audioRefs.current[trackId]) {
-      audioRefs.current[trackId].muted = newMuted;
-      synchronizeTracks();
+    if (audio) {
+      audio.muted = newMuted;
+      if (newMuted) {
+        audio.pause();
+      } else {
+        audio.play().catch(console.error);
+        synchronizeTracks();
+      }
     }
   };
 
