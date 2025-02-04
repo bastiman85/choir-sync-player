@@ -70,21 +70,16 @@ export const useTrackControls = ({
     }
   };
 
-  const handleMuteToggle = (trackId: string) => {
+  const handleMuteToggle = async (trackId: string) => {
     const track = song.tracks.find(t => t.id === trackId);
     const newMuted = !mutedTracks[trackId];
     const audio = audioRefs.current[trackId];
+    const wasPlaying = Object.values(audioRefs.current).some(a => !a.paused);
     
     if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && !newMuted) {
       setInstrumentalMode(track.voicePart === "instrumental");
       setAllTrackMode(track.voicePart === "all");
       setActiveVoicePart(track.voicePart);
-      
-      // First sync the track we're about to unmute with other playing tracks
-      const playingTrack = Object.values(audioRefs.current).find(a => !a.paused);
-      if (playingTrack) {
-        audio.currentTime = playingTrack.currentTime;
-      }
       
       Object.entries(audioRefs.current).forEach(([id, otherAudio]) => {
         const otherTrack = song.tracks.find(t => t.id === id);
@@ -99,12 +94,6 @@ export const useTrackControls = ({
       setAllTrackMode(false);
       setActiveVoicePart(track?.voicePart || "all");
       
-      // First sync the track we're about to unmute with other playing tracks
-      const playingTrack = Object.values(audioRefs.current).find(a => !a.paused);
-      if (playingTrack) {
-        audio.currentTime = playingTrack.currentTime;
-      }
-      
       song.tracks.forEach(t => {
         if (t.voicePart === "instrumental" || t.voicePart === "all") {
           const otherAudio = audioRefs.current[t.id];
@@ -115,17 +104,33 @@ export const useTrackControls = ({
       });
     }
 
+    // If we were playing, pause all tracks momentarily
+    if (wasPlaying) {
+      // Pause all tracks
+      Object.values(audioRefs.current).forEach(track => track.pause());
+      
+      // Wait a short moment to ensure all tracks are paused
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
     setMutedTracks(prev => ({ ...prev, [trackId]: newMuted }));
     if (audio) {
       audio.muted = newMuted;
       if (newMuted) {
         audio.pause();
-      } else {
-        // Only start playing if there's another track already playing
-        const anyTrackPlaying = Object.values(audioRefs.current).some(a => !a.paused);
-        if (anyTrackPlaying) {
-          // Ensure the track is at the correct position before playing
-          synchronizeTracks();
+      } else if (wasPlaying) {
+        // Synchronize all tracks before resuming
+        synchronizeTracks();
+        
+        // Resume all non-muted tracks
+        Object.entries(audioRefs.current).forEach(([id, track]) => {
+          if (!mutedTracks[id] && id !== trackId) {
+            track.play().catch(console.error);
+          }
+        });
+        
+        // Play the newly unmuted track
+        if (!newMuted) {
           audio.play().catch(console.error);
         }
       }
