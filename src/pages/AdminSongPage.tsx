@@ -35,6 +35,7 @@ const AdminSongPage = () => {
         pdf_url: data.pdf_url,
         htmlContent: data.html_content,
         html_file_url: data.html_file_url,
+        slug: data.slug,
         tracks: data.tracks.map((track: any) => ({
           id: track.id,
           url: track.url,
@@ -66,7 +67,8 @@ const AdminSongPage = () => {
           choir_id: newSong.choirId,
           html_content: newSong.htmlContent,
           html_file_url: newSong.html_file_url,
-          pdf_url: newSong.pdf_url
+          pdf_url: newSong.pdf_url,
+          slug: newSong.slug
         }])
         .select()
         .single();
@@ -136,7 +138,8 @@ const AdminSongPage = () => {
           choir_id: updatedSong.choirId,
           html_content: updatedSong.htmlContent,
           html_file_url: updatedSong.html_file_url,
-          pdf_url: updatedSong.pdf_url
+          pdf_url: updatedSong.pdf_url,
+          slug: updatedSong.slug
         })
         .eq('id', id);
       if (songError) throw songError;

@@ -30,6 +30,7 @@ export interface Song {
   htmlContent?: string;
   pdf_url?: string;
   html_file_url?: string;
+  slug: string;
 }
 
 export interface Choir {
