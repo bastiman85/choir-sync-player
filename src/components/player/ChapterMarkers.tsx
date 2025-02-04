@@ -13,6 +13,12 @@ const ChapterMarkers = ({ chapters, onChapterClick, currentTime }: ChapterMarker
     return currentTime >= chapter.time && (!nextChapter || currentTime < nextChapter.time);
   };
 
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="border rounded-md p-2">
       <div className="space-y-0">
@@ -23,7 +29,7 @@ const ChapterMarkers = ({ chapters, onChapterClick, currentTime }: ChapterMarker
             className="w-full justify-start"
             onClick={() => onChapterClick(chapter.time)}
           >
-            {chapter.title}
+            {chapter.title} ({formatTime(chapter.time)})
           </Button>
         ))}
       </div>
