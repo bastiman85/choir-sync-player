@@ -35,14 +35,27 @@ export const useTrackState = ({
   };
 
   const muteOtherTracks = (currentTrackVoicePart: string) => {
-    Object.entries(audioRefs.current).forEach(([id, audio]) => {
-      const trackPart = song.tracks.find(t => t.id === id)?.voicePart;
-      if (trackPart !== currentTrackVoicePart) {
-        audio.muted = true;
-        audio.pause();
-        setMutedTracks(prev => ({ ...prev, [id]: true }));
-      }
-    });
+    // Only mute other tracks if the current track is "all" or "instrumental"
+    if (currentTrackVoicePart === "all" || currentTrackVoicePart === "instrumental") {
+      Object.entries(audioRefs.current).forEach(([id, audio]) => {
+        const track = song.tracks.find(t => t.id === id);
+        if (track && track.voicePart !== currentTrackVoicePart) {
+          audio.muted = true;
+          audio.pause();
+          setMutedTracks(prev => ({ ...prev, [id]: true }));
+        }
+      });
+    } else {
+      // For voice parts, only mute "all" and "instrumental" tracks
+      Object.entries(audioRefs.current).forEach(([id, audio]) => {
+        const track = song.tracks.find(t => t.id === id);
+        if (track && (track.voicePart === "all" || track.voicePart === "instrumental")) {
+          audio.muted = true;
+          audio.pause();
+          setMutedTracks(prev => ({ ...prev, [id]: true }));
+        }
+      });
+    }
   };
 
   return {
