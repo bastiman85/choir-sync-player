@@ -34,6 +34,18 @@ export const useAudioManager = (song: Song) => {
 
   const { getCurrentChapter } = useChapterManagement(currentTime, song);
 
+  const synchronizeTracks = () => {
+    const tracks = Object.values(audioRefs.current);
+    if (tracks.length === 0) return;
+
+    tracks.forEach((track) => {
+      const timeDiff = Math.abs(track.currentTime - currentTime);
+      if (timeDiff > 0.1) {
+        track.currentTime = currentTime;
+      }
+    });
+  };
+
   const { handleVolumeChange, handleMuteToggle } = useTrackControls({
     audioRefs,
     song,
@@ -45,24 +57,6 @@ export const useAudioManager = (song: Song) => {
     setAllTrackMode,
     setActiveVoicePart,
   });
-
-  const synchronizeTracks = () => {
-    const tracks = Object.values(audioRefs.current);
-    if (tracks.length === 0) return;
-
-    const referenceTrack = tracks[0];
-    const referenceTime = referenceTrack.currentTime;
-
-    tracks.forEach((track) => {
-      if (track !== referenceTrack) {
-        const timeDiff = Math.abs(track.currentTime - referenceTime);
-        // If tracks are more than 0.1 seconds out of sync, adjust them
-        if (timeDiff > 0.1) {
-          track.currentTime = referenceTime;
-        }
-      }
-    });
-  };
 
   const handleTimeUpdate = () => {
     const firstAudio = Object.values(audioRefs.current)[0];
@@ -95,19 +89,19 @@ export const useAudioManager = (song: Song) => {
 
   const handleSeek = (value: number[]) => {
     const newTime = value[0];
+    setCurrentTime(newTime);
     Object.values(audioRefs.current).forEach((audio) => {
       audio.currentTime = newTime;
     });
-    setCurrentTime(newTime);
   };
 
   const handleTrackEnd = () => {
     if (autoRestartSong) {
+      setCurrentTime(0);
       Object.values(audioRefs.current).forEach(audio => {
         audio.currentTime = 0;
         audio.play().catch(console.error);
       });
-      setCurrentTime(0);
     } else {
       setIsPlaying(false);
       if (syncCheckInterval.current) {
