@@ -129,7 +129,7 @@ const Player = ({ song }: PlayerProps) => {
         />
 
         <div className="flex flex-wrap items-center justify-center gap-4 mt-6 mb-6">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-center gap-4">
             <ToggleGroup type="single" value={activeVoicePart} onValueChange={handleVoicePartChange}>
               <ToggleGroupItem 
                 value="all" 
@@ -166,7 +166,7 @@ const Player = ({ song }: PlayerProps) => {
             {song.pdf_url && song.pdf_url.trim() !== '' && (
               <Button 
                 variant="outline" 
-                className="gap-2 pdf-button" 
+                className="gap-2 pdf-button w-full sm:w-auto" 
                 onClick={() => window.open(song.pdf_url, '_blank')}
               >
                 <FileText className="h-4 w-4" />
