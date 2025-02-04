@@ -62,11 +62,46 @@ export const useAudioManager = (song: Song) => {
     synchronizeTracks,
   });
 
+  const checkAndHandleLooping = () => {
+    const firstAudio = Object.values(audioRefs.current)[0];
+    if (!firstAudio) return;
+
+    if (autoRestartSong && firstAudio.currentTime >= (firstAudio.duration - 0.1)) {
+      Object.values(audioRefs.current).forEach(audio => {
+        audio.currentTime = 0;
+        if (isPlaying) {
+          audio.play().catch(console.error);
+        }
+      });
+      setCurrentTime(0);
+      return;
+    }
+
+    if (autoRestartChapter && song.chapters?.length > 0) {
+      const currentChapter = getCurrentChapter();
+      if (currentChapter) {
+        const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
+        const chapterEndTime = nextChapter ? nextChapter.time : firstAudio.duration;
+        
+        if (firstAudio.currentTime >= chapterEndTime - 0.1) {
+          Object.values(audioRefs.current).forEach(audio => {
+            audio.currentTime = currentChapter.time;
+            if (isPlaying) {
+              audio.play().catch(console.error);
+            }
+          });
+          setCurrentTime(currentChapter.time);
+        }
+      }
+    }
+  };
+
   const handleTimeUpdate = (event: Event) => {
     const audio = event.target as HTMLAudioElement;
     // Only update time if this track is not muted and is actually playing
     if (!audio.muted && !audio.paused) {
       setCurrentTime(audio.currentTime);
+      checkAndHandleLooping();
     }
   };
 
