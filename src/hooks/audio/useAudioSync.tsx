@@ -16,6 +16,7 @@ export const useAudioSync = ({
   const syncCheckInterval = useRef<number | null>(null);
   const lastUpdateTime = useRef<number>(Date.now());
   const truePosition = useRef<number>(0);
+  const lastUIUpdate = useRef<number>(0);
 
   const synchronizeTracks = () => {
     const tracks = Object.values(audioRefs.current);
@@ -30,12 +31,15 @@ export const useAudioSync = ({
     
     lastUpdateTime.current = now;
 
-    // Update currentTime state to match the true position
-    if (Math.abs(currentTime - truePosition.current) > 0.1) {
-      setCurrentTime(truePosition.current);
+    // Only update UI every 250ms to prevent jumpy scrubber
+    if (now - lastUIUpdate.current >= 250) {
+      if (Math.abs(currentTime - truePosition.current) > 0.1) {
+        setCurrentTime(truePosition.current);
+        lastUIUpdate.current = now;
+      }
     }
 
-    // Sync all tracks to the true position
+    // Sync tracks that are significantly out of sync (more than 0.1 seconds)
     tracks.forEach((track) => {
       if (!track.muted && Math.abs(track.currentTime - truePosition.current) > 0.1) {
         track.currentTime = truePosition.current;
@@ -47,11 +51,14 @@ export const useAudioSync = ({
   const resetTruePosition = (time: number) => {
     truePosition.current = time;
     lastUpdateTime.current = Date.now();
+    lastUIUpdate.current = Date.now();
+    setCurrentTime(time); // Ensure UI is updated immediately after seeking
   };
 
   useEffect(() => {
     if (isPlaying && !syncCheckInterval.current) {
-      syncCheckInterval.current = window.setInterval(synchronizeTracks, 50); // More frequent updates
+      // Keep the 50ms interval for track sync, but UI updates are throttled
+      syncCheckInterval.current = window.setInterval(synchronizeTracks, 50);
     }
     return () => {
       if (syncCheckInterval.current) {
