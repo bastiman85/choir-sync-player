@@ -62,10 +62,11 @@ export const useAudioManager = (song: Song) => {
     synchronizeTracks,
   });
 
-  const handleTimeUpdate = () => {
-    const firstAudio = Object.values(audioRefs.current)[0];
-    if (firstAudio) {
-      setCurrentTime(firstAudio.currentTime);
+  const handleTimeUpdate = (event: Event) => {
+    const audio = event.target as HTMLAudioElement;
+    // Only update time if this track is not muted and is actually playing
+    if (!audio.muted && !audio.paused) {
+      setCurrentTime(audio.currentTime);
     }
   };
 
