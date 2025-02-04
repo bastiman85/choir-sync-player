@@ -14,9 +14,9 @@ const PlayerPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Load player-specific script
+    // Load player-specific script from public directory
     const script = document.createElement('script');
-    script.src = '/src/pages/player.js';
+    script.src = '/js/player.js';
     script.async = true;
     document.body.appendChild(script);
 
