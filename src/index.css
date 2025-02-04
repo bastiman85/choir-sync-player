@@ -154,3 +154,10 @@
 [role="switch"][data-state="checked"] span {
   @apply bg-secondary;
 }
+
+/* Hide PDF button icon on mobile */
+@media (max-width: 640px) {
+  .pdf-button svg {
+    @apply hidden;
+  }
+}

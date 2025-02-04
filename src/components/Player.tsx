@@ -165,7 +165,7 @@ const Player = ({ song }: PlayerProps) => {
           {song.pdf_url && song.pdf_url.trim() !== '' && (
             <Button 
               variant="outline" 
-              className="gap-2" 
+              className="gap-2 pdf-button" 
               onClick={() => window.open(song.pdf_url, '_blank')}
             >
               <FileText className="h-4 w-4" />
