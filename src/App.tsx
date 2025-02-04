@@ -7,15 +7,19 @@ import AdminOverviewPage from "./pages/AdminOverviewPage";
 import LoginPage from "./pages/LoginPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-const queryClient = new QueryClient();
-
-// Get the base URL from the environment or default to '/'
-const basename = import.meta.env.BASE_URL || '/';
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router basename={basename}>
+      <Router>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/player/:slug" element={<PlayerPage />} />

@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: "/", // Changed to "/" for proper asset loading in production
+  base: "/", // Ensure base URL is set to root
   build: {
     rollupOptions: {
       output: {
@@ -37,8 +37,8 @@ export default defineConfig(({ mode }) => ({
       },
     },
     sourcemap: true,
-    target: 'es2015', // Ensure broader browser compatibility
-    minify: 'terser', // Use terser for better minification
+    target: 'es2015',
+    minify: 'terser',
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
