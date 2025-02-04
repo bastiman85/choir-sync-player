@@ -128,8 +128,8 @@ const Player = ({ song }: PlayerProps) => {
           hasChapters={hasChapters}
         />
 
-        <div className="flex flex-wrap justify-center items-center gap-4 mt-6 mb-6">
-          <div className="flex-none w-full flex justify-center">
+        <div className="flex flex-wrap items-center justify-center gap-4 mt-6 mb-6">
+          <div className="flex items-center gap-4">
             <ToggleGroup type="single" value={activeVoicePart} onValueChange={handleVoicePartChange}>
               <ToggleGroupItem 
                 value="all" 
@@ -162,18 +162,18 @@ const Player = ({ song }: PlayerProps) => {
                 BAS
               </ToggleGroupItem>
             </ToggleGroup>
-          </div>
 
-          {song.pdf_url && song.pdf_url.trim() !== '' && (
-            <Button 
-              variant="outline" 
-              className="gap-2 pdf-button" 
-              onClick={() => window.open(song.pdf_url, '_blank')}
-            >
-              <FileText className="h-4 w-4" />
-              PDF
-            </Button>
-          )}
+            {song.pdf_url && song.pdf_url.trim() !== '' && (
+              <Button 
+                variant="outline" 
+                className="gap-2 pdf-button" 
+                onClick={() => window.open(song.pdf_url, '_blank')}
+              >
+                <FileText className="h-4 w-4" />
+                PDF
+              </Button>
+            )}
+          </div>
         </div>
 
         <LyricsDisplay 
