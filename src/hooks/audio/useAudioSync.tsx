@@ -14,7 +14,7 @@ export const useAudioSync = ({
   setCurrentTime,
 }: UseAudioSyncProps) => {
   const syncCheckInterval = useRef<number | null>(null);
-  const lastUpdateTime = useRef<number>(Date.now());
+  const lastUpdateTime = useRef<number>(performance.now());
   const truePosition = useRef<number>(0);
   const lastUIUpdate = useRef<number>(0);
   const driftCompensation = useRef<{ [key: string]: number }>({});
@@ -23,7 +23,7 @@ export const useAudioSync = ({
     const tracks = Object.values(audioRefs.current);
     if (tracks.length === 0) return;
 
-    const now = performance.now(); // Use performance.now() for more precise timing
+    const now = performance.now();
     const timeDelta = (now - lastUpdateTime.current) / 1000;
     
     if (isPlaying) {
@@ -32,63 +32,65 @@ export const useAudioSync = ({
     
     lastUpdateTime.current = now;
 
-    // Only update UI every 250ms to prevent jumpy scrubber
-    if (now - lastUIUpdate.current >= 250) {
+    // Only update UI every 100ms to prevent jumpy scrubber but maintain responsiveness
+    if (now - lastUIUpdate.current >= 100) {
       if (Math.abs(currentTime - truePosition.current) > 0.05) {
         setCurrentTime(truePosition.current);
         lastUIUpdate.current = now;
       }
     }
 
-    // More precise sync threshold and drift compensation
-    const SYNC_THRESHOLD = 0.02; // 20ms threshold
-    const MAX_DRIFT = 0.1; // Maximum allowed drift before hard sync
+    const SYNC_THRESHOLD = 0.05; // 50ms threshold for better stability
+    const MAX_DRIFT = 0.2; // Increased maximum allowed drift
 
     tracks.forEach((track) => {
-      if (!track.muted && !track.paused) {
-        const trackId = track.src; // Use src as unique identifier
+      if (!track.muted) {
+        const trackId = track.src;
         const currentDrift = track.currentTime - truePosition.current;
         
-        // Initialize drift compensation if needed
         if (!driftCompensation.current[trackId]) {
           driftCompensation.current[trackId] = 0;
         }
 
-        // Update drift compensation
-        driftCompensation.current[trackId] += currentDrift * 0.1; // Gradual drift correction
+        // Gentler drift correction
+        driftCompensation.current[trackId] += currentDrift * 0.05;
         
-        // Apply drift compensation
         const compensatedPosition = truePosition.current + driftCompensation.current[trackId];
         
-        // Check if track needs sync
         if (Math.abs(track.currentTime - compensatedPosition) > SYNC_THRESHOLD) {
           if (Math.abs(currentDrift) > MAX_DRIFT) {
-            // Hard sync if drift is too large
             track.currentTime = truePosition.current;
             driftCompensation.current[trackId] = 0;
           } else {
-            // Soft sync with drift compensation
             track.currentTime = compensatedPosition;
           }
+        }
+
+        // Ensure track is playing if it should be
+        if (isPlaying && track.paused) {
+          track.play().catch(console.error);
+        } else if (!isPlaying && !track.paused) {
+          track.pause();
         }
       }
     });
   };
 
-  // Reset true position when seeking
   const resetTruePosition = (time: number) => {
     truePosition.current = time;
     lastUpdateTime.current = performance.now();
     lastUIUpdate.current = performance.now();
-    driftCompensation.current = {}; // Reset drift compensation
+    driftCompensation.current = {};
     setCurrentTime(time);
   };
 
   useEffect(() => {
+    // Start sync interval when playing
     if (isPlaying && !syncCheckInterval.current) {
-      // Increase sync frequency to 30ms for more precise sync
-      syncCheckInterval.current = window.setInterval(synchronizeTracks, 30);
+      synchronizeTracks(); // Initial sync
+      syncCheckInterval.current = window.setInterval(synchronizeTracks, 50);
     }
+    
     return () => {
       if (syncCheckInterval.current) {
         clearInterval(syncCheckInterval.current);
