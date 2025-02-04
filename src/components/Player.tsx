@@ -50,6 +50,9 @@ const Player = ({ song }: PlayerProps) => {
 
   const hasChapters = Boolean(song.chapters?.length);
 
+  // Add console log to debug PDF URL
+  console.log('Song PDF URL:', song.pdf_url);
+
   return (
     <div className="p-3 sm:p-4 max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold mb-4 text-center sm:text-left">{song.title}</h2>
@@ -149,8 +152,12 @@ const Player = ({ song }: PlayerProps) => {
             </ToggleGroupItem>
           </ToggleGroup>
 
-          {song.pdf_url && (
-            <Button variant="outline" className="gap-2" onClick={() => window.open(song.pdf_url, '_blank')}>
+          {song.pdf_url && song.pdf_url.trim() !== '' && (
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              onClick={() => window.open(song.pdf_url, '_blank')}
+            >
               <FileText className="h-4 w-4" />
               PDF
             </Button>
