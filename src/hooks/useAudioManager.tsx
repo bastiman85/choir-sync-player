@@ -66,14 +66,25 @@ export const useAudioManager = (song: Song) => {
     const firstAudio = Object.values(audioRefs.current)[0];
     if (!firstAudio) return;
 
-    if (autoRestartSong && firstAudio.currentTime >= (firstAudio.duration - 0.1)) {
+    // Get the actual duration from the first audio element
+    const actualDuration = firstAudio.duration;
+    
+    // Check if we're near the end (within 0.5 seconds)
+    const isNearEnd = firstAudio.currentTime >= (actualDuration - 0.5);
+
+    if (autoRestartSong && isNearEnd) {
+      console.log("Restarting song...");
       Object.values(audioRefs.current).forEach(audio => {
         audio.currentTime = 0;
-        if (isPlaying) {
-          audio.play().catch(console.error);
-        }
       });
       setCurrentTime(0);
+      if (isPlaying) {
+        Object.values(audioRefs.current).forEach(audio => {
+          if (!audio.muted) {
+            audio.play().catch(console.error);
+          }
+        });
+      }
       return;
     }
 
@@ -81,16 +92,22 @@ export const useAudioManager = (song: Song) => {
       const currentChapter = getCurrentChapter();
       if (currentChapter) {
         const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
-        const chapterEndTime = nextChapter ? nextChapter.time : firstAudio.duration;
+        const chapterEndTime = nextChapter ? nextChapter.time : actualDuration;
         
-        if (firstAudio.currentTime >= chapterEndTime - 0.1) {
+        // Check if we're near the chapter end (within 0.5 seconds)
+        if (firstAudio.currentTime >= (chapterEndTime - 0.5)) {
+          console.log("Restarting chapter...");
           Object.values(audioRefs.current).forEach(audio => {
             audio.currentTime = currentChapter.time;
-            if (isPlaying) {
-              audio.play().catch(console.error);
-            }
           });
           setCurrentTime(currentChapter.time);
+          if (isPlaying) {
+            Object.values(audioRefs.current).forEach(audio => {
+              if (!audio.muted) {
+                audio.play().catch(console.error);
+              }
+            });
+          }
         }
       }
     }
@@ -98,11 +115,14 @@ export const useAudioManager = (song: Song) => {
 
   const handleTimeUpdate = (event: Event) => {
     const audio = event.target as HTMLAudioElement;
-    // Only update time if this track is not muted and is actually playing
+    
+    // Update current time based on any playing track
     if (!audio.muted && !audio.paused) {
       setCurrentTime(audio.currentTime);
-      checkAndHandleLooping();
     }
+    
+    // Always check for looping, regardless of which track triggered the update
+    checkAndHandleLooping();
   };
 
   useEffect(() => {
