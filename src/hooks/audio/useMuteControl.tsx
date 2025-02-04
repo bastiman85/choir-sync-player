@@ -28,6 +28,14 @@ export const useMuteControl = ({
     const audio = audioRefs.current[trackId];
     const wasPlaying = Object.values(audioRefs.current).some(a => !a.paused);
     
+    // Find the earliest position among currently playing tracks before any changes
+    let earliestPosition = Infinity;
+    Object.values(audioRefs.current).forEach(track => {
+      if (!track.muted && !track.paused) {
+        earliestPosition = Math.min(earliestPosition, track.currentTime);
+      }
+    });
+    
     if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && !newMuted) {
       setInstrumentalMode(track.voicePart === "instrumental");
       setAllTrackMode(track.voicePart === "all");
@@ -61,6 +69,13 @@ export const useMuteControl = ({
       // Pause all tracks
       Object.values(audioRefs.current).forEach(track => track.pause());
       
+      // Set all tracks to the earliest position we found
+      if (earliestPosition !== Infinity) {
+        Object.values(audioRefs.current).forEach(track => {
+          track.currentTime = earliestPosition;
+        });
+      }
+      
       // Wait a short moment to ensure all tracks are paused
       await new Promise(resolve => setTimeout(resolve, 50));
     }
@@ -71,6 +86,11 @@ export const useMuteControl = ({
       if (newMuted) {
         audio.pause();
       } else if (wasPlaying) {
+        // Set the newly unmuted track to the earliest position
+        if (earliestPosition !== Infinity) {
+          audio.currentTime = earliestPosition;
+        }
+        
         // Synchronize all tracks before resuming
         synchronizeTracks();
         

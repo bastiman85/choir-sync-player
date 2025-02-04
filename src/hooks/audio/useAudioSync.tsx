@@ -46,7 +46,10 @@ export const useAudioSync = ({
 
       // If we found a valid position, use it
       if (earliestPosition !== Infinity) {
-        truePosition.current = earliestPosition;
+        // Ensure we don't jump forward, only backward if needed
+        if (earliestPosition < truePosition.current || Math.abs(earliestPosition - truePosition.current) > 0.5) {
+          truePosition.current = earliestPosition;
+        }
       }
 
       // Update UI with the true position
@@ -58,7 +61,7 @@ export const useAudioSync = ({
       if (!track.muted) {
         const drift = Math.abs(track.currentTime - truePosition.current);
         if (drift > 0.1) {
-          // Always set to the earliest position to avoid skipping content
+          // Always set to the true position to maintain sync
           track.currentTime = truePosition.current;
         }
 
@@ -107,9 +110,12 @@ export const useAudioSync = ({
           });
           
           if (earliestPosition !== Infinity) {
-            truePosition.current = earliestPosition;
-            lastUIUpdate.current = now;
-            setCurrentTime(truePosition.current);
+            // Only update if we need to move backward or if drift is significant
+            if (earliestPosition < truePosition.current || Math.abs(earliestPosition - truePosition.current) > 0.5) {
+              truePosition.current = earliestPosition;
+              lastUIUpdate.current = now;
+              setCurrentTime(truePosition.current);
+            }
           }
         }
       }, 50); // More frequent updates for smoother UI
