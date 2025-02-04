@@ -104,8 +104,8 @@ export const useTrackControls = ({
       });
     }
 
-    // If we were playing, pause all tracks momentarily
-    if (wasPlaying) {
+    // Only pause all tracks momentarily when unmuting during playback
+    if (wasPlaying && !newMuted) {
       // Pause all tracks
       Object.values(audioRefs.current).forEach(track => track.pause());
       
