@@ -36,6 +36,7 @@ const PlayerPage = () => {
           title,
           choir_id,
           pdf_url,
+          slug,
           tracks (
             id,
             url,
@@ -68,6 +69,7 @@ const PlayerPage = () => {
         title: songData.title,
         choirId: songData.choir_id,
         pdf_url: songData.pdf_url,
+        slug: songData.slug,
         tracks: songData.tracks.map((track) => {
           const voicePart = track.voice_part.toLowerCase();
           if (!isValidVoicePart(voicePart)) {
