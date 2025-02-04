@@ -38,10 +38,22 @@ export const useAudioManager = (song: Song) => {
     const tracks = Object.values(audioRefs.current);
     if (tracks.length === 0) return;
 
+    // Find the first unmuted track to use as a reference
+    const referenceTrack = tracks.find(track => !track.muted) || tracks[0];
+    const referenceTime = referenceTrack.currentTime;
+
+    // Update currentTime state to match the actual playback position
+    if (Math.abs(currentTime - referenceTime) > 0.1) {
+      setCurrentTime(referenceTime);
+    }
+
+    // Only sync tracks that are significantly out of sync
     tracks.forEach((track) => {
-      const timeDiff = Math.abs(track.currentTime - currentTime);
-      if (timeDiff > 0.1) {
-        track.currentTime = currentTime;
+      if (track !== referenceTrack) {
+        const timeDiff = Math.abs(track.currentTime - referenceTime);
+        if (timeDiff > 0.1) {
+          track.currentTime = referenceTime;
+        }
       }
     });
   };
@@ -62,7 +74,6 @@ export const useAudioManager = (song: Song) => {
     const firstAudio = Object.values(audioRefs.current)[0];
     if (firstAudio) {
       setCurrentTime(firstAudio.currentTime);
-      synchronizeTracks();
     }
   };
 
