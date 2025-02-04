@@ -28,6 +28,7 @@ const PlayerPage = () => {
   const { data: song, isLoading } = useQuery({
     queryKey: ['song', slug],
     queryFn: async () => {
+      console.log('Fetching song with slug:', slug);
       const { data: songData, error: songError } = await supabase
         .from('songs')
         .select(`
@@ -54,7 +55,7 @@ const PlayerPage = () => {
           html_content,
           html_file_url
         `)
-        .ilike('title', slug?.replace(/-/g, ' ') || '')
+        .eq('slug', slug)
         .single();
 
       if (songError || !songData) {

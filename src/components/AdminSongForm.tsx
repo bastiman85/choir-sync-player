@@ -24,6 +24,13 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
   const [htmlContentUrl, setHtmlContentUrl] = useState(initialSong?.htmlContent || "");
   const [htmlFileUrl, setHtmlFileUrl] = useState(initialSong?.html_file_url || "");
 
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Submitting form with PDF URL:', pdfUrl);
@@ -50,6 +57,7 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
       chapters,
       htmlContent: htmlContentUrl,
       html_file_url: htmlFileUrl,
+      slug: generateSlug(title),
     });
   };
 

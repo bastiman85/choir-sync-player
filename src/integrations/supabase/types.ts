@@ -105,6 +105,7 @@ export type Database = {
           html_file_url: string | null
           id: string
           pdf_url: string | null
+          slug: string
           title: string
         }
         Insert: {
@@ -114,6 +115,7 @@ export type Database = {
           html_file_url?: string | null
           id?: string
           pdf_url?: string | null
+          slug: string
           title: string
         }
         Update: {
@@ -123,6 +125,7 @@ export type Database = {
           html_file_url?: string | null
           id?: string
           pdf_url?: string | null
+          slug?: string
           title?: string
         }
         Relationships: [
