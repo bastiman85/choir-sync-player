@@ -50,8 +50,18 @@ const Player = ({ song }: PlayerProps) => {
 
   const hasChapters = Boolean(song.chapters?.length);
 
-  // Add console log to debug PDF URL
-  console.log('Song PDF URL:', song.pdf_url);
+  // Sort tracks in the desired order
+  const sortedTracks = [...song.tracks].sort((a, b) => {
+    const order = {
+      'all': 0,
+      'soprano': 1,
+      'alto': 2,
+      'tenor': 3,
+      'bass': 4,
+      'instrumental': 5
+    };
+    return (order[a.voicePart] ?? 6) - (order[b.voicePart] ?? 6);
+  });
 
   return (
     <div className="p-3 sm:p-4 max-w-4xl mx-auto">
@@ -60,7 +70,7 @@ const Player = ({ song }: PlayerProps) => {
       <div className="bg-white rounded-lg p-3 sm:p-4 shadow-lg">
         <div className={`grid grid-cols-1 ${hasChapters ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
           <div className={`${hasChapters ? 'md:col-span-2' : 'md:col-span-2'} space-y-3 md:mt-8`}>
-            {song.tracks.map((track) => (
+            {sortedTracks.map((track) => (
               <TrackControls
                 key={track.id}
                 track={track}
