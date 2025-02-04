@@ -24,21 +24,22 @@ export const useTrackSync = ({ audioRefs, truePosition, isPlaying }: UseTrackSyn
     const earliestPosition = findEarliestPosition();
     
     if (earliestPosition !== null) {
-      // Only move backward or if significant drift
-      if (earliestPosition < truePosition.current || 
-          Math.abs(earliestPosition - truePosition.current) > 0.5) {
+      // Never allow forward jumps, only backward or small corrections
+      if (earliestPosition < truePosition.current) {
         truePosition.current = earliestPosition;
       }
     }
 
-    // Sync all non-muted tracks
+    // Sync all non-muted tracks to the true position
     tracks.forEach((track) => {
       if (!track.muted) {
         const drift = Math.abs(track.currentTime - truePosition.current);
-        if (drift > 0.1) {
+        // Only sync if there's significant drift and we're not jumping forward
+        if (drift > 0.1 && track.currentTime > truePosition.current) {
           track.currentTime = truePosition.current;
         }
 
+        // Ensure playback state matches
         if (isPlaying && track.paused) {
           track.currentTime = truePosition.current;
           track.play().catch(console.error);
