@@ -34,6 +34,7 @@ const PlayerPage = () => {
           id,
           title,
           choir_id,
+          pdf_url,
           tracks (
             id,
             url,
@@ -50,7 +51,8 @@ const PlayerPage = () => {
             title,
             start_time
           ),
-          html_content
+          html_content,
+          html_file_url
         `)
         .ilike('title', slug?.replace(/-/g, ' ') || '')
         .single();
@@ -64,6 +66,7 @@ const PlayerPage = () => {
         id: songData.id,
         title: songData.title,
         choirId: songData.choir_id,
+        pdf_url: songData.pdf_url,
         tracks: songData.tracks.map((track) => {
           const voicePart = track.voice_part.toLowerCase();
           if (!isValidVoicePart(voicePart)) {
@@ -92,7 +95,8 @@ const PlayerPage = () => {
           time: chapter.start_time,
           type: "verse" as const
         })),
-        htmlContent: songData.html_content
+        htmlContent: songData.html_content,
+        html_file_url: songData.html_file_url
       };
     }
   });
