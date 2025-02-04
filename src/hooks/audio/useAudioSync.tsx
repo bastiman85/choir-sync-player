@@ -17,7 +17,6 @@ export const useAudioSync = ({
   const lastUpdateTime = useRef<number>(performance.now());
   const truePosition = useRef<number>(0);
   const lastUIUpdate = useRef<number>(0);
-  const driftCompensation = useRef<{ [key: string]: number }>({});
 
   const synchronizeTracks = () => {
     const tracks = Object.values(audioRefs.current);
@@ -32,7 +31,7 @@ export const useAudioSync = ({
     
     lastUpdateTime.current = now;
 
-    // Only update UI every 100ms to prevent jumpy scrubber but maintain responsiveness
+    // Update UI every 100ms to prevent jumpy scrubber but maintain responsiveness
     if (now - lastUIUpdate.current >= 100) {
       if (Math.abs(currentTime - truePosition.current) > 0.05) {
         setCurrentTime(truePosition.current);
@@ -40,30 +39,13 @@ export const useAudioSync = ({
       }
     }
 
-    const SYNC_THRESHOLD = 0.05; // 50ms threshold for better stability
-    const MAX_DRIFT = 0.2; // Increased maximum allowed drift
+    const SYNC_THRESHOLD = 0.05; // 50ms threshold
 
     tracks.forEach((track) => {
       if (!track.muted) {
-        const trackId = track.src;
-        const currentDrift = track.currentTime - truePosition.current;
-        
-        if (!driftCompensation.current[trackId]) {
-          driftCompensation.current[trackId] = 0;
-        }
-
-        // Gentler drift correction
-        driftCompensation.current[trackId] += currentDrift * 0.05;
-        
-        const compensatedPosition = truePosition.current + driftCompensation.current[trackId];
-        
-        if (Math.abs(track.currentTime - compensatedPosition) > SYNC_THRESHOLD) {
-          if (Math.abs(currentDrift) > MAX_DRIFT) {
-            track.currentTime = truePosition.current;
-            driftCompensation.current[trackId] = 0;
-          } else {
-            track.currentTime = compensatedPosition;
-          }
+        // Simple sync check without drift compensation
+        if (Math.abs(track.currentTime - truePosition.current) > SYNC_THRESHOLD) {
+          track.currentTime = truePosition.current;
         }
 
         // Ensure track is playing if it should be
@@ -80,7 +62,6 @@ export const useAudioSync = ({
     truePosition.current = time;
     lastUpdateTime.current = performance.now();
     lastUIUpdate.current = performance.now();
-    driftCompensation.current = {};
     setCurrentTime(time);
   };
 
