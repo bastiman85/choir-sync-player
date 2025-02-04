@@ -29,7 +29,7 @@ const ChapterMarkers = ({ chapters, onChapterClick, currentTime }: ChapterMarker
             className="w-full justify-start"
             onClick={() => onChapterClick(chapter.time)}
           >
-            {chapter.title} ({formatTime(chapter.time)})
+            {chapter.title} <span className="text-muted-foreground">({formatTime(chapter.time)})</span>
           </Button>
         ))}
       </div>
