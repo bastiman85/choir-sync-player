@@ -121,9 +121,13 @@ export const useTrackControls = ({
       if (newMuted) {
         audio.pause();
       } else {
-        // Ensure the track is at the correct position before playing
-        synchronizeTracks();
-        audio.play().catch(console.error);
+        // Only start playing if there's another track already playing
+        const anyTrackPlaying = Object.values(audioRefs.current).some(a => !a.paused);
+        if (anyTrackPlaying) {
+          // Ensure the track is at the correct position before playing
+          synchronizeTracks();
+          audio.play().catch(console.error);
+        }
       }
     }
   };
