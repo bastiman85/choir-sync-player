@@ -7,6 +7,7 @@ import { usePlaybackControls } from "./audio/usePlaybackControls";
 
 export const useAudioManager = (song: Song) => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
+  const syncCheckInterval = useRef<number | null>(null);
   
   const {
     isPlaying,
@@ -45,6 +46,24 @@ export const useAudioManager = (song: Song) => {
     setActiveVoicePart,
   });
 
+  const synchronizeTracks = () => {
+    const tracks = Object.values(audioRefs.current);
+    if (tracks.length === 0) return;
+
+    const referenceTrack = tracks[0];
+    const referenceTime = referenceTrack.currentTime;
+
+    tracks.forEach((track) => {
+      if (track !== referenceTrack) {
+        const timeDiff = Math.abs(track.currentTime - referenceTime);
+        // If tracks are more than 0.1 seconds out of sync, adjust them
+        if (timeDiff > 0.1) {
+          track.currentTime = referenceTime;
+        }
+      }
+    });
+  };
+
   const { handleTrackEnd, togglePlayPause, handleSeek } = usePlaybackControls({
     audioRefs,
     song,
@@ -60,6 +79,7 @@ export const useAudioManager = (song: Song) => {
     const firstAudio = Object.values(audioRefs.current)[0];
     if (firstAudio) {
       setCurrentTime(firstAudio.currentTime);
+      synchronizeTracks();
     }
   };
 
@@ -68,15 +88,18 @@ export const useAudioManager = (song: Song) => {
       const audio = new Audio(track.url);
       audioRefs.current[track.id] = audio;
       
+      // Set initial volume and mute state
       setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
-      
-      // Only unmute the "all" track, mute everything else
       const shouldBeMuted = track.voicePart !== "all";
       setMutedTracks((prev) => ({ ...prev, [track.id]: shouldBeMuted }));
 
       audio.volume = 1;
       audio.muted = shouldBeMuted;
+      
+      // Preload audio
+      audio.preload = "auto";
 
+      // Add event listeners
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.addEventListener("timeupdate", handleTimeUpdate);
       
@@ -91,7 +114,17 @@ export const useAudioManager = (song: Song) => {
     setInstrumentalMode(false);
     setActiveVoicePart("all");
 
+    // Start periodic sync check when playing
+    if (isPlaying) {
+      syncCheckInterval.current = window.setInterval(synchronizeTracks, 1000);
+    }
+
     return () => {
+      // Clean up event listeners and interval
+      if (syncCheckInterval.current) {
+        clearInterval(syncCheckInterval.current);
+      }
+      
       Object.values(audioRefs.current).forEach((audio) => {
         audio.removeEventListener("timeupdate", handleTimeUpdate);
         audio.removeEventListener("ended", handleTrackEnd);
@@ -99,7 +132,7 @@ export const useAudioManager = (song: Song) => {
         audio.currentTime = 0;
       });
     };
-  }, [song]);
+  }, [song, isPlaying]);
 
   return {
     isPlaying,
