@@ -64,22 +64,56 @@ export const useAudioManager = (song: Song) => {
     });
   };
 
-  const { handleTrackEnd, togglePlayPause, handleSeek } = usePlaybackControls({
-    audioRefs,
-    song,
-    isPlaying,
-    setIsPlaying,
-    setCurrentTime,
-    autoRestartSong,
-    autoRestartChapter,
-    getCurrentChapter,
-  });
-
   const handleTimeUpdate = () => {
     const firstAudio = Object.values(audioRefs.current)[0];
     if (firstAudio) {
       setCurrentTime(firstAudio.currentTime);
       synchronizeTracks();
+    }
+  };
+
+  const togglePlayPause = () => {
+    if (isPlaying) {
+      Object.values(audioRefs.current).forEach((audio) => {
+        audio.pause();
+      });
+      if (syncCheckInterval.current) {
+        clearInterval(syncCheckInterval.current);
+        syncCheckInterval.current = null;
+      }
+    } else {
+      Object.values(audioRefs.current).forEach((audio) => {
+        audio.play().catch(console.error);
+      });
+      // Start periodic sync check when playing
+      if (!syncCheckInterval.current) {
+        syncCheckInterval.current = window.setInterval(synchronizeTracks, 1000);
+      }
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleSeek = (value: number[]) => {
+    const newTime = value[0];
+    Object.values(audioRefs.current).forEach((audio) => {
+      audio.currentTime = newTime;
+    });
+    setCurrentTime(newTime);
+  };
+
+  const handleTrackEnd = () => {
+    if (autoRestartSong) {
+      Object.values(audioRefs.current).forEach(audio => {
+        audio.currentTime = 0;
+        audio.play().catch(console.error);
+      });
+      setCurrentTime(0);
+    } else {
+      setIsPlaying(false);
+      if (syncCheckInterval.current) {
+        clearInterval(syncCheckInterval.current);
+        syncCheckInterval.current = null;
+      }
     }
   };
 
@@ -114,11 +148,6 @@ export const useAudioManager = (song: Song) => {
     setInstrumentalMode(false);
     setActiveVoicePart("all");
 
-    // Start periodic sync check when playing
-    if (isPlaying) {
-      syncCheckInterval.current = window.setInterval(synchronizeTracks, 1000);
-    }
-
     return () => {
       // Clean up event listeners and interval
       if (syncCheckInterval.current) {
@@ -132,7 +161,7 @@ export const useAudioManager = (song: Song) => {
         audio.currentTime = 0;
       });
     };
-  }, [song, isPlaying]);
+  }, [song]);
 
   return {
     isPlaying,
