@@ -87,6 +87,7 @@ export const useAudioManager = (song: Song) => {
         
         console.log("Current chapter:", currentChapter.title);
         console.log("Chapter end time:", chapterEndTime);
+        console.log("Next chapter start time:", nextChapter ? nextChapter.time : "No next chapter (using song end)");
         
         // If we're within 0.2 seconds of the chapter end
         if (currentPosition >= chapterEndTime - 0.2) {
