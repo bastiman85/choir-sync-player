@@ -75,7 +75,6 @@ export const useAudioManager = (song: Song) => {
       return;
     }
 
-    const actualDuration = firstAudio.duration;
     const currentPosition = firstAudio.currentTime;
     
     console.log("Checking loop - Current position:", currentPosition);
@@ -86,10 +85,11 @@ export const useAudioManager = (song: Song) => {
       const currentChapter = getCurrentChapter();
       if (currentChapter) {
         const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
-        const chapterEndTime = nextChapter ? nextChapter.time : actualDuration;
+        const chapterEndTime = nextChapter ? nextChapter.time : firstAudio.duration;
         
         console.log("Current chapter:", currentChapter.title);
         console.log("Chapter end time:", chapterEndTime);
+        console.log("Time until chapter end:", chapterEndTime - currentPosition);
         
         if (currentPosition >= chapterEndTime - 0.1) {
           console.log("Restarting chapter from:", currentChapter.time);
@@ -106,7 +106,7 @@ export const useAudioManager = (song: Song) => {
     }
 
     // Handle song looping
-    if (autoRestartSong && currentPosition >= actualDuration - 0.1) {
+    if (autoRestartSong && currentPosition >= firstAudio.duration - 0.1) {
       console.log("Restarting song from beginning");
       Object.values(audioRefs.current).forEach(audio => {
         audio.currentTime = 0;
