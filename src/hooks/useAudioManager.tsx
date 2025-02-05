@@ -90,6 +90,8 @@ export const useAudioManager = (song: Song) => {
         console.log("Current chapter:", currentChapter.title);
         console.log("Chapter end time:", chapterEndTime);
         console.log("Time until chapter end:", chapterEndTime - currentPosition);
+        console.log("Expected chapter end at:", chapterEndTime, "seconds");
+        console.log("Should loop if position reaches:", chapterEndTime - 0.1, "seconds");
         
         if (currentPosition >= chapterEndTime - 0.1) {
           console.log("Restarting chapter from:", currentChapter.time);
