@@ -1,5 +1,5 @@
 import { RefObject, useEffect, useRef } from "react";
-import { Song } from "@/types/song";
+import { Song, ChapterMarker } from "@/types/song";
 
 interface UseChapterLoopProps {
   audioRefs: RefObject<{ [key: string]: HTMLAudioElement }>;
@@ -7,7 +7,7 @@ interface UseChapterLoopProps {
   setCurrentTime: (time: number) => void;
   autoRestartChapter: boolean;
   song: Song;
-  getCurrentChapter: () => { time: number } | null;
+  getCurrentChapter: () => ChapterMarker | null;
 }
 
 export const useChapterLoop = ({
