@@ -72,7 +72,7 @@ export const useAudioManager = (song: Song) => {
 
     const actualDuration = firstAudio.duration;
     const currentPosition = firstAudio.currentTime;
-    const roundedPosition = Math.floor(currentPosition); // Round down to nearest second
+    const roundedPosition = Math.floor(currentPosition);
     
     console.log("Current position:", currentPosition);
     console.log("Rounded position:", roundedPosition);
@@ -83,15 +83,13 @@ export const useAudioManager = (song: Song) => {
     if (autoRestartChapter && song.chapters?.length > 0) {
       const currentChapter = getCurrentChapter();
       if (currentChapter) {
-        const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
-        const chapterEndTime = nextChapter ? nextChapter.time : actualDuration;
-        const roundedChapterEnd = Math.floor(chapterEndTime); // Round down chapter end time
+        const chapterEndTime = currentChapter.endTime;
+        const roundedChapterEnd = Math.floor(chapterEndTime);
         
         console.log("Current chapter:", currentChapter.title);
         console.log("Chapter end time:", chapterEndTime);
         console.log("Rounded chapter end:", roundedChapterEnd);
         
-        // Check if we're at the rounded second of the chapter end
         if (roundedPosition === roundedChapterEnd) {
           console.log("Restarting chapter at time:", currentChapter.time);
           Object.values(audioRefs.current).forEach(audio => {
@@ -105,14 +103,13 @@ export const useAudioManager = (song: Song) => {
               }
             });
           }
-          return; // Exit early since we handled chapter loop
+          return;
         }
       }
     }
 
-    // Handle song loop only if chapter loop didn't trigger
     if (autoRestartSong) {
-      const roundedDuration = Math.floor(actualDuration); // Round down duration
+      const roundedDuration = Math.floor(actualDuration);
       console.log("Rounded duration:", roundedDuration);
       
       if (roundedPosition === roundedDuration) {
@@ -136,12 +133,10 @@ export const useAudioManager = (song: Song) => {
     const audio = event.target as HTMLAudioElement;
     console.log("Time update event fired");
     
-    // Update current time based on any playing track
     if (!audio.muted && !audio.paused) {
       setCurrentTime(audio.currentTime);
     }
     
-    // Always check for looping, regardless of which track triggered the update
     checkAndHandleLooping();
   };
 
@@ -151,18 +146,14 @@ export const useAudioManager = (song: Song) => {
       const audio = new Audio(track.url);
       audioRefs.current[track.id] = audio;
       
-      // Set initial volume and mute state
       setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
       const shouldBeMuted = track.voicePart !== "all";
       setMutedTracks((prev) => ({ ...prev, [track.id]: shouldBeMuted }));
 
       audio.volume = 1;
       audio.muted = shouldBeMuted;
-      
-      // Preload audio
       audio.preload = "auto";
 
-      // Remove existing listeners before adding new ones
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.addEventListener("timeupdate", handleTimeUpdate);
       
@@ -174,7 +165,6 @@ export const useAudioManager = (song: Song) => {
       audio.addEventListener("ended", handleTrackEnd);
     });
 
-    // Set initial state for track modes
     setAllTrackMode(true);
     setInstrumentalMode(false);
     setActiveVoicePart("all");
