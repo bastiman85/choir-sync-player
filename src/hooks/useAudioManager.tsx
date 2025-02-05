@@ -33,7 +33,7 @@ export const useAudioManager = (song: Song) => {
     setActiveVoicePart,
   } = useAudioState(song);
 
-  const { getCurrentChapter } = useChapterManagement(currentTime, song);
+  const { getCurrentChapter, shouldLoopToCurrentChapter } = useChapterManagement(currentTime, song);
 
   const { synchronizeTracks, resetTruePosition } = useAudioSync({
     audioRefs,
@@ -63,15 +63,6 @@ export const useAudioManager = (song: Song) => {
     synchronizeTracks,
   });
 
-  const { handleChapterLoop } = useChapterLoop({
-    audioRefs,
-    currentTime,
-    setCurrentTime,
-    autoRestartChapter,
-    song,
-    getCurrentChapter,
-  });
-
   const handleTimeUpdate = (event: Event) => {
     const audio = event.target as HTMLAudioElement;
     
@@ -91,37 +82,20 @@ export const useAudioManager = (song: Song) => {
         return;
       }
 
-      // Handle chapter looping without interference from sync
+      // Handle chapter looping with improved chapter management
       if (autoRestartChapter && song.chapters?.length > 0) {
         const currentChapter = getCurrentChapter();
-        if (currentChapter) {
-          const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
-          const chapterEndTime = nextChapter ? nextChapter.time : audio.duration;
-          
-          // Check if we just entered a new chapter
-          if (nextChapter && currentPosition >= nextChapter.time && currentPosition <= nextChapter.time + 0.1) {
-            console.log("Detected chapter transition, returning to previous chapter");
-            Object.values(audioRefs.current).forEach(track => {
-              track.currentTime = currentChapter.time;
-              if (!track.muted) {
-                track.play().catch(error => console.error("Error playing audio:", error));
-              }
-            });
-            setCurrentTime(currentChapter.time);
-            return;
-          }
-          
-          // Normal end of chapter check
-          if (currentPosition >= chapterEndTime - 0.1) {
-            Object.values(audioRefs.current).forEach(track => {
-              track.currentTime = currentChapter.time;
-              if (!track.muted) {
-                track.play().catch(error => console.error("Error playing audio:", error));
-              }
-            });
-            setCurrentTime(currentChapter.time);
-            return;
-          }
+        
+        if (currentChapter && shouldLoopToCurrentChapter(autoRestartChapter)) {
+          console.log("Looping back to chapter:", currentChapter.title);
+          Object.values(audioRefs.current).forEach(track => {
+            track.currentTime = currentChapter.time;
+            if (!track.muted) {
+              track.play().catch(error => console.error("Error playing audio:", error));
+            }
+          });
+          setCurrentTime(currentChapter.time);
+          return;
         }
       }
     }

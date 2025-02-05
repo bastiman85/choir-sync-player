@@ -1,51 +1,84 @@
 import { Song, ChapterMarker } from "@/types/song";
+import { useRef } from "react";
 
 export const useChapterManagement = (position: number, song: Song) => {
-  const getCurrentChapter = () => {
+  const currentChapterRef = useRef<ChapterMarker | null>(null);
+  const nextChapterRef = useRef<ChapterMarker | null>(null);
+
+  const updateChapterRefs = () => {
     if (!song.chapters?.length) {
-      console.log("No chapters found in song");
-      return null;
+      currentChapterRef.current = null;
+      nextChapterRef.current = null;
+      return;
     }
 
-    // Sort chapters by time to ensure we check them in order
     const sortedChapters = [...song.chapters].sort((a, b) => a.time - b.time);
     
-    console.log("Current position:", position);
-    console.log("Available chapters:", sortedChapters.map(c => `${c.title} (starts at ${c.time})`));
-    
-    // If we're before the first chapter
-    if (position < sortedChapters[0].time) {
-      console.log(`Current position (${position}) is before first chapter (${sortedChapters[0].time})`);
-      return null;
-    }
-    
-    // Find the current chapter by checking if position is between this chapter's start and the next chapter's start
-    for (let i = 0; i < sortedChapters.length; i++) {
-      const currentChapter = sortedChapters[i];
-      const nextChapter = sortedChapters[i + 1];
-      
-      // If this is the last chapter or if we're between this chapter and the next one
-      if (!nextChapter || position < nextChapter.time) {
-        console.log(`Found current chapter: ${currentChapter.title}`);
-        console.log(`Chapter start time: ${currentChapter.time}`);
-        console.log(`Chapter end time: ${nextChapter ? nextChapter.time : 'end of song'}`);
-        return currentChapter;
-      }
+    // Find current chapter
+    let newCurrentChapter: ChapterMarker | null = null;
+    let newNextChapter: ChapterMarker | null = null;
 
-      // Check if we just entered a new chapter and need to go back
-      if (nextChapter && position >= nextChapter.time && position <= nextChapter.time + 0.1) {
-        console.log("Just entered new chapter, returning previous chapter for repeat");
-        return currentChapter;
+    for (let i = 0; i < sortedChapters.length; i++) {
+      const chapter = sortedChapters[i];
+      const nextChapter = sortedChapters[i + 1];
+
+      if (position >= chapter.time && (!nextChapter || position < nextChapter.time)) {
+        newCurrentChapter = chapter;
+        newNextChapter = nextChapter || null;
+        break;
       }
     }
-    
-    // If we're past all chapters but not at the end, return the last chapter
-    const lastChapter = sortedChapters[sortedChapters.length - 1];
-    console.log(`Past all chapter starts, returning last chapter: ${lastChapter.title}`);
-    return lastChapter;
+
+    // Update refs if chapters have changed
+    if (newCurrentChapter?.id !== currentChapterRef.current?.id) {
+      console.log("Updating current chapter to:", newCurrentChapter?.title);
+      currentChapterRef.current = newCurrentChapter;
+    }
+    if (newNextChapter?.id !== nextChapterRef.current?.id) {
+      console.log("Updating next chapter to:", newNextChapter?.title);
+      nextChapterRef.current = newNextChapter;
+    }
+  };
+
+  const getCurrentChapter = () => {
+    updateChapterRefs();
+    return currentChapterRef.current;
+  };
+
+  const getNextChapter = () => {
+    return nextChapterRef.current;
+  };
+
+  const shouldLoopToCurrentChapter = (autoRestartChapter: boolean) => {
+    if (!autoRestartChapter || !currentChapterRef.current || !nextChapterRef.current) {
+      return false;
+    }
+
+    // Check if we just entered the next chapter (within 0.1 seconds)
+    const justEnteredNextChapter = 
+      position >= nextChapterRef.current.time && 
+      position <= nextChapterRef.current.time + 0.1;
+
+    if (justEnteredNextChapter) {
+      console.log("Just entered next chapter, should loop back to:", currentChapterRef.current.title);
+      return true;
+    }
+
+    // Check if we reached the end of current chapter
+    const chapterEndTime = nextChapterRef.current ? nextChapterRef.current.time : Infinity;
+    const reachedChapterEnd = position >= chapterEndTime - 0.1;
+
+    if (reachedChapterEnd) {
+      console.log("Reached end of chapter, should loop back to:", currentChapterRef.current.title);
+      return true;
+    }
+
+    return false;
   };
 
   return {
     getCurrentChapter,
+    getNextChapter,
+    shouldLoopToCurrentChapter,
   };
 };
