@@ -72,10 +72,8 @@ export const useAudioManager = (song: Song) => {
 
     const actualDuration = firstAudio.duration;
     const currentPosition = firstAudio.currentTime;
-    const roundedPosition = Math.ceil(currentPosition);
     
     console.log("Current position:", currentPosition);
-    console.log("Rounded position:", roundedPosition);
     console.log("Duration:", actualDuration);
     console.log("Auto restart song:", autoRestartSong);
     console.log("Auto restart chapter:", autoRestartChapter);
@@ -84,18 +82,18 @@ export const useAudioManager = (song: Song) => {
     if (autoRestartChapter && song.chapters?.length > 0) {
       const currentChapter = getCurrentChapter();
       if (currentChapter) {
-        const chapterEndTime = currentChapter.endTime;
-        const roundedChapterEnd = Math.floor(chapterEndTime);
+        const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
+        const chapterEndTime = nextChapter ? nextChapter.time : actualDuration;
         
         console.log("Current chapter:", currentChapter.title);
         console.log("Chapter end time:", chapterEndTime);
-        console.log("Rounded chapter end:", roundedChapterEnd);
         
-        if (roundedPosition >= roundedChapterEnd) {
+        // If we're within 0.2 seconds of the chapter end
+        if (currentPosition >= chapterEndTime - 0.2) {
           console.log("Restarting chapter at time:", currentChapter.time);
           Object.values(audioRefs.current).forEach(audio => {
             audio.currentTime = currentChapter.time;
-            if (!audio.muted && isPlaying) {
+            if (!audio.muted) {
               audio.play().catch(error => console.error("Error playing audio:", error));
             }
           });
@@ -107,12 +105,12 @@ export const useAudioManager = (song: Song) => {
 
     // Check for song looping
     if (autoRestartSong) {
-      // If we're very close to the end or at/past the end
+      // If we're within 0.2 seconds of the end
       if (currentPosition >= actualDuration - 0.2) {
         console.log("Restarting song from beginning");
         Object.values(audioRefs.current).forEach(audio => {
           audio.currentTime = 0;
-          if (!audio.muted && isPlaying) {
+          if (!audio.muted) {
             audio.play().catch(error => console.error("Error playing audio:", error));
           }
         });
