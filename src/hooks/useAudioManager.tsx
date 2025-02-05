@@ -33,7 +33,6 @@ export const useAudioManager = (song: Song) => {
     setActiveVoicePart,
   } = useAudioState(song);
 
-  // Keep the ref in sync with the state
   useEffect(() => {
     autoRestartChapterRef.current = autoRestartChapter;
     console.log("Auto restart chapter state changed to:", autoRestartChapter);
@@ -92,6 +91,7 @@ export const useAudioManager = (song: Song) => {
         console.log("Time until chapter end:", chapterEndTime - currentPosition);
         console.log("Expected chapter end at:", chapterEndTime, "seconds");
         console.log("Should loop if position reaches:", chapterEndTime - 0.1, "seconds");
+        console.log("Next chapter starts at:", nextChapter ? nextChapter.time : "end of song");
         
         if (currentPosition >= chapterEndTime - 0.1) {
           console.log("Restarting chapter from:", currentChapter.time);
