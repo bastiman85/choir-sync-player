@@ -48,6 +48,18 @@ const Player = ({ song }: PlayerProps) => {
     setActiveVoicePart(value === 'all' ? 'all' : value.toLowerCase());
   };
 
+  const handleAutoRestartChapterChange = (checked: boolean) => {
+    console.log('Setting autoRestartChapter to:', checked);
+    setAutoRestartChapter(checked);
+    if (checked) setAutoRestartSong(false);
+  };
+
+  const handleAutoRestartSongChange = (checked: boolean) => {
+    console.log('Setting autoRestartSong to:', checked);
+    setAutoRestartSong(checked);
+    if (checked) setAutoRestartChapter(false);
+  };
+
   const hasChapters = Boolean(song.chapters?.length);
 
   // Sort tracks in the desired order
@@ -117,14 +129,8 @@ const Player = ({ song }: PlayerProps) => {
           autoRestartSong={autoRestartSong}
           autoRestartChapter={autoRestartChapter}
           onPlayPauseClick={togglePlayPause}
-          onAutoRestartSongChange={(checked) => {
-            setAutoRestartSong(checked);
-            if (checked) setAutoRestartChapter(false);
-          }}
-          onAutoRestartChapterChange={(checked) => {
-            setAutoRestartChapter(checked);
-            if (checked) setAutoRestartSong(false);
-          }}
+          onAutoRestartSongChange={handleAutoRestartSongChange}
+          onAutoRestartChapterChange={handleAutoRestartChapterChange}
           hasChapters={hasChapters}
         />
 
