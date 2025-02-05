@@ -71,25 +71,21 @@ export const useAudioManager = (song: Song) => {
     const actualDuration = firstAudio.duration;
     const currentPosition = firstAudio.currentTime;
     
-    if (autoRestartSong) {
-      if (currentPosition >= actualDuration - 0.01) {
-        Object.values(audioRefs.current).forEach(audio => {
-          audio.currentTime = 0;
-          if (!audio.muted) {
-            audio.play().catch(error => console.error("Error playing audio:", error));
-          }
-        });
-        setCurrentTime(0);
-      }
-    }
+    console.log("Checking loop - Current position:", currentPosition);
+    console.log("Checking loop - autoRestartChapter:", autoRestartChapter);
 
+    // Handle chapter looping first
     if (autoRestartChapter && song.chapters?.length > 0) {
       const currentChapter = getCurrentChapter();
       if (currentChapter) {
         const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
         const chapterEndTime = nextChapter ? nextChapter.time : actualDuration;
         
-        if (currentPosition >= chapterEndTime - 0.01) {
+        console.log("Current chapter:", currentChapter.title);
+        console.log("Chapter end time:", chapterEndTime);
+        
+        if (currentPosition >= chapterEndTime - 0.1) {
+          console.log("Restarting chapter from:", currentChapter.time);
           Object.values(audioRefs.current).forEach(audio => {
             audio.currentTime = currentChapter.time;
             if (!audio.muted) {
@@ -97,8 +93,21 @@ export const useAudioManager = (song: Song) => {
             }
           });
           setCurrentTime(currentChapter.time);
+          return; // Exit early to prevent song loop check
         }
       }
+    }
+
+    // Handle song looping
+    if (autoRestartSong && currentPosition >= actualDuration - 0.1) {
+      console.log("Restarting song from beginning");
+      Object.values(audioRefs.current).forEach(audio => {
+        audio.currentTime = 0;
+        if (!audio.muted) {
+          audio.play().catch(error => console.error("Error playing audio:", error));
+        }
+      });
+      setCurrentTime(0);
     }
   };
 
