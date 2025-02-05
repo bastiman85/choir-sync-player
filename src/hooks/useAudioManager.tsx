@@ -63,10 +63,8 @@ export const useAudioManager = (song: Song) => {
   });
 
   const checkAndHandleLooping = () => {
-    console.log("Checking for loop conditions...");
     const firstAudio = Object.values(audioRefs.current)[0];
     if (!firstAudio) {
-      console.log("No audio elements found");
       return;
     }
 
@@ -84,10 +82,6 @@ export const useAudioManager = (song: Song) => {
       if (currentChapter) {
         const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
         const chapterEndTime = nextChapter ? nextChapter.time : actualDuration;
-        
-        console.log("Current chapter:", currentChapter.title);
-        console.log("Chapter end time:", chapterEndTime);
-        console.log("Next chapter start time:", nextChapter ? nextChapter.time : "No next chapter (using song end)");
         
         // If we're at or past the chapter end time (with a small buffer)
         if (currentPosition >= chapterEndTime - 0.01) {
@@ -120,9 +114,12 @@ export const useAudioManager = (song: Song) => {
     }
   };
 
+  useEffect(() => {
+    console.log("Auto restart chapter state changed to:", autoRestartChapter);
+  }, [autoRestartChapter]);
+
   const handleTimeUpdate = (event: Event) => {
     const audio = event.target as HTMLAudioElement;
-    console.log("Time update event fired");
     
     if (!audio.muted && !audio.paused) {
       setCurrentTime(audio.currentTime);
@@ -132,7 +129,6 @@ export const useAudioManager = (song: Song) => {
   };
 
   useEffect(() => {
-    console.log("Setting up audio elements...");
     song.tracks.forEach((track) => {
       const audio = new Audio(track.url);
       audioRefs.current[track.id] = audio;
@@ -149,7 +145,6 @@ export const useAudioManager = (song: Song) => {
       audio.addEventListener("timeupdate", handleTimeUpdate);
       
       audio.addEventListener("loadedmetadata", () => {
-        console.log("Audio metadata loaded for track:", track.voicePart);
         setDuration(audio.duration);
       });
       
