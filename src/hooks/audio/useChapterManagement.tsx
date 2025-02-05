@@ -6,7 +6,7 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
   const nextChapterRef = useRef<ChapterMarker | null>(null);
   const lastUpdateTimeRef = useRef<number>(0);
   const lastLoopCheckTimeRef = useRef<number>(0);
-  const loopCheckIntervalRef = useRef<number>(100); // Check every 100ms
+  const loopCheckIntervalRef = useRef<number>(50); // Reduced to 50ms for more frequent checks
 
   const updateChapterRefs = useCallback(() => {
     if (!song.chapters?.length) {
@@ -23,6 +23,8 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     if (timeSinceLastLoopCheck < loopCheckIntervalRef.current) {
       return;
     }
+    
+    lastLoopCheckTimeRef.current = now;
     
     console.log("\n=== Chapter Update Check ===");
     console.log("Time since last update:", timeSinceLastUpdate.toFixed(2), "ms");
@@ -83,14 +85,12 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     console.log("Next chapter time:", nextChapter?.time || "N/A");
     console.log("Time since last chapter update:", (now - lastUpdateTimeRef.current).toFixed(2), "ms");
     
-    // Calculate chapter end time (either next chapter start or song end)
     const chapterEndTime = nextChapter ? nextChapter.time : Infinity;
     
     console.log("Chapter end time:", chapterEndTime);
     console.log("Time until chapter end:", (chapterEndTime - currentTime).toFixed(2));
     console.log("Loop threshold:", (chapterEndTime - 0.1).toFixed(2));
 
-    // Check if we're at the end of the current chapter (within 0.1 seconds)
     const shouldLoop = currentTime >= chapterEndTime - 0.1;
     console.log("Should loop?", shouldLoop);
     console.log("Time comparison:", `${currentTime.toFixed(2)} >= ${(chapterEndTime - 0.1).toFixed(2)}`);
