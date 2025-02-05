@@ -37,16 +37,14 @@ export const useAudioSync = ({
   });
 
   const synchronizeTracks = () => {
-    const now = updatePosition(isPlaying);
-    
-    if (shouldSync(now)) {
-      updateSyncTime(now);
-      const earliestPosition = getEarliestTrackPosition();
-      
-      if (earliestPosition !== null) {
-        updateTruePosition(earliestPosition);
-        syncTrackPositions(truePosition.current);
-      }
+    // Only sync if there's significant drift (more than 0.5 seconds)
+    const earliestPosition = getEarliestTrackPosition();
+    if (earliestPosition !== null) {
+      Object.values(audioRefs.current).forEach(track => {
+        if (!track.muted && Math.abs(track.currentTime - earliestPosition) > 0.5) {
+          track.currentTime = earliestPosition;
+        }
+      });
     }
   };
 
@@ -59,14 +57,10 @@ export const useAudioSync = ({
 
   useEffect(() => {
     if (isPlaying) {
-      synchronizeTracks();
-      
+      // Reduce sync check frequency to avoid interference with looping
       uiUpdateInterval.current = window.setInterval(() => {
-        const earliestPosition = getEarliestTrackPosition();
-        if (earliestPosition !== null) {
-          updateUIPosition(earliestPosition);
-        }
-      }, 50);
+        synchronizeTracks();
+      }, 1000); // Check every second instead of every 50ms
     }
     
     return () => {

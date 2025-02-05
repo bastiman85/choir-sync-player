@@ -91,8 +91,25 @@ export const useAudioManager = (song: Song) => {
         return;
       }
 
-      // Handle chapter looping
-      handleChapterLoop(currentPosition);
+      // Handle chapter looping without interference from sync
+      if (autoRestartChapter && song.chapters?.length > 0) {
+        const currentChapter = getCurrentChapter();
+        if (currentChapter) {
+          const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
+          const chapterEndTime = nextChapter ? nextChapter.time : audio.duration;
+          
+          if (currentPosition >= chapterEndTime - 0.1) {
+            Object.values(audioRefs.current).forEach(track => {
+              track.currentTime = currentChapter.time;
+              if (!track.muted) {
+                track.play().catch(error => console.error("Error playing audio:", error));
+              }
+            });
+            setCurrentTime(currentChapter.time);
+            return;
+          }
+        }
+      }
     }
   };
 
