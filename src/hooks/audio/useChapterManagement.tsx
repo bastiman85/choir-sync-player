@@ -4,9 +4,9 @@ import { Song, ChapterMarker } from "@/types/song";
 export const useChapterManagement = (currentTime: number, song: Song) => {
   const currentChapterRef = useRef<ChapterMarker | null>(null);
   const nextChapterRef = useRef<ChapterMarker | null>(null);
-  const lastUpdateTimeRef = useRef<number>(0);
+  const lastUpdateTimeRef = useRef<number>(performance.now());
   const lastLoopCheckTimeRef = useRef<number>(0);
-  const loopCheckIntervalRef = useRef<number>(50); // Reduced to 50ms for more frequent checks
+  const loopCheckIntervalRef = useRef<number>(50); // 50ms check interval
 
   const updateChapterRefs = useCallback(() => {
     if (!song.chapters?.length) {
@@ -62,17 +62,10 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
 
   const shouldLoopChapter = useCallback((autoRestartChapter: boolean): { shouldLoop: boolean; loopToTime: number } => {
     if (!autoRestartChapter || !currentChapterRef.current) {
-      console.log("\n--- Loop Check Skipped ---");
-      console.log("Reason:", !autoRestartChapter ? "auto-restart is off" : "no current chapter");
-      console.log("Auto restart chapter:", autoRestartChapter);
-      console.log("Current chapter exists:", !!currentChapterRef.current);
-      console.log("-----------------------\n");
       return { shouldLoop: false, loopToTime: 0 };
     }
 
     const now = performance.now();
-    lastLoopCheckTimeRef.current = now;
-
     const currentChapter = currentChapterRef.current;
     const nextChapter = nextChapterRef.current;
     
