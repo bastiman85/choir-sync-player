@@ -5,7 +5,7 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
   const currentChapterRef = useRef<ChapterMarker | null>(null);
   const nextChapterRef = useRef<ChapterMarker | null>(null);
   const lastUpdateTimeRef = useRef<number>(performance.now());
-  const lastLoopCheckTimeRef = useRef<number>(0);
+  const lastLoopCheckTimeRef = useRef<number>(performance.now());
   const loopCheckIntervalRef = useRef<number>(50); // 50ms check interval
 
   const updateChapterRefs = useCallback(() => {
@@ -66,17 +66,17 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     }
 
     const now = performance.now();
+    lastLoopCheckTimeRef.current = now;
+    
     const currentChapter = currentChapterRef.current;
     const nextChapter = nextChapterRef.current;
     
     console.log("\n=== Detailed Loop Check ===");
-    console.log("Timestamp:", new Date().toISOString());
     console.log("Current chapter:", currentChapter.title);
     console.log("Current time:", currentTime.toFixed(2));
     console.log("Chapter start time:", currentChapter.time);
     console.log("Next chapter:", nextChapter?.title || "end of song");
     console.log("Next chapter time:", nextChapter?.time || "N/A");
-    console.log("Time since last chapter update:", (now - lastUpdateTimeRef.current).toFixed(2), "ms");
     
     const chapterEndTime = nextChapter ? nextChapter.time : Infinity;
     
@@ -93,13 +93,10 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
       console.log("Timestamp:", new Date().toISOString());
       console.log(`Chapter end reached at ${currentTime.toFixed(2)}`);
       console.log(`Looping back to ${currentChapter.title} at ${currentChapter.time}`);
-      console.log("Time since last update:", (now - lastUpdateTimeRef.current).toFixed(2), "ms");
       console.log("!!!!!!!!!!!!!!!!!!!!!\n");
       return { shouldLoop: true, loopToTime: currentChapter.time };
     }
 
-    console.log("Not time to loop yet");
-    console.log("========================\n");
     return { shouldLoop: false, loopToTime: 0 };
   }, [currentTime]);
 
