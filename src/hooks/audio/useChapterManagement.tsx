@@ -21,14 +21,19 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
 
       if (currentTime >= chapter.time && (!nextChapter || currentTime < nextChapter.time)) {
         if (currentChapterRef.current?.id !== chapter.id) {
+          console.log("\n=== Chapter Update ===");
           console.log("Current chapter updated to:", chapter.title);
           console.log("Chapter start time:", chapter.time);
+          console.log("Current playback time:", currentTime.toFixed(2));
           if (nextChapter) {
             console.log("Next chapter:", nextChapter.title);
             console.log("Next chapter start time:", nextChapter.time);
+            console.log("Time until next chapter:", (nextChapter.time - currentTime).toFixed(2));
           } else {
             console.log("This is the last chapter");
+            console.log("Time until song end:", "Unknown - using audio duration");
           }
+          console.log("===================\n");
           currentChapterRef.current = chapter;
           nextChapterRef.current = nextChapter || null;
         }
@@ -39,14 +44,18 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
 
   const shouldLoopChapter = useCallback((autoRestartChapter: boolean): { shouldLoop: boolean; loopToTime: number } => {
     if (!autoRestartChapter || !currentChapterRef.current) {
-      console.log("Loop check skipped:", !autoRestartChapter ? "auto-restart is off" : "no current chapter");
+      console.log("\n--- Loop Check Skipped ---");
+      console.log("Reason:", !autoRestartChapter ? "auto-restart is off" : "no current chapter");
+      console.log("Auto restart chapter:", autoRestartChapter);
+      console.log("Current chapter exists:", !!currentChapterRef.current);
+      console.log("-----------------------\n");
       return { shouldLoop: false, loopToTime: 0 };
     }
 
     const currentChapter = currentChapterRef.current;
     const nextChapter = nextChapterRef.current;
     
-    console.log("\n--- Chapter Loop Check ---");
+    console.log("\n=== Chapter Loop Check ===");
     console.log("Current chapter:", currentChapter.title);
     console.log("Current time:", currentTime.toFixed(2));
     console.log("Chapter start time:", currentChapter.time);
@@ -56,16 +65,21 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     
     console.log("Chapter end time:", chapterEndTime);
     console.log("Time until chapter end:", (chapterEndTime - currentTime).toFixed(2));
-    console.log("Will loop if time >= ", (chapterEndTime - 0.1).toFixed(2));
+    console.log("Loop threshold:", (chapterEndTime - 0.1).toFixed(2));
+    console.log("Should loop?", currentTime >= chapterEndTime - 0.1);
+    console.log("Time comparison:", `${currentTime.toFixed(2)} >= ${(chapterEndTime - 0.1).toFixed(2)}`);
 
     // Check if we're at the end of the current chapter (within 0.1 seconds)
     if (currentTime >= chapterEndTime - 0.1) {
-      console.log(`Chapter end reached at ${currentTime.toFixed(2)}. Looping back to ${currentChapter.title} at ${currentChapter.time}`);
+      console.log("LOOP TRIGGERED!");
+      console.log(`Chapter end reached at ${currentTime.toFixed(2)}`);
+      console.log(`Looping back to ${currentChapter.title} at ${currentChapter.time}`);
+      console.log("=======================\n");
       return { shouldLoop: true, loopToTime: currentChapter.time };
     }
 
     console.log("Not time to loop yet");
-    console.log("------------------------\n");
+    console.log("=======================\n");
     return { shouldLoop: false, loopToTime: 0 };
   }, [currentTime]);
 
