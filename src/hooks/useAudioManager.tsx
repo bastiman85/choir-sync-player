@@ -89,8 +89,8 @@ export const useAudioManager = (song: Song) => {
         console.log("Chapter end time:", chapterEndTime);
         console.log("Next chapter start time:", nextChapter ? nextChapter.time : "No next chapter (using song end)");
         
-        // If we're within 0.2 seconds of the chapter end
-        if (currentPosition >= chapterEndTime - 0.2) {
+        // If we're at or past the chapter end time (with a small buffer)
+        if (currentPosition >= chapterEndTime - 0.01) {
           console.log("Restarting chapter at time:", currentChapter.time);
           Object.values(audioRefs.current).forEach(audio => {
             audio.currentTime = currentChapter.time;
@@ -106,8 +106,8 @@ export const useAudioManager = (song: Song) => {
 
     // Check for song looping
     if (autoRestartSong) {
-      // If we're within 0.2 seconds of the end
-      if (currentPosition >= actualDuration - 0.2) {
+      // If we're at or past the end of the song (with a small buffer)
+      if (currentPosition >= actualDuration - 0.01) {
         console.log("Restarting song from beginning");
         Object.values(audioRefs.current).forEach(audio => {
           audio.currentTime = 0;
