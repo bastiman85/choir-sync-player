@@ -98,6 +98,20 @@ export const useAudioManager = (song: Song) => {
           const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
           const chapterEndTime = nextChapter ? nextChapter.time : audio.duration;
           
+          // Check if we just entered a new chapter
+          if (nextChapter && currentPosition >= nextChapter.time && currentPosition <= nextChapter.time + 0.1) {
+            console.log("Detected chapter transition, returning to previous chapter");
+            Object.values(audioRefs.current).forEach(track => {
+              track.currentTime = currentChapter.time;
+              if (!track.muted) {
+                track.play().catch(error => console.error("Error playing audio:", error));
+              }
+            });
+            setCurrentTime(currentChapter.time);
+            return;
+          }
+          
+          // Normal end of chapter check
           if (currentPosition >= chapterEndTime - 0.1) {
             Object.values(audioRefs.current).forEach(track => {
               track.currentTime = currentChapter.time;

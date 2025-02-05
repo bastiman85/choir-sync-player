@@ -1,4 +1,4 @@
-import { Song } from "@/types/song";
+import { Song, ChapterMarker } from "@/types/song";
 
 export const useChapterManagement = (position: number, song: Song) => {
   const getCurrentChapter = () => {
@@ -29,6 +29,12 @@ export const useChapterManagement = (position: number, song: Song) => {
         console.log(`Found current chapter: ${currentChapter.title}`);
         console.log(`Chapter start time: ${currentChapter.time}`);
         console.log(`Chapter end time: ${nextChapter ? nextChapter.time : 'end of song'}`);
+        return currentChapter;
+      }
+
+      // Check if we just entered a new chapter and need to go back
+      if (nextChapter && position >= nextChapter.time && position <= nextChapter.time + 0.1) {
+        console.log("Just entered new chapter, returning previous chapter for repeat");
         return currentChapter;
       }
     }
