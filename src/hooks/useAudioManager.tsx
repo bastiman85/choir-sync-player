@@ -68,14 +68,12 @@ export const useAudioManager = (song: Song) => {
     synchronizeTracks,
   });
 
-  const checkAndHandleLooping = () => {
+  const checkAndHandleLooping = (currentPosition: number) => {
     const firstAudio = Object.values(audioRefs.current)[0];
     if (!firstAudio) {
       console.log("No audio element found");
       return;
     }
-
-    const currentPosition = firstAudio.currentTime;
     
     console.log("------- Loop Check Start -------");
     console.log("Current position:", currentPosition);
@@ -128,9 +126,10 @@ export const useAudioManager = (song: Song) => {
     const audio = event.target as HTMLAudioElement;
     
     if (!audio.muted && !audio.paused) {
-      setCurrentTime(audio.currentTime);
-      // Call checkAndHandleLooping directly here, not in a useEffect
-      checkAndHandleLooping();
+      const currentPosition = audio.currentTime;
+      setCurrentTime(currentPosition);
+      // Call checkAndHandleLooping with the current position
+      checkAndHandleLooping(currentPosition);
     }
   };
 
