@@ -8,6 +8,7 @@ import { useAudioSync } from "./audio/useAudioSync";
 
 export const useAudioManager = (song: Song) => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
+  const autoRestartChapterRef = useRef(false);
   
   const {
     isPlaying,
@@ -31,6 +32,12 @@ export const useAudioManager = (song: Song) => {
     activeVoicePart,
     setActiveVoicePart,
   } = useAudioState(song);
+
+  // Keep the ref in sync with the state
+  useEffect(() => {
+    autoRestartChapterRef.current = autoRestartChapter;
+    console.log("Auto restart chapter state changed to:", autoRestartChapter);
+  }, [autoRestartChapter]);
 
   const { getCurrentChapter } = useChapterManagement(currentTime, song);
 
@@ -72,10 +79,10 @@ export const useAudioManager = (song: Song) => {
     const currentPosition = firstAudio.currentTime;
     
     console.log("Checking loop - Current position:", currentPosition);
-    console.log("Checking loop - autoRestartChapter:", autoRestartChapter);
+    console.log("Checking loop - autoRestartChapter:", autoRestartChapterRef.current);
 
     // Handle chapter looping first
-    if (autoRestartChapter && song.chapters?.length > 0) {
+    if (autoRestartChapterRef.current && song.chapters?.length > 0) {
       const currentChapter = getCurrentChapter();
       if (currentChapter) {
         const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
