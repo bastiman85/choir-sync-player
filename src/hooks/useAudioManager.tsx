@@ -109,6 +109,7 @@ export const useAudioManager = (song: Song) => {
       audio.muted = shouldBeMuted;
       audio.preload = "auto";
 
+      // Remove existing event listeners before adding new ones
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.addEventListener("timeupdate", handleTimeUpdate);
       
