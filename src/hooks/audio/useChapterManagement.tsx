@@ -12,7 +12,7 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
       if (currentTime >= sortedChapters[i].time) {
         // Calculate the end time for this chapter
         const nextChapter = sortedChapters[i + 1];
-        const chapterEndTime = nextChapter ? nextChapter.time : currentTime;
+        const chapterEndTime = nextChapter ? nextChapter.time : Infinity;
         
         return {
           ...sortedChapters[i],
@@ -25,7 +25,7 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     const nextChapter = sortedChapters[1];
     return {
       ...sortedChapters[0],
-      endTime: nextChapter ? nextChapter.time : currentTime
+      endTime: nextChapter ? nextChapter.time : Infinity
     };
   };
 

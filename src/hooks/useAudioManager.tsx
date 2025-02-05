@@ -72,7 +72,7 @@ export const useAudioManager = (song: Song) => {
 
     const actualDuration = firstAudio.duration;
     const currentPosition = firstAudio.currentTime;
-    const roundedPosition = Math.floor(currentPosition);
+    const roundedPosition = Math.ceil(currentPosition); // Changed from Math.floor to Math.ceil
     
     console.log("Current position:", currentPosition);
     console.log("Rounded position:", roundedPosition);
@@ -90,7 +90,7 @@ export const useAudioManager = (song: Song) => {
         console.log("Chapter end time:", chapterEndTime);
         console.log("Rounded chapter end:", roundedChapterEnd);
         
-        if (roundedPosition === roundedChapterEnd) {
+        if (roundedPosition >= roundedChapterEnd) { // Changed from === to >=
           console.log("Restarting chapter at time:", currentChapter.time);
           Object.values(audioRefs.current).forEach(audio => {
             audio.currentTime = currentChapter.time;
@@ -112,7 +112,7 @@ export const useAudioManager = (song: Song) => {
       const roundedDuration = Math.floor(actualDuration);
       console.log("Rounded duration:", roundedDuration);
       
-      if (roundedPosition === roundedDuration) {
+      if (roundedPosition >= roundedDuration) { // Changed from === to >=
         console.log("Restarting song from beginning");
         Object.values(audioRefs.current).forEach(audio => {
           audio.currentTime = 0;
