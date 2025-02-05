@@ -5,7 +5,6 @@ import { useChapterManagement } from "./audio/useChapterManagement";
 import { useTrackControls } from "./audio/useTrackControls";
 import { useAudioControls } from "./audio/useAudioControls";
 import { useAudioSync } from "./audio/useAudioSync";
-import { useChapterLoop } from "./audio/useChapterLoop";
 
 export const useAudioManager = (song: Song) => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
@@ -33,7 +32,7 @@ export const useAudioManager = (song: Song) => {
     setActiveVoicePart,
   } = useAudioState(song);
 
-  const { getCurrentChapter, shouldLoopToCurrentChapter } = useChapterManagement(currentTime, song);
+  const { currentChapter, nextChapter, shouldLoopChapter } = useChapterManagement(currentTime, song);
 
   const { synchronizeTracks, resetTruePosition } = useAudioSync({
     audioRefs,
@@ -72,6 +71,7 @@ export const useAudioManager = (song: Song) => {
 
       // Handle song looping
       if (autoRestartSong && currentPosition >= audio.duration - 0.1) {
+        console.log("Song end reached, looping entire song");
         Object.values(audioRefs.current).forEach(track => {
           track.currentTime = 0;
           if (!track.muted) {
@@ -82,19 +82,19 @@ export const useAudioManager = (song: Song) => {
         return;
       }
 
-      // Handle chapter looping with improved chapter management
+      // Handle chapter looping with improved management
       if (autoRestartChapter && song.chapters?.length > 0) {
-        const currentChapter = getCurrentChapter();
+        const { shouldLoop, loopToTime } = shouldLoopChapter(autoRestartChapter);
         
-        if (currentChapter && shouldLoopToCurrentChapter(autoRestartChapter)) {
-          console.log("Looping back to chapter:", currentChapter.title);
+        if (shouldLoop) {
+          console.log("Looping chapter to time:", loopToTime);
           Object.values(audioRefs.current).forEach(track => {
-            track.currentTime = currentChapter.time;
+            track.currentTime = loopToTime;
             if (!track.muted) {
               track.play().catch(error => console.error("Error playing audio:", error));
             }
           });
-          setCurrentTime(currentChapter.time);
+          setCurrentTime(loopToTime);
           return;
         }
       }
@@ -114,7 +114,6 @@ export const useAudioManager = (song: Song) => {
       audio.muted = shouldBeMuted;
       audio.preload = "auto";
 
-      // Remove existing event listeners before adding new ones
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.addEventListener("timeupdate", handleTimeUpdate);
       
