@@ -6,6 +6,7 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
   const nextChapterRef = useRef<ChapterMarker | null>(null);
   const lastUpdateTimeRef = useRef<number>(0);
   const lastLoopCheckTimeRef = useRef<number>(0);
+  const loopCheckIntervalRef = useRef<number>(100); // Check every 100ms
 
   const updateChapterRefs = useCallback(() => {
     if (!song.chapters?.length) {
@@ -17,6 +18,11 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     const now = performance.now();
     const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
     const timeSinceLastLoopCheck = now - lastLoopCheckTimeRef.current;
+    
+    // Only update if enough time has passed since last check
+    if (timeSinceLastLoopCheck < loopCheckIntervalRef.current) {
+      return;
+    }
     
     console.log("\n=== Chapter Update Check ===");
     console.log("Time since last update:", timeSinceLastUpdate.toFixed(2), "ms");
