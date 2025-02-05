@@ -125,7 +125,37 @@ export const useAudioManager = (song: Song) => {
       setCurrentTime(audio.currentTime);
     }
     
-    checkAndHandleLooping();
+    // Create a closure to capture the current value of autoRestartChapter
+    const checkLooping = () => {
+      const firstAudio = Object.values(audioRefs.current)[0];
+      if (!firstAudio) return;
+      
+      const currentPosition = firstAudio.currentTime;
+      const actualDuration = firstAudio.duration;
+      
+      console.log("Checking loop with autoRestartChapter:", autoRestartChapter);
+      
+      if (autoRestartChapter && song.chapters?.length > 0) {
+        const currentChapter = getCurrentChapter();
+        if (currentChapter) {
+          const nextChapter = song.chapters.find(c => c.time > currentChapter.time);
+          const chapterEndTime = nextChapter ? nextChapter.time : actualDuration;
+          
+          if (currentPosition >= chapterEndTime - 0.01) {
+            console.log("Loop check: Restarting chapter at time:", currentChapter.time);
+            Object.values(audioRefs.current).forEach(audio => {
+              audio.currentTime = currentChapter.time;
+              if (!audio.muted) {
+                audio.play().catch(error => console.error("Error playing audio:", error));
+              }
+            });
+            setCurrentTime(currentChapter.time);
+          }
+        }
+      }
+    };
+    
+    checkLooping();
   };
 
   useEffect(() => {
