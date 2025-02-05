@@ -95,7 +95,6 @@ export const useAudioManager = (song: Song) => {
             }
           });
           setCurrentTime(loopToTime);
-          return;
         }
       }
     }
