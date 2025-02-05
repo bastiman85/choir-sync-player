@@ -79,7 +79,6 @@ export const useAudioManager = (song: Song) => {
           }
         });
         setCurrentTime(0);
-        return;
       }
 
       // Handle chapter looping with improved management

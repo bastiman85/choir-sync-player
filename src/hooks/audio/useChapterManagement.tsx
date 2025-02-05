@@ -20,7 +20,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
       const nextChapter = sortedChapters[i + 1];
 
       if (currentTime >= chapter.time && (!nextChapter || currentTime < nextChapter.time)) {
-        // Only update refs if there's a change
         if (currentChapterRef.current?.id !== chapter.id) {
           console.log("Current chapter updated to:", chapter.title);
           currentChapterRef.current = chapter;
@@ -42,6 +41,10 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     // Calculate chapter end time (either next chapter start or song end)
     const chapterEndTime = nextChapter ? nextChapter.time : Infinity;
     
+    console.log("Current time:", currentTime);
+    console.log("Chapter end time:", chapterEndTime);
+    console.log("Time until chapter end:", chapterEndTime - currentTime);
+
     // Check if we're at the end of the current chapter (within 0.1 seconds)
     if (currentTime >= chapterEndTime - 0.1) {
       console.log(`Chapter end reached at ${currentTime}. Looping back to ${currentChapter.title} at ${currentChapter.time}`);
