@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Player from "@/components/Player";
@@ -29,55 +30,39 @@ const PlayerPage = () => {
     queryKey: ['song', slug],
     queryFn: async () => {
       console.log('Fetching song with slug:', slug);
-      const { data: songData, error: songError } = await supabase
+      const { data, error } = await supabase
         .from('songs')
         .select(`
-          id,
-          title,
-          choir_id,
-          pdf_url,
-          slug,
-          tracks (
-            id,
-            url,
-            voice_part
-          ),
-          lyrics (
-            id,
-            text,
-            start_time,
-            end_time
-          ),
-          chapters (
-            id,
-            title,
-            start_time
-          ),
-          html_content,
-          html_file_url
+          *,
+          tracks (*),
+          lyrics (*),
+          chapters (*)
         `)
         .eq('slug', slug)
         .single();
 
-      if (songError || !songData) {
-        console.error('Error fetching song:', songError);
+      if (error) {
+        console.error('Error fetching song:', error);
+        return null;
+      }
+
+      if (!data) {
         return null;
       }
 
       return {
-        id: songData.id,
-        title: songData.title,
-        choirId: songData.choir_id,
-        pdf_url: songData.pdf_url,
-        slug: songData.slug,
-        tracks: songData.tracks.map((track) => {
+        id: data.id,
+        title: data.title,
+        pdf_url: data.pdf_url,
+        slug: data.slug,
+        tracks: data.tracks.map((track) => {
           const voicePart = track.voice_part.toLowerCase();
           if (!isValidVoicePart(voicePart)) {
             console.error(`Invalid voice part: ${voicePart}`);
             return {
               id: track.id,
               url: track.url,
-              voicePart: "all" as VoicePart // fallback to "all" if invalid
+              voicePart: "all" as VoicePart
             };
           }
           return {
@@ -86,20 +71,20 @@ const PlayerPage = () => {
             voicePart
           };
         }),
-        lyrics: songData.lyrics.map((lyric) => ({
+        lyrics: data.lyrics.map((lyric) => ({
           id: lyric.id,
           text: lyric.text,
           startTime: lyric.start_time,
           endTime: lyric.end_time
         })),
-        chapters: songData.chapters.map((chapter) => ({
+        chapters: data.chapters.map((chapter) => ({
           id: chapter.id,
           title: chapter.title,
           time: chapter.start_time,
           type: "verse" as const
         })),
-        htmlContent: songData.html_content,
-        html_file_url: songData.html_file_url
+        htmlContent: data.html_content,
+        html_file_url: data.html_file_url
       };
     }
   });
