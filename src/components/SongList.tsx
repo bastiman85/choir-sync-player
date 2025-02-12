@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 
 const SongList = () => {
-  const [selectedTermin, setSelectedTermin] = useState<string>("");
+  const [selectedTermin, setSelectedTermin] = useState<string>("all");
 
   const { data: songs, isLoading } = useQuery<Song[]>({
     queryKey: ["songs"],
@@ -69,7 +69,7 @@ const SongList = () => {
 
   const filteredSongs = useMemo(() => {
     if (!songs) return [];
-    if (!selectedTermin) return songs;
+    if (selectedTermin === "all") return songs;
     return songs.filter(song => song.termin === selectedTermin);
   }, [songs, selectedTermin]);
 
@@ -93,7 +93,7 @@ const SongList = () => {
             <SelectValue placeholder="Alla terminer" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Alla terminer</SelectItem>
+            <SelectItem value="all">Alla terminer</SelectItem>
             {uniqueTerminer.map((termin) => (
               <SelectItem key={termin} value={termin}>
                 {termin}
