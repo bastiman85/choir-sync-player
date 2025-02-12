@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -9,6 +9,21 @@ import SongTable from "@/components/admin/SongTable";
 const AdminOverviewPage = () => {
   const navigate = useNavigate();
   const { songs, removeSong } = useSongManagement();
+  const [selectedTermin, setSelectedTermin] = useState<string>("all");
+
+  const uniqueTerminer = useMemo(() => {
+    if (!songs) return [];
+    const terminer = songs
+      .map(song => song.termin)
+      .filter((termin): termin is string => !!termin);
+    return Array.from(new Set(terminer)).sort();
+  }, [songs]);
+
+  const filteredSongs = useMemo(() => {
+    if (!songs) return [];
+    if (selectedTermin === "all") return songs;
+    return songs.filter(song => song.termin === selectedTermin);
+  }, [songs, selectedTermin]);
 
   return (
     <div className="container py-8">
@@ -28,8 +43,11 @@ const AdminOverviewPage = () => {
       </div>
 
       <SongTable
-        songs={songs}
+        songs={filteredSongs}
         onDelete={(songId) => removeSong.mutate(songId)}
+        selectedTermin={selectedTermin}
+        onTerminChange={setSelectedTermin}
+        uniqueTerminer={uniqueTerminer}
       />
     </div>
   );
