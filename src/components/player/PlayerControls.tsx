@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
+import { Play, Pause, RotateCcw, RotateCw } from "lucide-react";
 
 interface PlayerControlsProps {
   isPlaying: boolean;
@@ -16,12 +16,12 @@ const PlayerControls = ({
   currentTime,
 }: PlayerControlsProps) => {
   const handleSkipBack = () => {
-    const newTime = Math.max(0, currentTime - 15);
+    const newTime = Math.max(0, currentTime - 10);
     onSeek([newTime]);
   };
 
   const handleSkipForward = () => {
-    const newTime = currentTime + 15;
+    const newTime = currentTime + 10;
     onSeek([newTime]);
   };
 
@@ -29,7 +29,7 @@ const PlayerControls = ({
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between mb-4">
       <div className="flex items-center gap-2 w-full sm:w-auto">
         <Button onClick={handleSkipBack} variant="outline" size="icon" className="w-10 h-10">
-          <SkipBack className="h-4 w-4" />
+          <RotateCcw className="h-4 w-4" />
         </Button>
         
         <Button onClick={onPlayPauseClick} variant="outline" className="w-full sm:w-auto">
@@ -38,7 +38,7 @@ const PlayerControls = ({
         </Button>
 
         <Button onClick={handleSkipForward} variant="outline" size="icon" className="w-10 h-10">
-          <SkipForward className="h-4 w-4" />
+          <RotateCw className="h-4 w-4" />
         </Button>
       </div>
     </div>
