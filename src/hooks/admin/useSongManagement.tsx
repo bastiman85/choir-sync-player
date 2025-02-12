@@ -23,6 +23,7 @@ export const useSongManagement = () => {
       return data.map(song => ({
         id: song.id,
         title: song.title,
+        termin: song.termin,
         pdf_url: song.pdf_url,
         htmlContent: song.html_content,
         html_file_url: song.html_file_url,
