@@ -1,3 +1,4 @@
+
 import { Song } from "@/types/song";
 import TrackControls from "./player/TrackControls";
 import Scrubber from "./player/Scrubber";
@@ -132,6 +133,8 @@ const Player = ({ song }: PlayerProps) => {
           onAutoRestartSongChange={handleAutoRestartSongChange}
           onAutoRestartChapterChange={handleAutoRestartChapterChange}
           hasChapters={hasChapters}
+          onSeek={handleSeek}
+          currentTime={currentTime}
         />
 
         <div className="flex flex-wrap items-center justify-center gap-4 mt-6 mb-6">
