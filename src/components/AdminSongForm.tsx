@@ -1,6 +1,7 @@
+
 import React, { useState } from "react";
 import { Button } from "./ui/button";
-import { Song, LyricLine, Choir } from "@/types/song";
+import { Song, LyricLine } from "@/types/song";
 import TrackUrlInputs from "./admin/TrackUrlInputs";
 import ChapterMarkers from "./admin/ChapterMarkers";
 import SongBasicDetails from "./admin/SongBasicDetails";
@@ -14,7 +15,6 @@ interface AdminSongFormProps {
 
 const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
   const [title, setTitle] = useState(initialSong?.title || "");
-  const [choirId, setChoirId] = useState(initialSong?.choirId || "");
   const [pdfUrl, setPdfUrl] = useState(initialSong?.pdf_url || "");
   const [tracks, setTracks] = useState(initialSong?.tracks || []);
   const [lyrics, setLyrics] = useState(
@@ -50,7 +50,6 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
 
     onSubmit({
       title,
-      choirId,
       pdf_url: pdfUrl,
       tracks,
       lyrics: parsedLyrics,
@@ -66,8 +65,6 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
       <SongBasicDetails
         title={title}
         onTitleChange={setTitle}
-        choirId={choirId}
-        onChoirIdChange={setChoirId}
         pdfUrl={pdfUrl}
         onPdfUrlChange={setPdfUrl}
       />
