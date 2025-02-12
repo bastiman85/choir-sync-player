@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Song } from "@/types/song";
@@ -26,7 +25,6 @@ export const useSongManagement = () => {
         termin: song.termin,
         pdf_url: song.pdf_url,
         htmlContent: song.html_content,
-        html_file_url: song.html_file_url,
         slug: song.slug,
         tracks: song.tracks.map((track: any) => ({
           id: track.id,

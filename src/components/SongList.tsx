@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -35,7 +34,6 @@ const SongList = () => {
         title: song.title,
         pdf_url: song.pdf_url,
         htmlContent: song.html_content,
-        html_file_url: song.html_file_url,
         termin: song.termin,
         slug: song.slug,
         tracks: song.tracks.map((track: any) => ({

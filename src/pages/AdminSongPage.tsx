@@ -1,4 +1,3 @@
-
 import React from "react";
 import AdminSongForm from "@/components/AdminSongForm";
 import { Song } from "@/types/song";
@@ -34,7 +33,6 @@ const AdminSongPage = () => {
         title: data.title,
         pdf_url: data.pdf_url,
         htmlContent: data.html_content,
-        html_file_url: data.html_file_url,
         termin: data.termin,
         slug: data.slug,
         tracks: data.tracks.map((track: any) => ({
@@ -66,7 +64,6 @@ const AdminSongPage = () => {
         .insert([{
           title: newSong.title,
           html_content: newSong.htmlContent,
-          html_file_url: newSong.html_file_url,
           pdf_url: newSong.pdf_url,
           termin: newSong.termin,
           slug: newSong.slug
@@ -137,7 +134,6 @@ const AdminSongPage = () => {
         .update({
           title: updatedSong.title,
           html_content: updatedSong.htmlContent,
-          html_file_url: updatedSong.html_file_url,
           pdf_url: updatedSong.pdf_url,
           termin: updatedSong.termin,
           slug: updatedSong.slug
