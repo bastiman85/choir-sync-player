@@ -23,7 +23,6 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
   );
   const [chapters, setChapters] = useState(initialSong?.chapters || []);
   const [htmlContentUrl, setHtmlContentUrl] = useState(initialSong?.htmlContent || "");
-  const [htmlFileUrl, setHtmlFileUrl] = useState(initialSong?.html_file_url || "");
 
   const generateSlug = (title: string) => {
     return title
@@ -56,7 +55,6 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
       lyrics: parsedLyrics,
       chapters,
       htmlContent: htmlContentUrl,
-      html_file_url: htmlFileUrl,
       slug: generateSlug(title),
     });
   };
@@ -79,8 +77,6 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
       <HtmlContentInput
         htmlContentUrl={htmlContentUrl}
         onHtmlContentUrlChange={setHtmlContentUrl}
-        htmlFileUrl={htmlFileUrl}
-        onHtmlFileUrlChange={setHtmlFileUrl}
       />
 
       <ChapterMarkers chapters={chapters} onChaptersChange={setChapters} />
