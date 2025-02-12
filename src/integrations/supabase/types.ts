@@ -101,7 +101,6 @@ export type Database = {
         Row: {
           created_at: string
           html_content: string | null
-          html_file_url: string | null
           id: string
           pdf_url: string | null
           slug: string
@@ -111,7 +110,6 @@ export type Database = {
         Insert: {
           created_at?: string
           html_content?: string | null
-          html_file_url?: string | null
           id?: string
           pdf_url?: string | null
           slug: string
@@ -121,7 +119,6 @@ export type Database = {
         Update: {
           created_at?: string
           html_content?: string | null
-          html_file_url?: string | null
           id?: string
           pdf_url?: string | null
           slug?: string
