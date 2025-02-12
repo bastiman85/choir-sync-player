@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -26,7 +27,7 @@ const SongList = () => {
           lyrics (*),
           chapters (*)
         `)
-        .order('created_at', { ascending: false });
+        .order('title', { ascending: true });
       if (error) throw error;
       
       return data.map(song => ({

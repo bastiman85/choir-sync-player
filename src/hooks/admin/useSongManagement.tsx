@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Song } from "@/types/song";
@@ -16,7 +17,8 @@ export const useSongManagement = () => {
           tracks (*),
           lyrics (*),
           chapters (*)
-        `);
+        `)
+        .order('title', { ascending: true });
       if (error) throw error;
 
       return data.map(song => ({
