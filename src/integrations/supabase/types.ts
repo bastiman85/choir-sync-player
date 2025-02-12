@@ -99,7 +99,6 @@ export type Database = {
       }
       songs: {
         Row: {
-          choir_id: string | null
           created_at: string
           html_content: string | null
           html_file_url: string | null
@@ -109,7 +108,6 @@ export type Database = {
           title: string
         }
         Insert: {
-          choir_id?: string | null
           created_at?: string
           html_content?: string | null
           html_file_url?: string | null
@@ -119,7 +117,6 @@ export type Database = {
           title: string
         }
         Update: {
-          choir_id?: string | null
           created_at?: string
           html_content?: string | null
           html_file_url?: string | null
@@ -128,15 +125,7 @@ export type Database = {
           slug?: string
           title?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "songs_choir_id_fkey"
-            columns: ["choir_id"]
-            isOneToOne: false
-            referencedRelation: "choirs"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tracks: {
         Row: {

@@ -1,3 +1,4 @@
+
 export type VoicePart = "soprano" | "alto" | "tenor" | "bass" | "instrumental" | "all";
 
 export interface Track {
@@ -25,22 +26,9 @@ export interface Song {
   title: string;
   tracks: Track[];
   lyrics: LyricLine[];
-  choirId: string;
   chapters: ChapterMarker[];
   htmlContent?: string;
   pdf_url?: string;
   html_file_url?: string;
   slug: string;
-}
-
-export interface Choir {
-  id: string;
-  name: string;
-  description?: string;
-}
-
-export interface ChoirSong {
-  id: string;
-  choirId: string;
-  songId: string;
 }
