@@ -16,6 +16,7 @@ interface AdminSongFormProps {
 const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
   const [title, setTitle] = useState(initialSong?.title || "");
   const [pdfUrl, setPdfUrl] = useState(initialSong?.pdf_url || "");
+  const [termin, setTermin] = useState(initialSong?.termin || "");
   const [tracks, setTracks] = useState(initialSong?.tracks || []);
   const [lyrics, setLyrics] = useState(
     initialSong?.lyrics.map((l) => `${l.startTime},${l.endTime},${l.text}`).join("\n") || ""
@@ -33,7 +34,6 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Submitting form with PDF URL:', pdfUrl);
     
     const parsedLyrics: LyricLine[] = lyrics
       .split("\n")
@@ -51,6 +51,7 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
     onSubmit({
       title,
       pdf_url: pdfUrl,
+      termin,
       tracks,
       lyrics: parsedLyrics,
       chapters,
@@ -67,6 +68,8 @@ const AdminSongForm = ({ onSubmit, initialSong }: AdminSongFormProps) => {
         onTitleChange={setTitle}
         pdfUrl={pdfUrl}
         onPdfUrlChange={setPdfUrl}
+        termin={termin}
+        onTerminChange={setTermin}
       />
 
       <TrackUrlInputs tracks={tracks} onTracksChange={setTracks} />

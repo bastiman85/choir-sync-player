@@ -24,6 +24,7 @@ export interface ChapterMarker {
 export interface Song {
   id: string;
   title: string;
+  termin?: string;
   tracks: Track[];
   lyrics: LyricLine[];
   chapters: ChapterMarker[];

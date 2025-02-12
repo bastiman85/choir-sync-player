@@ -6,6 +6,8 @@ interface SongBasicDetailsProps {
   onTitleChange: (title: string) => void;
   pdfUrl: string;
   onPdfUrlChange: (pdfUrl: string) => void;
+  termin: string;
+  onTerminChange: (termin: string) => void;
 }
 
 const SongBasicDetails = ({
@@ -13,6 +15,8 @@ const SongBasicDetails = ({
   onTitleChange,
   pdfUrl,
   onPdfUrlChange,
+  termin,
+  onTerminChange,
 }: SongBasicDetailsProps) => {
   return (
     <div className="space-y-6">
@@ -22,6 +26,15 @@ const SongBasicDetails = ({
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
           placeholder="Ange sångtitel"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Termin</label>
+        <Input
+          value={termin}
+          onChange={(e) => onTerminChange(e.target.value)}
+          placeholder="Ange termin (t.ex. VT24)"
         />
       </div>
 

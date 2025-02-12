@@ -35,6 +35,7 @@ const AdminSongPage = () => {
         pdf_url: data.pdf_url,
         htmlContent: data.html_content,
         html_file_url: data.html_file_url,
+        termin: data.termin,
         slug: data.slug,
         tracks: data.tracks.map((track: any) => ({
           id: track.id,
@@ -67,6 +68,7 @@ const AdminSongPage = () => {
           html_content: newSong.htmlContent,
           html_file_url: newSong.html_file_url,
           pdf_url: newSong.pdf_url,
+          termin: newSong.termin,
           slug: newSong.slug
         }])
         .select()
@@ -137,6 +139,7 @@ const AdminSongPage = () => {
           html_content: updatedSong.htmlContent,
           html_file_url: updatedSong.html_file_url,
           pdf_url: updatedSong.pdf_url,
+          termin: updatedSong.termin,
           slug: updatedSong.slug
         })
         .eq('id', id);
