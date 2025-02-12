@@ -1,3 +1,4 @@
+
 import { useRef, useEffect } from "react";
 import { Song } from "@/types/song";
 import { useAudioState } from "./audio/useAudioState";
@@ -24,15 +25,11 @@ export const useAudioManager = (song: Song) => {
     setInstrumentalMode,
     allTrackMode,
     setAllTrackMode,
-    autoRestartSong,
-    setAutoRestartSong,
-    autoRestartChapter,
-    setAutoRestartChapter,
     activeVoicePart,
     setActiveVoicePart,
   } = useAudioState(song);
 
-  const { currentChapter, nextChapter, shouldLoopChapter } = useChapterManagement(currentTime, song);
+  const { currentChapter } = useChapterManagement(currentTime, song);
 
   const { synchronizeTracks, resetTruePosition } = useAudioSync({
     audioRefs,
@@ -45,7 +42,6 @@ export const useAudioManager = (song: Song) => {
     audioRefs,
     setIsPlaying,
     setCurrentTime,
-    autoRestartSong,
     resetTruePosition,
   });
 
@@ -64,57 +60,9 @@ export const useAudioManager = (song: Song) => {
 
   const handleTimeUpdate = (event: Event) => {
     const audio = event.target as HTMLAudioElement;
-    
     if (!audio.muted && !audio.paused) {
       const currentPosition = audio.currentTime;
       setCurrentTime(currentPosition);
-
-      console.log("\n=== Time Update Check ===");
-      console.log("Current position:", currentPosition.toFixed(2));
-      console.log("Auto restart song:", autoRestartSong);
-      console.log("Auto restart chapter:", autoRestartChapter);
-      
-      // Handle song looping
-      if (autoRestartSong && currentPosition >= audio.duration - 0.1) {
-        console.log("\n=== Song Loop Check ===");
-        console.log("Song end reached, looping entire song");
-        console.log("Current position:", currentPosition.toFixed(2));
-        console.log("Audio duration:", audio.duration.toFixed(2));
-        Object.values(audioRefs.current).forEach(track => {
-          track.currentTime = 0;
-          if (!track.muted) {
-            track.play().catch(error => console.error("Error playing audio:", error));
-          }
-        });
-        setCurrentTime(0);
-      }
-
-      // Handle chapter looping with improved management
-      if (autoRestartChapter && song.chapters?.length > 0) {
-        console.log("\n=== Chapter Loop Management ===");
-        console.log("Auto restart chapter is enabled");
-        console.log("Current chapter:", currentChapter?.title);
-        console.log("Next chapter:", nextChapter?.title);
-        
-        const { shouldLoop, loopToTime } = shouldLoopChapter(autoRestartChapter);
-        
-        if (shouldLoop) {
-          console.log("\n!!! LOOP EXECUTION !!!");
-          console.log("Loop triggered - Resetting to time:", loopToTime);
-          Object.values(audioRefs.current).forEach(track => {
-            track.currentTime = loopToTime;
-            if (!track.muted) {
-              track.play().catch(error => console.error("Error playing audio:", error));
-            }
-          });
-          setCurrentTime(loopToTime);
-          console.log("Loop complete - New current time:", loopToTime);
-          console.log("!!!!!!!!!!!!!!!!!!!!!!\n");
-        } else {
-          console.log("No loop needed at current time:", currentPosition.toFixed(2));
-        }
-        console.log("============================\n");
-      }
     }
   };
 
@@ -161,11 +109,7 @@ export const useAudioManager = (song: Song) => {
     duration,
     volumes,
     mutedTracks,
-    autoRestartSong,
-    autoRestartChapter,
-    setAutoRestartSong,
-    setAutoRestartChapter,
-    togglePlayPause: () => togglePlayPause(isPlaying),
+    togglePlayPause,
     handleVolumeChange,
     handleMuteToggle,
     handleSeek,
