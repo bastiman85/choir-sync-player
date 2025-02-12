@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Song } from "@/types/song";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const SongList = () => {
   const { data: songs, isLoading } = useQuery<Song[]>({
@@ -47,24 +48,55 @@ const SongList = () => {
   });
 
   if (isLoading) {
-    return <div>Laddar sånger...</div>;
+    return <div className="text-center py-8">Laddar sånger...</div>;
   }
 
   if (!songs?.length) {
-    return <div>Inga sånger hittades</div>;
+    return <div className="text-center py-8">Inga sånger hittades</div>;
   }
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-      {songs.map((song) => (
-        <Link
-          key={song.id}
-          to={`/player/${song.slug}`}
-          className="block p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-        >
-          <h3 className="font-medium">{song.title}</h3>
-        </Link>
-      ))}
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Titel</TableHead>
+            <TableHead>Antal spår</TableHead>
+            <TableHead>PDF</TableHead>
+            <TableHead className="w-[100px]"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {songs.map((song) => (
+            <TableRow key={song.id}>
+              <TableCell>{song.title}</TableCell>
+              <TableCell>{song.tracks.length}</TableCell>
+              <TableCell>
+                {song.pdf_url ? (
+                  <a 
+                    href={song.pdf_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Visa PDF
+                  </a>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
+              </TableCell>
+              <TableCell>
+                <Link
+                  to={`/player/${song.slug}`}
+                  className="text-blue-600 hover:underline"
+                >
+                  Spela
+                </Link>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };
