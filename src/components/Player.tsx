@@ -20,7 +20,6 @@ const Player = ({ song }: PlayerProps) => {
   const [activeVoicePart, setActiveVoicePart] = useState<string>('all');
   
   useEffect(() => {
-    // Update page title
     document.title = song.title;
   }, [song.title]);
 
@@ -30,10 +29,6 @@ const Player = ({ song }: PlayerProps) => {
     duration,
     volumes,
     mutedTracks,
-    autoRestartSong,
-    autoRestartChapter,
-    setAutoRestartSong,
-    setAutoRestartChapter,
     togglePlayPause,
     handleVolumeChange,
     handleMuteToggle,
@@ -49,21 +44,8 @@ const Player = ({ song }: PlayerProps) => {
     setActiveVoicePart(value === 'all' ? 'all' : value.toLowerCase());
   };
 
-  const handleAutoRestartChapterChange = (checked: boolean) => {
-    console.log('Setting autoRestartChapter to:', checked);
-    setAutoRestartChapter(checked);
-    if (checked) setAutoRestartSong(false);
-  };
-
-  const handleAutoRestartSongChange = (checked: boolean) => {
-    console.log('Setting autoRestartSong to:', checked);
-    setAutoRestartSong(checked);
-    if (checked) setAutoRestartChapter(false);
-  };
-
   const hasChapters = Boolean(song.chapters?.length);
 
-  // Sort tracks in the desired order
   const sortedTracks = [...song.tracks].sort((a, b) => {
     const order = {
       'all': 0,
@@ -75,6 +57,10 @@ const Player = ({ song }: PlayerProps) => {
     };
     return (order[a.voicePart] ?? 6) - (order[b.voicePart] ?? 6);
   });
+
+  const handlePlayPauseClick = () => {
+    togglePlayPause(isPlaying);
+  };
 
   return (
     <div className="p-3 sm:p-4 max-w-4xl mx-auto">
@@ -127,12 +113,7 @@ const Player = ({ song }: PlayerProps) => {
 
         <PlayerControls
           isPlaying={isPlaying}
-          autoRestartSong={autoRestartSong}
-          autoRestartChapter={autoRestartChapter}
-          onPlayPauseClick={togglePlayPause}
-          onAutoRestartSongChange={handleAutoRestartSongChange}
-          onAutoRestartChapterChange={handleAutoRestartChapterChange}
-          hasChapters={hasChapters}
+          onPlayPauseClick={handlePlayPauseClick}
           onSeek={handleSeek}
           currentTime={currentTime}
         />
