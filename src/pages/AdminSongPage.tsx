@@ -1,3 +1,4 @@
+
 import React from "react";
 import AdminSongForm from "@/components/AdminSongForm";
 import { Song } from "@/types/song";
@@ -50,6 +51,7 @@ const AdminSongPage = () => {
           id: chapter.id,
           title: chapter.title,
           time: chapter.start_time,
+          endTime: chapter.end_time,
           type: "verse" as const
         }))
       } as Song;
