@@ -72,7 +72,6 @@ export const useAudioManager = (song: Song) => {
     synchronizeTracks,
   });
 
-  // Separate useEffect for audio end event listeners
   useEffect(() => {
     Object.values(audioRefs.current).forEach((audio) => {
       const handleEnded = () => {
@@ -96,7 +95,6 @@ export const useAudioManager = (song: Song) => {
     });
   }, [autoRestartSong]);
 
-  // Main useEffect for audio setup
   useEffect(() => {
     song.tracks.forEach((track) => {
       const audio = new Audio(track.url);
@@ -135,10 +133,10 @@ export const useAudioManager = (song: Song) => {
     const audio = event.target as HTMLAudioElement;
     if (!audio.muted && !audio.paused) {
       const currentPosition = audio.currentTime;
-      if (autoRestartChapter) {
-        handleChapterLoop(currentPosition);
+      const chapterLooped = handleChapterLoop(currentPosition); // Spara returvärdet
+      if (!chapterLooped) { // Uppdatera bara currentTime om vi inte loopade
+        setCurrentTime(currentPosition);
       }
-      setCurrentTime(currentPosition);
     }
   };
 
