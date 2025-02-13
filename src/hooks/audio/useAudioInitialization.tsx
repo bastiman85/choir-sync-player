@@ -22,7 +22,7 @@ export const useAudioInitialization = ({
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
   const loadingPromises = useRef<{ [key: string]: Promise<void> }>({});
   const audioContextRef = useRef<AudioContext | null>(null);
-  const mediaSourceRefs = useRef<{ [key: string]: MediaSource }>({});
+  const objectUrlsRef = useRef<{ [key: string]: string }>({});
 
   const initAudioContext = () => {
     if (!audioContextRef.current) {
@@ -62,7 +62,7 @@ export const useAudioInitialization = ({
         audio.src = objectUrl;
         
         // Spara object URL för senare cleanup
-        mediaSourceRefs.current[track.id] = objectUrl as any;
+        objectUrlsRef.current[track.id] = objectUrl;
       } catch (error) {
         console.error("Error loading audio:", error);
         resolve();
@@ -152,8 +152,8 @@ export const useAudioInitialization = ({
     });
     
     // Rensa object URLs
-    Object.values(mediaSourceRefs.current).forEach(url => {
-      URL.revokeObjectURL(url as string);
+    Object.values(objectUrlsRef.current).forEach(url => {
+      URL.revokeObjectURL(url);
     });
     
     if (audioContextRef.current) {
@@ -163,7 +163,7 @@ export const useAudioInitialization = ({
     
     audioRefs.current = {};
     loadingPromises.current = {};
-    mediaSourceRefs.current = {};
+    objectUrlsRef.current = {};
   };
 
   return {
