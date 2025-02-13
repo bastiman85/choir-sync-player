@@ -10,11 +10,8 @@ export const useTrackPosition = ({ audioRefs, truePosition }: UseTrackPositionPr
   const syncTrackPositions = (targetPosition: number) => {
     Object.values(audioRefs.current).forEach(track => {
       if (!track.muted && !track.paused) {
-        const drift = Math.abs(track.currentTime - targetPosition);
-        // Minska toleransen för drift från 0.05 till 0.02 sekunder
-        if (drift > 0.02) {
-          track.currentTime = targetPosition;
-        }
+        // Ta bort drift-korrigering helt och hållet
+        track.currentTime = targetPosition;
       }
     });
   };
