@@ -43,25 +43,69 @@ export const useAudioInitialization = ({
       audio.setAttribute('playsinline', '');
       audio.setAttribute('webkit-playsinline', '');
       
-      // Sätt källa direkt
-      audio.src = track.url;
+      // Tvinga Safari att preload hela filen
+      if ('mediaGroup' in audio) {
+        audio.mediaGroup = 'audiogroup'; // Gruppera ljudfiler för bättre buffringshantering
+      }
+      
+      // Försök sätta buffer mode för mer aggressiv buffring
+      if ('mozAutoplayEnabled' in audio) {
+        (audio as any).mozPreservesPitch = false;
+        (audio as any).mozAutoplayEnabled = true;
+      }
+      
+      // Tvinga fram högsta prioritet för buffring
+      if ('preload' in audio) {
+        audio.preload = 'auto';
+        // @ts-ignore - Webkit-specifikt attribut
+        if ('webkitPreservesPitch' in audio) {
+          // @ts-ignore
+          audio.webkitPreservesPitch = false;
+        }
+      }
+      
+      // Sätt media attribut för bättre prestanda
+      audio.setAttribute('x-webkit-airplay', 'allow');
+      audio.setAttribute('controls', 'none');
+      
+      // Lägg till range request header via en temporär länk
+      const url = new URL(track.url);
+      url.searchParams.set('range', 'bytes=0-'); // Be om hela filen
+      audio.src = url.toString();
       
       const handleLoaded = () => {
         audioRefs.current[track.id] = audio;
         if (audio.duration && !isNaN(audio.duration)) {
           setDuration(audio.duration);
         }
+        console.log(`Track ${track.id} loaded, duration:`, audio.duration);
         resolve();
       };
 
+      const handleCanPlayThrough = () => {
+        console.log(`Track ${track.id} can play through`);
+      };
+
+      const handleProgress = () => {
+        if (audio.buffered.length > 0) {
+          const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
+          console.log(`Track ${track.id} buffered to:`, bufferedEnd);
+        }
+      };
+
       const handleError = (e: Event) => {
-        console.error(`Error loading track ${track.id}`);
-        resolve();
+        console.error(`Error loading track ${track.id}:`, e);
+        // För iOS, försök igen med timeout
+        setTimeout(() => {
+          audio.load();
+        }, 1000);
       };
 
       const setupAudioEvents = () => {
         audio.addEventListener("loadeddata", handleLoaded);
         audio.addEventListener("error", handleError);
+        audio.addEventListener("canplaythrough", handleCanPlayThrough);
+        audio.addEventListener("progress", handleProgress);
         
         // Lägg till timeupdate-lyssnare för synkronisering
         audio.addEventListener("timeupdate", () => {
@@ -80,7 +124,16 @@ export const useAudioInitialization = ({
       };
       
       setupAudioEvents();
+      
+      // Starta laddningen aggressivt
       audio.load();
+      // Försök förbuffa genom att spela och pausa direkt
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }).catch(() => {
+        // Ignorera fel här, det är okej
+      });
     });
 
     loadingPromises.current[track.id] = loadingPromise;
@@ -91,9 +144,10 @@ export const useAudioInitialization = ({
     const audioContext = initAudioContext();
     
     try {
-      // Ladda alla spår parallellt
-      const loadPromises = song.tracks.map(track => loadTrack(track));
-      await Promise.all(loadPromises);
+      // Ladda spåren sekventiellt för bättre stabilitet på iOS
+      for (const track of song.tracks) {
+        await loadTrack(track);
+      }
       
       // Konfigurera varje spår efter laddning
       song.tracks.forEach(track => {
@@ -123,6 +177,8 @@ export const useAudioInitialization = ({
     Object.values(audioRefs.current).forEach((audio) => {
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("ended", handleTrackEnd);
+      audio.removeEventListener("canplaythrough", () => {});
+      audio.removeEventListener("progress", () => {});
       audio.pause();
       audio.currentTime = 0;
       audio.src = '';
