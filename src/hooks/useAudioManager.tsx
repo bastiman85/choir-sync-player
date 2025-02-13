@@ -133,16 +133,16 @@ export const useAudioManager = (song: Song) => {
     const audio = event.target as HTMLAudioElement;
     if (!audio.muted && !audio.paused) {
       const currentPosition = audio.currentTime;
-      const chapter = getCurrentChapter();
       
+      // Använd currentChapter från useChapterManagement istället för att anropa getCurrentChapter igen
       console.log("\n=== Time Update Check ===");
       console.log("Auto restart chapter enabled:", autoRestartChapter);
       console.log("Current position:", currentPosition.toFixed(2));
-      console.log("Current chapter:", chapter?.title);
-      console.log("Chapter end time:", chapter?.endTime);
+      console.log("Current chapter:", currentChapter?.title);
+      console.log("Chapter end time:", currentChapter?.endTime);
       
       // Om vi har ett kapitel och har passerat dess sluttid, låt looplogiken hantera det
-      if (chapter?.endTime && currentPosition >= chapter.endTime) {
+      if (currentChapter?.endTime && currentPosition >= currentChapter.endTime) {
         console.log("Past chapter end, attempting loop with autoRestartChapter =", autoRestartChapter);
         const looped = handleChapterLoop(currentPosition);
         console.log("Loop attempt completed, result:", looped);
