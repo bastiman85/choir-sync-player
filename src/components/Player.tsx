@@ -121,7 +121,7 @@ const Player = ({ song }: PlayerProps) => {
 
         <PlayerControls
           isPlaying={isPlaying}
-          onPlayPauseClick={() => togglePlayPause(isPlaying)}
+          onPlayPauseClick={togglePlayPause}
           onSkipForward={handleSkipForward}
           onSkipBack={handleSkipBack}
           currentTime={currentTime}
