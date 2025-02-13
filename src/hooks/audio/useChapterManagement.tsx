@@ -20,7 +20,12 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
       const nextChapter = sortedChapters[i + 1];
 
       if (currentTime >= chapter.time && (!nextChapter || currentTime < nextChapter.time)) {
-        return chapter;
+        // Sätt endTime baserat på nästa kapitel eller sångens slut
+        const chapterWithEndTime = {
+          ...chapter,
+          endTime: nextChapter ? nextChapter.time : undefined
+        };
+        return chapterWithEndTime;
       }
     }
     return null;
@@ -52,21 +57,27 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
         // Always update nextChapterRef even if chapter hasn't changed
         nextChapterRef.current = nextChapter || null;
         
+        // Sätt endTime baserat på nästa kapitel
+        const chapterWithEndTime = {
+          ...chapter,
+          endTime: nextChapter ? nextChapter.time : undefined
+        };
+        
         if (currentChapterRef.current?.id !== chapter.id) {
           console.log("\n=== Chapter State Change ===");
           console.log("Timestamp:", new Date().toISOString());
           console.log("Current time:", currentTime.toFixed(2));
           console.log("Previous chapter:", currentChapterRef.current?.title);
           console.log("New chapter:", chapter.title);
-          console.log("Raw chapter data:", chapter); // Lägg till denna rad för att se all data
-          console.log("Chapter boundaries:", chapter.time, "to", chapter.endTime || "no end time set");
+          console.log("Raw chapter data:", chapterWithEndTime);
+          console.log("Chapter boundaries:", chapter.time, "to", chapterWithEndTime.endTime || "no end time set");
           if (nextChapter) {
             console.log("Next chapter:", nextChapter.title);
             console.log("Next chapter starts at:", nextChapter.time);
           }
           console.log("=========================\n");
           
-          currentChapterRef.current = chapter;
+          currentChapterRef.current = chapterWithEndTime;
           lastUpdateTimeRef.current = now;
         } else {
           // Logga bara var 2:a sekund om kapitlet inte ändrats
@@ -75,9 +86,9 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
             console.log("\n=== Chapter Update Check ===");
             console.log("Current time:", currentTime.toFixed(2));
             console.log("Current chapter:", chapter.title);
-            console.log("Raw chapter data:", chapter); // Lägg till denna rad för att se all data
-            if (chapter.endTime) {
-              console.log("Time until chapter end:", (chapter.endTime - currentTime).toFixed(2));
+            console.log("Raw chapter data:", chapterWithEndTime);
+            if (chapterWithEndTime.endTime) {
+              console.log("Time until chapter end:", (chapterWithEndTime.endTime - currentTime).toFixed(2));
             }
             if (nextChapter) {
               console.log("Next chapter starts at:", nextChapter.time);
