@@ -14,7 +14,7 @@ export const useAudioControls = ({
   setCurrentTime,
   resetTruePosition,
 }: UseAudioControlsProps) => {
-  const SYNC_PAUSE_DURATION = 100; // 100ms paus för att låta spåren justeras
+  const SYNC_PAUSE_DURATION = 50; // Kort paus för att säkerställa synkronisering
 
   const getActiveAudioElements = () => {
     return Object.values(audioRefs.current).filter(audio => !audio.muted);
@@ -36,16 +36,6 @@ export const useAudioControls = ({
         earliestPosition = Math.min(earliestPosition, audio.currentTime);
       });
       
-      // Logga startpositioner för alla spår
-      console.log('--- Spår startpositioner ---');
-      console.log(`App currentTime: ${earliestPosition.toFixed(3)} sekunder`);
-      Object.entries(audioRefs.current).forEach(([trackId, audio]) => {
-        if (!audio.muted) {
-          console.log(`Spår ${trackId}: ${audio.currentTime.toFixed(3)} sekunder`);
-        }
-      });
-      console.log('-------------------------');
-      
       // Synkronisera alla aktiva spår till den tidigaste tidpunkten
       activeAudios.forEach((audio) => {
         audio.pause();
@@ -55,42 +45,30 @@ export const useAudioControls = ({
       setCurrentTime(earliestPosition);
       resetTruePosition(earliestPosition);
       
-      // Lägg till en kort paus innan uppspelningen startas
+      // Lägg till en kort paus innan uppspelningen startas för att säkerställa synkronisering
       setTimeout(() => {
-        // Hämta aktiva spår igen för att säkerställa att vi har alla
-        const updatedActiveAudios = getActiveAudioElements();
-        let startPosition = Infinity;
-        
-        // Hitta tidigaste position igen innan uppspelning
-        updatedActiveAudios.forEach(audio => {
-          startPosition = Math.min(startPosition, audio.currentTime);
+        const promises = getActiveAudioElements().map(audio => {
+          audio.currentTime = earliestPosition;
+          return audio.play();
         });
         
-        // Synka en sista gång innan uppspelning och logga
-        console.log('--- Synkronisering före uppspelning ---');
-        console.log(`Synkar till position: ${startPosition.toFixed(3)} sekunder`);
-        
-        updatedActiveAudios.forEach((audio) => {
-          audio.currentTime = startPosition;
-          console.log(`Spår synkat till: ${audio.currentTime.toFixed(3)} sekunder`);
-          audio.play().catch(console.error);
-        });
-        
-        setCurrentTime(startPosition);
-        resetTruePosition(startPosition);
-        console.log('-------------------------');
+        // Vänta tills alla spår har startat innan vi sätter isPlaying
+        Promise.all(promises)
+          .then(() => {
+            setIsPlaying(true);
+            console.log('Alla spår startade synkroniserat på position:', earliestPosition);
+          })
+          .catch(console.error);
       }, SYNC_PAUSE_DURATION);
-      
-      setIsPlaying(true);
     }
   };
 
   const handleSeek = (value: number[]) => {
     const newTime = value[0];
     const activeAudios = getActiveAudioElements();
+    const wasPlaying = activeAudios.some(audio => !audio.paused);
     
-    setIsPlaying(false);
-    
+    // Pausa och synka alla spår
     activeAudios.forEach((audio) => {
       audio.pause();
       audio.currentTime = newTime;
@@ -99,32 +77,22 @@ export const useAudioControls = ({
     setCurrentTime(newTime);
     resetTruePosition(newTime);
     
-    // Lägg till en kort paus innan uppspelningen återupptas
-    setTimeout(() => {
-      // Hämta aktiva spår igen för att säkerställa att vi har alla
-      const updatedActiveAudios = getActiveAudioElements();
-      let startPosition = Infinity;
-      
-      // Hitta tidigaste position innan uppspelning återupptas
-      updatedActiveAudios.forEach(audio => {
-        startPosition = Math.min(startPosition, audio.currentTime);
-      });
-      
-      // Synka en sista gång innan uppspelning och logga
-      console.log('--- Synkronisering före återuppspelning ---');
-      console.log(`Synkar till position: ${startPosition.toFixed(3)} sekunder`);
-      
-      updatedActiveAudios.forEach((audio) => {
-        audio.currentTime = startPosition;
-        console.log(`Spår synkat till: ${audio.currentTime.toFixed(3)} sekunder`);
-        audio.play().catch(console.error);
-      });
-      
-      setCurrentTime(startPosition);
-      resetTruePosition(startPosition);
-      console.log('-------------------------');
-      setIsPlaying(true);
-    }, SYNC_PAUSE_DURATION);
+    if (wasPlaying) {
+      // Om det spelades innan, starta om uppspelningen synkroniserat
+      setTimeout(() => {
+        const promises = activeAudios.map(audio => {
+          audio.currentTime = newTime;
+          return audio.play();
+        });
+        
+        Promise.all(promises)
+          .then(() => {
+            setIsPlaying(true);
+            console.log('Alla spår startade om synkroniserat på position:', newTime);
+          })
+          .catch(console.error);
+      }, SYNC_PAUSE_DURATION);
+    }
   };
 
   const handleTrackEnd = () => {
