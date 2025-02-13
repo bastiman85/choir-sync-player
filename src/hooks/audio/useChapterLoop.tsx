@@ -20,7 +20,7 @@ export const useChapterLoop = ({
   getCurrentChapter,
 }: UseChapterLoopProps) => {
   const lastLoopCheckTimeRef = useRef<number>(performance.now());
-  const loopCheckIntervalRef = useRef<number>(5); // Very low interval for precise checking
+  const loopCheckIntervalRef = useRef<number>(1); // Mycket tätare kontroller (1ms)
   const activeChapterRef = useRef<{
     id: string;
     startTime: number;
@@ -47,31 +47,34 @@ export const useChapterLoop = ({
       return false;
     }
 
-    // Always update active chapter details
+    // Uppdatera alltid aktiva kapitlets detaljer
     activeChapterRef.current = {
       id: currentChapter.id,
       startTime: currentChapter.time,
       endTime: currentChapter.endTime
     };
 
-    // Använd det aktiva kapitlets gränser för loopning
     if (activeChapterRef.current && activeChapterRef.current.endTime) {
       const { startTime, endTime } = activeChapterRef.current;
 
-      // Mer aggressiv kontroll för att hitta när kapitlet ska loopa
-      if (currentPosition > endTime || (endTime - currentPosition < 0.05)) {
+      // Mer exakt kontroll för loopning
+      if (currentPosition >= endTime || Math.abs(endTime - currentPosition) < 0.01) {
         console.log("\n!!! PERFORMING CHAPTER LOOP !!!");
         console.log("Timestamp:", new Date().toISOString());
         console.log("Current position:", currentPosition.toFixed(4));
         console.log("Chapter end time:", endTime.toFixed(4));
         console.log("Looping back to:", startTime);
-        console.log("Distance past end:", (currentPosition - endTime).toFixed(4));
+        console.log("Distance to end:", Math.abs(endTime - currentPosition).toFixed(4));
 
-        // Reset alla ljudelement till kapitlets starttid
+        // Återställ alla ljudelement till kapitlets starttid
         Object.values(audioRefs.current).forEach(audio => {
-          audio.currentTime = startTime;
           if (!audio.muted) {
+            // Pausa först för att undvika överlappning
+            audio.pause();
+            audio.currentTime = startTime;
             audio.play().catch(error => console.error("Error playing audio:", error));
+          } else {
+            audio.currentTime = startTime;
           }
         });
         
