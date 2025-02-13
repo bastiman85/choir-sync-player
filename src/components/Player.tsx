@@ -46,6 +46,16 @@ const Player = ({ song }: PlayerProps) => {
     setActiveVoicePart(value === 'all' ? 'all' : value.toLowerCase());
   };
 
+  const handleSkipBack = () => {
+    const newTime = Math.max(0, currentTime - 10);
+    handleSeek([newTime]);
+  };
+
+  const handleSkipForward = () => {
+    const newTime = currentTime + 10;
+    handleSeek([newTime]);
+  };
+
   const hasChapters = Boolean(song.chapters?.length);
 
   const sortedTracks = [...song.tracks].sort((a, b) => {
@@ -59,10 +69,6 @@ const Player = ({ song }: PlayerProps) => {
     };
     return (order[a.voicePart] ?? 6) - (order[b.voicePart] ?? 6);
   });
-
-  const handlePlayPauseClick = () => {
-    togglePlayPause(isPlaying);
-  };
 
   return (
     <div className="p-3 sm:p-4 max-w-4xl mx-auto">
@@ -115,8 +121,9 @@ const Player = ({ song }: PlayerProps) => {
 
         <PlayerControls
           isPlaying={isPlaying}
-          onPlayPauseClick={handlePlayPauseClick}
-          onSeek={handleSeek}
+          onPlayPauseClick={() => togglePlayPause(isPlaying)}
+          onSkipForward={handleSkipForward}
+          onSkipBack={handleSkipBack}
           currentTime={currentTime}
           autoRestartSong={autoRestartSong}
           onAutoRestartToggle={setAutoRestartSong}

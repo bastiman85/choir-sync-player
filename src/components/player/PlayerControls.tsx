@@ -6,7 +6,8 @@ import { Switch } from "@/components/ui/switch";
 interface PlayerControlsProps {
   isPlaying: boolean;
   onPlayPauseClick: () => void;
-  onSeek: (value: number[]) => void;
+  onSkipForward: () => void;
+  onSkipBack: () => void;
   currentTime: number;
   autoRestartSong: boolean;
   onAutoRestartToggle: (checked: boolean) => void;
@@ -15,25 +16,16 @@ interface PlayerControlsProps {
 const PlayerControls = ({
   isPlaying,
   onPlayPauseClick,
-  onSeek,
+  onSkipForward,
+  onSkipBack,
   currentTime,
   autoRestartSong,
   onAutoRestartToggle,
 }: PlayerControlsProps) => {
-  const handleSkipBack = () => {
-    const newTime = Math.max(0, currentTime - 10);
-    onSeek([newTime]);
-  };
-
-  const handleSkipForward = () => {
-    const newTime = currentTime + 10;
-    onSeek([newTime]);
-  };
-
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between mb-4">
       <div className="flex items-center gap-2 w-full sm:w-auto">
-        <Button onClick={handleSkipBack} variant="outline" size="icon" className="w-10 h-10">
+        <Button onClick={onSkipBack} variant="outline" size="icon" className="w-10 h-10">
           <RotateCcw className="h-4 w-4" />
         </Button>
         
@@ -42,7 +34,7 @@ const PlayerControls = ({
           <span className="ml-2">{isPlaying ? "Pausa" : "Spela"}</span>
         </Button>
 
-        <Button onClick={handleSkipForward} variant="outline" size="icon" className="w-10 h-10">
+        <Button onClick={onSkipForward} variant="outline" size="icon" className="w-10 h-10">
           <RotateCw className="h-4 w-4" />
         </Button>
       </div>
