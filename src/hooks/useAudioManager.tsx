@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from "react";
 import { Song } from "@/types/song";
 import { useAudioState } from "./audio/useAudioState";
@@ -9,8 +8,6 @@ import { useAudioSync } from "./audio/useAudioSync";
 
 export const useAudioManager = (song: Song) => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
-  const scrubberTimeRef = useRef<number>(0);
-  const updateIntervalRef = useRef<number | null>(null);
   
   const {
     isPlaying,
@@ -27,15 +24,17 @@ export const useAudioManager = (song: Song) => {
     setInstrumentalMode,
     allTrackMode,
     setAllTrackMode,
-    activeVoicePart,
-    setActiveVoicePart,
     autoRestartSong,
     setAutoRestartSong,
+    autoRestartChapter,
+    setAutoRestartChapter,
+    activeVoicePart,
+    setActiveVoicePart,
   } = useAudioState(song);
 
-  const { currentChapter } = useChapterManagement(currentTime, song);
+  const { getCurrentChapter } = useChapterManagement(currentTime, song);
 
-  const { resetTruePosition } = useAudioSync({
+  const { synchronizeTracks, resetTruePosition } = useAudioSync({
     audioRefs,
     isPlaying,
     currentTime,
@@ -46,6 +45,7 @@ export const useAudioManager = (song: Song) => {
     audioRefs,
     setIsPlaying,
     setCurrentTime,
+    autoRestartSong,
     resetTruePosition,
   });
 
@@ -59,99 +59,57 @@ export const useAudioManager = (song: Song) => {
     setInstrumentalMode,
     setAllTrackMode,
     setActiveVoicePart,
+    synchronizeTracks,
   });
 
-  // Optimerad tidsuppdatering med requestAnimationFrame
-  useEffect(() => {
-    const updateTime = () => {
-      if (isPlaying) {
-        scrubberTimeRef.current += 0.05;
-        setCurrentTime(scrubberTimeRef.current);
-        updateIntervalRef.current = requestAnimationFrame(updateTime);
-      }
-    };
-
-    if (isPlaying) {
-      updateIntervalRef.current = requestAnimationFrame(updateTime);
-    } else if (updateIntervalRef.current) {
-      cancelAnimationFrame(updateIntervalRef.current);
+  const handleTimeUpdate = (event: Event) => {
+    const audio = event.target as HTMLAudioElement;
+    // Only update time if this track is not muted and is actually playing
+    if (!audio.muted && !audio.paused) {
+      setCurrentTime(audio.currentTime);
     }
-
-    return () => {
-      if (updateIntervalRef.current) {
-        cancelAnimationFrame(updateIntervalRef.current);
-      }
-    };
-  }, [isPlaying]);
+  };
 
   useEffect(() => {
-    const loadTrack = async (track: { id: string; url: string }) => {
-      const audio = new Audio();
-      audio.src = track.url;
-      audio.preload = "auto";
+    song.tracks.forEach((track) => {
+      const audio = new Audio(track.url);
+      audioRefs.current[track.id] = audio;
       
-      return new Promise<void>((resolve) => {
-        audio.addEventListener("loadedmetadata", () => {
-          audioRefs.current[track.id] = audio;
-          setDuration(audio.duration);
-          resolve();
-        });
-      });
-    };
+      // Set initial volume and mute state
+      setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
+      const shouldBeMuted = track.voicePart !== "all";
+      setMutedTracks((prev) => ({ ...prev, [track.id]: shouldBeMuted }));
 
-    // Ladda alla spår parallellt
-    Promise.all(song.tracks.map(track => loadTrack(track))).then(() => {
-      song.tracks.forEach(track => {
-        const audio = audioRefs.current[track.id];
-        setVolumes(prev => ({ ...prev, [track.id]: 1 }));
-        const shouldBeMuted = track.voicePart !== "all";
-        setMutedTracks(prev => ({ ...prev, [track.id]: shouldBeMuted }));
-        audio.volume = 1;
-        audio.muted = shouldBeMuted;
-      });
+      audio.volume = 1;
+      audio.muted = shouldBeMuted;
+      
+      // Preload audio
+      audio.preload = "auto";
 
-      setAllTrackMode(true);
-      setInstrumentalMode(false);
-      setActiveVoicePart("all");
+      // Add event listeners
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.addEventListener("timeupdate", handleTimeUpdate);
+      
+      audio.addEventListener("loadedmetadata", () => {
+        setDuration(audio.duration);
+      });
+      audio.addEventListener("ended", handleTrackEnd);
     });
+
+    // Set initial state for track modes
+    setAllTrackMode(true);
+    setInstrumentalMode(false);
+    setActiveVoicePart("all");
 
     return () => {
       Object.values(audioRefs.current).forEach((audio) => {
+        audio.removeEventListener("timeupdate", handleTimeUpdate);
+        audio.removeEventListener("ended", handleTrackEnd);
         audio.pause();
         audio.currentTime = 0;
       });
     };
   }, [song]);
-
-  useEffect(() => {
-    const handleEnded = () => {
-      if (autoRestartSong) {
-        Object.values(audioRefs.current).forEach(audio => {
-          audio.currentTime = 0;
-          audio.play().catch(console.error);
-        });
-        scrubberTimeRef.current = 0;
-        setCurrentTime(0);
-        resetTruePosition(0);
-      } else {
-        handleTrackEnd();
-      }
-    };
-
-    Object.values(audioRefs.current).forEach((audio) => {
-      audio.addEventListener("ended", handleEnded);
-    });
-    
-    return () => {
-      Object.values(audioRefs.current).forEach((audio) => {
-        audio.removeEventListener("ended", handleEnded);
-      });
-    };
-  }, [autoRestartSong]);
-
-  useEffect(() => {
-    scrubberTimeRef.current = currentTime;
-  }, [currentTime]);
 
   return {
     isPlaying,
@@ -160,11 +118,13 @@ export const useAudioManager = (song: Song) => {
     volumes,
     mutedTracks,
     autoRestartSong,
-    togglePlayPause,
+    autoRestartChapter,
+    setAutoRestartSong,
+    setAutoRestartChapter,
+    togglePlayPause: () => togglePlayPause(isPlaying),
     handleVolumeChange,
     handleMuteToggle,
     handleSeek,
     activeVoicePart,
-    setAutoRestartSong,
   };
 };
