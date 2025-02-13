@@ -28,16 +28,13 @@ export const useTrackSync = ({ audioRefs, truePosition, isPlaying }: UseTrackSyn
       truePosition.current = earliestPosition;
     }
 
-    // More aggressive sync for all non-muted tracks
     tracks.forEach((track) => {
-      if (!track.muted) {
+      if (!track.muted && !track.paused) {
         const drift = Math.abs(track.currentTime - truePosition.current);
-        // Sync if there's any noticeable drift
         if (drift > 0.05) {
           track.currentTime = truePosition.current;
         }
 
-        // Ensure playback state matches
         if (isPlaying && track.paused) {
           track.currentTime = truePosition.current;
           track.play().catch(console.error);

@@ -41,7 +41,7 @@ export const useAudioSync = ({
     const earliestPosition = getEarliestTrackPosition();
     if (earliestPosition !== null) {
       Object.values(audioRefs.current).forEach(track => {
-        if (!track.muted) {
+        if (!track.muted && !track.paused) {
           const drift = Math.abs(track.currentTime - earliestPosition);
           if (drift > 0.05) {
             track.currentTime = earliestPosition;
@@ -57,22 +57,6 @@ export const useAudioSync = ({
       track.currentTime = time;
     });
   };
-
-  useEffect(() => {
-    if (isPlaying) {
-      // Increase sync frequency
-      uiUpdateInterval.current = window.setInterval(() => {
-        synchronizeTracks();
-      }, 100); // Check every 100ms instead of 1000ms
-    }
-    
-    return () => {
-      if (uiUpdateInterval.current) {
-        clearInterval(uiUpdateInterval.current);
-        uiUpdateInterval.current = null;
-      }
-    };
-  }, [isPlaying]);
 
   return { synchronizeTracks, resetTruePosition };
 };

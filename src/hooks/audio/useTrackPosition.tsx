@@ -9,7 +9,7 @@ interface UseTrackPositionProps {
 export const useTrackPosition = ({ audioRefs, truePosition }: UseTrackPositionProps) => {
   const syncTrackPositions = (targetPosition: number) => {
     Object.values(audioRefs.current).forEach(track => {
-      if (!track.muted) {
+      if (!track.muted && !track.paused) {
         const drift = Math.abs(track.currentTime - targetPosition);
         if (drift > 0.05) {
           track.currentTime = targetPosition;
