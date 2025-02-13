@@ -11,7 +11,6 @@ interface UseMuteControlProps {
   setInstrumentalMode: (value: boolean) => void;
   setAllTrackMode: (value: boolean) => void;
   setActiveVoicePart: (value: string) => void;
-  synchronizeTracks: () => void;
 }
 
 export const useMuteControl = ({
@@ -22,7 +21,6 @@ export const useMuteControl = ({
   setInstrumentalMode,
   setAllTrackMode,
   setActiveVoicePart,
-  synchronizeTracks,
 }: UseMuteControlProps) => {
   const { updateTrackModes, muteOtherTracks } = useTrackState({
     audioRefs,
