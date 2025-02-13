@@ -45,7 +45,6 @@ export const useAudioManager = (song: Song) => {
     audioRefs,
     setIsPlaying,
     setCurrentTime,
-    autoRestartSong,
     resetTruePosition,
   });
 
@@ -71,6 +70,36 @@ export const useAudioManager = (song: Song) => {
   };
 
   useEffect(() => {
+    const loadTrack = async (track: { id: string; url: string }) => {
+      const audio = new Audio();
+      audio.preload = "auto";
+      
+      // Lägg till dessa attribut för bättre iOS-kompatibilitet
+      audio.setAttribute('playsinline', '');
+      audio.setAttribute('webkit-playsinline', '');
+      audio.setAttribute('preload', 'auto');
+      
+      // Sätt src sist för att undvika race conditions
+      audio.src = track.url;
+      
+      return new Promise<void>((resolve) => {
+        const handleLoaded = () => {
+          audioRefs.current[track.id] = audio;
+          setDuration(audio.duration);
+          audio.removeEventListener("loadedmetadata", handleLoaded);
+          resolve();
+        };
+        
+        audio.addEventListener("loadedmetadata", handleLoaded);
+        
+        // Lägg till felhantering
+        audio.addEventListener("error", (e) => {
+          console.error("Error loading audio:", e);
+          resolve(); // Fortsätt ändå för att inte blockera andra spår
+        });
+      });
+    };
+
     song.tracks.forEach((track) => {
       const audio = new Audio(track.url);
       audioRefs.current[track.id] = audio;
