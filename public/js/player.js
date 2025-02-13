@@ -1,11 +1,11 @@
 // This file only runs on the player page
-console.log("Player page script loaded")
+
 
 // Add any player-specific JavaScript here
 setTimeout(() => {
-	console.log("Delayed for 1 second.")
 
-	console.log("Player page is ready")
+
+
 	const lattext = document.querySelectorAll(".lattextblock")
 
 	function showStamma(stamma) {
@@ -27,7 +27,7 @@ setTimeout(() => {
 			})
 			button.classList.add("active")
 			var stamma = button.classList[19]
-			console.log(stamma)
+
 			switch (stamma) {
 				case "voice-part-sopran":
 					showStamma("s")
