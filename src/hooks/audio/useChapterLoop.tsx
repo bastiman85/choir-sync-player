@@ -37,7 +37,12 @@ export const useChapterLoop = ({
     lastLoopCheckTimeRef.current = now;
 
     const currentChapter = getCurrentChapter();
-    if (!currentChapter || !currentChapter.endTime) {
+    if (!currentChapter) {
+      return false;
+    }
+
+    // Bara loopa om kapitlet har ett endTime
+    if (!currentChapter.endTime) {
       return false;
     }
 
