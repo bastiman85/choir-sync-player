@@ -1,3 +1,4 @@
+
 import { useRef, useEffect } from "react";
 import { Song } from "@/types/song";
 import { useAudioState } from "./audio/useAudioState";
@@ -63,7 +64,6 @@ export const useAudioManager = (song: Song) => {
 
   const handleTimeUpdate = (event: Event) => {
     const audio = event.target as HTMLAudioElement;
-    // Only update time if this track is not muted and is actually playing
     if (!audio.muted && !audio.paused) {
       setCurrentTime(audio.currentTime);
     }
@@ -72,12 +72,20 @@ export const useAudioManager = (song: Song) => {
   useEffect(() => {
     const loadTrack = async (track: { id: string; url: string }) => {
       const audio = new Audio();
-      audio.preload = "auto";
       
-      // Lägg till dessa attribut för bättre iOS-kompatibilitet
+      // Optimeringar för iOS Safari
+      audio.preload = "auto";
       audio.setAttribute('playsinline', '');
       audio.setAttribute('webkit-playsinline', '');
       audio.setAttribute('preload', 'auto');
+      
+      // Lägg till specifika iOS-attribut för bättre ljudhantering
+      audio.setAttribute('x-webkit-airplay', 'allow');
+      audio.setAttribute('controlsList', 'nodownload');
+      
+      // Sätt upp buffering för bättre prestanda
+      audio.autobuffer = true;
+      audio.load();
       
       // Sätt src sist för att undvika race conditions
       audio.src = track.url;
@@ -90,42 +98,55 @@ export const useAudioManager = (song: Song) => {
           resolve();
         };
         
+        const handleCanPlayThrough = () => {
+          audio.removeEventListener('canplaythrough', handleCanPlayThrough);
+          resolve();
+        };
+        
         audio.addEventListener("loadedmetadata", handleLoaded);
+        audio.addEventListener('canplaythrough', handleCanPlayThrough);
         
         // Lägg till felhantering
         audio.addEventListener("error", (e) => {
           console.error("Error loading audio:", e);
-          resolve(); // Fortsätt ändå för att inte blockera andra spår
+          resolve();
         });
       });
     };
 
-    song.tracks.forEach((track) => {
-      const audio = new Audio(track.url);
-      audioRefs.current[track.id] = audio;
-      
-      // Set initial volume and mute state
-      setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
-      const shouldBeMuted = track.voicePart !== "all";
-      setMutedTracks((prev) => ({ ...prev, [track.id]: shouldBeMuted }));
+    const initializeTracks = async () => {
+      // Ladda spår sekventiellt för att minska belastningen
+      for (const track of song.tracks) {
+        await loadTrack(track);
+        
+        const audio = audioRefs.current[track.id];
+        if (audio) {
+          // Sätt initial volym och mute-tillstånd
+          setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
+          const shouldBeMuted = track.voicePart !== "all";
+          setMutedTracks((prev) => ({ ...prev, [track.id]: shouldBeMuted }));
 
-      audio.volume = 1;
-      audio.muted = shouldBeMuted;
-      
-      // Preload audio
-      audio.preload = "auto";
+          audio.volume = 1;
+          audio.muted = shouldBeMuted;
+          
+          // Lägg till eventlyssnare
+          audio.removeEventListener("timeupdate", handleTimeUpdate);
+          audio.addEventListener("timeupdate", handleTimeUpdate);
+          audio.addEventListener("ended", handleTrackEnd);
+          
+          // Förbered för iOS-uppspelning
+          try {
+            await audio.load();
+          } catch (error) {
+            console.error("Error preloading audio:", error);
+          }
+        }
+      }
+    };
 
-      // Add event listeners
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.addEventListener("timeupdate", handleTimeUpdate);
-      
-      audio.addEventListener("loadedmetadata", () => {
-        setDuration(audio.duration);
-      });
-      audio.addEventListener("ended", handleTrackEnd);
-    });
+    initializeTracks();
 
-    // Set initial state for track modes
+    // Sätt initial state för spårlägen
     setAllTrackMode(true);
     setInstrumentalMode(false);
     setActiveVoicePart("all");
@@ -136,7 +157,9 @@ export const useAudioManager = (song: Song) => {
         audio.removeEventListener("ended", handleTrackEnd);
         audio.pause();
         audio.currentTime = 0;
+        audio.src = ''; // Rensa src för att frigöra minne
       });
+      audioRefs.current = {};
     };
   }, [song]);
 
@@ -150,7 +173,7 @@ export const useAudioManager = (song: Song) => {
     autoRestartChapter,
     setAutoRestartSong,
     setAutoRestartChapter,
-    togglePlayPause: () => togglePlayPause(isPlaying),
+    togglePlayPause,
     handleVolumeChange,
     handleMuteToggle,
     handleSeek,
