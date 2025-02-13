@@ -51,7 +51,6 @@ const AdminSongPage = () => {
           id: chapter.id,
           title: chapter.title,
           time: chapter.start_time,
-          endTime: chapter.end_time,
           type: "verse" as const
         }))
       } as Song;
@@ -108,8 +107,7 @@ const AdminSongPage = () => {
             newSong.chapters.map(chapter => ({
               song_id: songData.id,
               title: chapter.title,
-              start_time: chapter.time,
-              end_time: chapter.endTime
+              start_time: chapter.time
             }))
           );
         if (chaptersError) throw chaptersError;
@@ -185,8 +183,7 @@ const AdminSongPage = () => {
             updatedSong.chapters.map(chapter => ({
               song_id: id,
               title: chapter.title,
-              start_time: chapter.time,
-              end_time: chapter.endTime
+              start_time: chapter.time
             }))
           );
         if (chaptersError) throw chaptersError;

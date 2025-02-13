@@ -15,7 +15,6 @@ const PlayerPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Load player-specific script from public directory
     const script = document.createElement('script');
     script.src = '/js/player.js';
     script.async = true;
@@ -81,7 +80,6 @@ const PlayerPage = () => {
           id: chapter.id,
           title: chapter.title,
           time: chapter.start_time,
-          endTime: chapter.end_time,
           type: "verse" as const
         })),
         htmlContent: data.html_content

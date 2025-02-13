@@ -21,7 +21,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
       const nextChapter = sortedChapters[i + 1];
 
       if (currentTime >= chapter.time && (!nextChapter || currentTime < nextChapter.time)) {
-        // Använd det explicita endTime-värdet som kommer från databasen
         return chapter;
       }
     }
@@ -51,7 +50,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
       const nextChapter = sortedChapters[i + 1];
 
       if (currentTime >= chapter.time && (!nextChapter || currentTime < nextChapter.time)) {
-        // Always update nextChapterRef even if chapter hasn't changed
         nextChapterRef.current = nextChapter || null;
         
         if (currentChapterRef.current?.id !== chapter.id) {
@@ -61,7 +59,7 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
           console.log("Previous chapter:", currentChapterRef.current?.title);
           console.log("New chapter:", chapter.title);
           console.log("Raw chapter data:", chapter);
-          console.log("Chapter boundaries:", chapter.time, "to", chapter.endTime || "no end time set");
+          console.log("Chapter start time:", chapter.time);
           if (nextChapter) {
             console.log("Next chapter:", nextChapter.title);
             console.log("Next chapter starts at:", nextChapter.time);
@@ -71,16 +69,12 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
           currentChapterRef.current = chapter;
           lastUpdateTimeRef.current = now;
         } else {
-          // Logga bara var 2:a sekund om kapitlet inte ändrats
           const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
           if (timeSinceLastUpdate > 2000) {
             console.log("\n=== Chapter Update Check ===");
             console.log("Current time:", currentTime.toFixed(2));
             console.log("Current chapter:", chapter.title);
             console.log("Raw chapter data:", chapter);
-            if (chapter.endTime) {
-              console.log("Time until chapter end:", (chapter.endTime - currentTime).toFixed(2));
-            }
             if (nextChapter) {
               console.log("Next chapter starts at:", nextChapter.time);
             }
@@ -92,7 +86,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     }
   }, [currentTime, song.chapters]);
 
-  // Update refs whenever time changes
   updateChapterRefs();
 
   return {
