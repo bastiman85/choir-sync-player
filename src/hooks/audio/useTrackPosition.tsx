@@ -7,11 +7,12 @@ interface UseTrackPositionProps {
 }
 
 export const useTrackPosition = ({ audioRefs, truePosition }: UseTrackPositionProps) => {
+  const SYNC_OFFSET = 0.2; // 200ms offset för att kompensera för latens
+
   const syncTrackPositions = (targetPosition: number) => {
     Object.values(audioRefs.current).forEach(track => {
       if (!track.muted && !track.paused) {
-        // Ta bort drift-korrigering helt och hållet
-        track.currentTime = targetPosition;
+        track.currentTime = Math.max(0, targetPosition - SYNC_OFFSET);
       }
     });
   };
