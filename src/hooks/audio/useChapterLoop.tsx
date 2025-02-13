@@ -20,7 +20,7 @@ export const useChapterLoop = ({
   getCurrentChapter,
 }: UseChapterLoopProps) => {
   const lastLoopCheckTimeRef = useRef<number>(performance.now());
-  const loopCheckIntervalRef = useRef<number>(25);
+  const loopCheckIntervalRef = useRef<number>(10); // Minska intervallet till 10ms för tätare kontroller
   const activeChapterRef = useRef<{
     id: string;
     startTime: number;
