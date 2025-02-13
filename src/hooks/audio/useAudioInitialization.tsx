@@ -52,9 +52,6 @@ export const useAudioInitialization = ({
         (audio as any).mozFrameBufferLength = 2048;
       }
       
-      // Lägg till audio.crossOrigin för CORS-hantering
-      audio.crossOrigin = "anonymous";
-      
       // Optimera för mobila enheter
       if (typeof audio.playbackRate !== 'undefined') {
         audio.playbackRate = 1.0;
