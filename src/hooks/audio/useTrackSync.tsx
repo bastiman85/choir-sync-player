@@ -31,7 +31,7 @@ export const useTrackSync = ({ audioRefs, truePosition, isPlaying }: UseTrackSyn
     tracks.forEach((track) => {
       if (!track.muted && !track.paused) {
         const drift = Math.abs(track.currentTime - truePosition.current);
-        if (drift > 0.05) {
+        if (drift > 0.05) { // Endast synka om driften är större än 50ms
           track.currentTime = truePosition.current;
         }
 
