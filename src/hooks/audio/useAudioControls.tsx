@@ -32,6 +32,22 @@ export const useAudioControls = ({
           try {
             // Sätt currentTime explicit för varje spår
             audio.currentTime = unmutedTracks[0].currentTime;
+            // Vänta på att audio är redo
+            if (audio.readyState < 3) { // HAVE_FUTURE_DATA
+              await new Promise((resolve, reject) => {
+                const canPlayHandler = () => {
+                  audio.removeEventListener('canplay', canPlayHandler);
+                  resolve(null);
+                };
+                const errorHandler = (e: Event) => {
+                  audio.removeEventListener('error', errorHandler);
+                  reject(e);
+                };
+                audio.addEventListener('canplay', canPlayHandler);
+                audio.addEventListener('error', errorHandler);
+                audio.load();
+              });
+            }
             await audio.play();
             // Lägg till en kort fördröjning mellan varje spår
             await new Promise(resolve => setTimeout(resolve, 50));
@@ -76,6 +92,22 @@ export const useAudioControls = ({
       // På iOS, spela upp ett spår i taget
       for (const audio of unmutedTracks) {
         try {
+          // Vänta på att audio är redo
+          if (audio.readyState < 3) { // HAVE_FUTURE_DATA
+            await new Promise((resolve, reject) => {
+              const canPlayHandler = () => {
+                audio.removeEventListener('canplay', canPlayHandler);
+                resolve(null);
+              };
+              const errorHandler = (e: Event) => {
+                audio.removeEventListener('error', errorHandler);
+                reject(e);
+              };
+              audio.addEventListener('canplay', canPlayHandler);
+              audio.addEventListener('error', errorHandler);
+              audio.load();
+            });
+          }
           await audio.play();
           await new Promise(resolve => setTimeout(resolve, 50));
         } catch (error) {
