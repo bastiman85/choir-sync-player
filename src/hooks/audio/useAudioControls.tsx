@@ -57,9 +57,20 @@ export const useAudioControls = ({
       
       // Lägg till en kort paus innan uppspelningen startas
       setTimeout(() => {
+        // Hitta tidigaste position igen innan uppspelning
+        let startPosition = Infinity;
+        activeAudios.forEach(audio => {
+          startPosition = Math.min(startPosition, audio.currentTime);
+        });
+        
+        // Synka en sista gång innan uppspelning
         activeAudios.forEach((audio) => {
+          audio.currentTime = startPosition;
           audio.play().catch(console.error);
         });
+        
+        setCurrentTime(startPosition);
+        resetTruePosition(startPosition);
       }, SYNC_PAUSE_DURATION);
       
       setIsPlaying(true);
@@ -82,9 +93,20 @@ export const useAudioControls = ({
     
     // Lägg till en kort paus innan uppspelningen återupptas
     setTimeout(() => {
+      // Hitta tidigaste position innan uppspelning återupptas
+      let startPosition = Infinity;
+      activeAudios.forEach(audio => {
+        startPosition = Math.min(startPosition, audio.currentTime);
+      });
+      
+      // Synka en sista gång innan uppspelning
       activeAudios.forEach((audio) => {
+        audio.currentTime = startPosition;
         audio.play().catch(console.error);
       });
+      
+      setCurrentTime(startPosition);
+      resetTruePosition(startPosition);
       setIsPlaying(true);
     }, SYNC_PAUSE_DURATION);
   };
