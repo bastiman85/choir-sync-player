@@ -21,7 +21,9 @@ export const useAudioControls = ({
       });
       setIsPlaying(false);
     } else {
+      const currentTime = Object.values(audioRefs.current)[0]?.currentTime || 0;
       Object.values(audioRefs.current).forEach((audio) => {
+        audio.currentTime = currentTime;
         audio.play().catch(console.error);
       });
       setIsPlaying(true);
