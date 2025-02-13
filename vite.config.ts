@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -16,8 +17,8 @@ export default defineConfig(({ mode }) => ({
       transformIndexHtml(html: string) {
         if (mode === 'development') {
           return html.replace(
-            '</body>',
-            `<script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script></body>`
+            '</head>',
+            `<script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script></head>`
           );
         }
         return html;
