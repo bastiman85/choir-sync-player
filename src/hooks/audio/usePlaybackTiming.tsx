@@ -1,5 +1,4 @@
-
-import { RefObject, useCallback } from "react";
+import { RefObject, useRef } from "react";
 
 interface UsePlaybackTimingProps {
   audioRefs: RefObject<{ [key: string]: HTMLAudioElement }>;
@@ -7,26 +6,30 @@ interface UsePlaybackTimingProps {
 }
 
 export const usePlaybackTiming = ({ audioRefs, isPlaying }: UsePlaybackTimingProps) => {
-  const getEarliestTrackPosition = useCallback(() => {
+  const lastSyncTime = useRef<number>(performance.now());
+  const syncInterval = useRef<number>(50); // 50ms sync interval
+
+  const shouldSync = (now: number) => {
+    return now - lastSyncTime.current >= syncInterval.current;
+  };
+
+  const updateSyncTime = (time: number) => {
+    lastSyncTime.current = time;
+  };
+
+  const getEarliestTrackPosition = () => {
     let earliestPosition = Infinity;
-    let activeTrackCount = 0;
-    
     Object.values(audioRefs.current).forEach(track => {
       if (!track.muted && !track.paused) {
         earliestPosition = Math.min(earliestPosition, track.currentTime);
-        activeTrackCount++;
       }
     });
-    
-    // Om det bara finns ett aktivt spår, hoppa över synkronisering
-    if (activeTrackCount <= 1) {
-      return null;
-    }
-    
     return earliestPosition !== Infinity ? earliestPosition : null;
-  }, []);
+  };
 
   return {
+    shouldSync,
+    updateSyncTime,
     getEarliestTrackPosition,
   };
 };
