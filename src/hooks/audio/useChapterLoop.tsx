@@ -20,11 +20,11 @@ export const useChapterLoop = ({
   getCurrentChapter,
 }: UseChapterLoopProps) => {
   const lastLoopCheckTimeRef = useRef<number>(performance.now());
-  const loopCheckIntervalRef = useRef<number>(10); // Minska intervallet till 10ms för tätare kontroller
+  const loopCheckIntervalRef = useRef<number>(10);
   const activeChapterRef = useRef<{
     id: string;
     startTime: number;
-    endTime: number;
+    endTime?: number;
   } | null>(null);
 
   const handleChapterLoop = (currentPosition: number) => {
@@ -47,33 +47,23 @@ export const useChapterLoop = ({
       return false;
     }
 
-    const sortedChapters = [...song.chapters].sort((a, b) => a.time - b.time);
-    const currentChapterIndex = sortedChapters.findIndex(c => c.id === currentChapter.id);
-    const nextChapter = sortedChapters[currentChapterIndex + 1];
-
     // Uppdatera aktivt kapitel endast om vi nått ett nytt kapitels starttid
-    if (!activeChapterRef.current || currentPosition >= nextChapter?.time) {
-      // Använd kapitlets egen endTime om den finns, annars nästa kapitels starttid
-      const endTime = currentChapter.endTime || nextChapter?.time || Infinity;
-      
+    if (!activeChapterRef.current || currentChapter.id !== activeChapterRef.current.id) {
       activeChapterRef.current = {
         id: currentChapter.id,
         startTime: currentChapter.time,
-        endTime: endTime
+        endTime: currentChapter.endTime
       };
 
       console.log("\n=== New Active Chapter ===");
       console.log("Chapter:", currentChapter.title);
       console.log("Start time:", activeChapterRef.current.startTime);
-      console.log("End time:", endTime, currentChapter.endTime ? "(explicit end time)" : "(next chapter start)");
+      console.log("End time:", currentChapter.endTime || "Not set (no auto-loop)");
       console.log("Current position:", currentPosition);
-      if (nextChapter) {
-        console.log("Next chapter starts at:", nextChapter.time);
-      }
     }
 
     // Använd det aktiva kapitlets gränser för loopning
-    if (activeChapterRef.current) {
+    if (activeChapterRef.current && activeChapterRef.current.endTime) {
       const { startTime, endTime } = activeChapterRef.current;
 
       // Kontrollera om vi nått slutet av det aktiva kapitlet
