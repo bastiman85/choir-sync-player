@@ -14,6 +14,8 @@ export const useAudioControls = ({
   setCurrentTime,
   resetTruePosition,
 }: UseAudioControlsProps) => {
+  const SYNC_PAUSE_DURATION = 100; // 100ms paus för att låta spåren justeras
+
   const togglePlayPause = (isPlaying: boolean) => {
     if (isPlaying) {
       Object.values(audioRefs.current).forEach((audio) => {
@@ -24,19 +26,38 @@ export const useAudioControls = ({
       const currentTime = Object.values(audioRefs.current)[0]?.currentTime || 0;
       Object.values(audioRefs.current).forEach((audio) => {
         audio.currentTime = currentTime;
-        audio.play().catch(console.error);
       });
+      
+      // Lägg till en kort paus innan uppspelningen startas
+      setTimeout(() => {
+        Object.values(audioRefs.current).forEach((audio) => {
+          audio.play().catch(console.error);
+        });
+      }, SYNC_PAUSE_DURATION);
+      
       setIsPlaying(true);
     }
   };
 
   const handleSeek = (value: number[]) => {
     const newTime = value[0];
+    setIsPlaying(false);
+    
     Object.values(audioRefs.current).forEach((audio) => {
+      audio.pause();
       audio.currentTime = newTime;
     });
+    
     setCurrentTime(newTime);
     resetTruePosition(newTime);
+    
+    // Lägg till en kort paus innan uppspelningen återupptas
+    setTimeout(() => {
+      Object.values(audioRefs.current).forEach((audio) => {
+        audio.play().catch(console.error);
+      });
+      setIsPlaying(true);
+    }, SYNC_PAUSE_DURATION);
   };
 
   const handleTrackEnd = () => {
