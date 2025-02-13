@@ -60,6 +60,31 @@ export const useAudioManager = (song: Song) => {
     synchronizeTracks,
   });
 
+  // Separate useEffect for audio end event listeners
+  useEffect(() => {
+    Object.values(audioRefs.current).forEach((audio) => {
+      const handleEnded = () => {
+        if (autoRestartSong) {
+          Object.values(audioRefs.current).forEach(audio => {
+            audio.currentTime = 0;
+            audio.play().catch(console.error);
+          });
+          setCurrentTime(0);
+          resetTruePosition(0);
+        } else {
+          handleTrackEnd();
+        }
+      };
+
+      audio.addEventListener("ended", handleEnded);
+      
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    });
+  }, [autoRestartSong]);
+
+  // Main useEffect for audio setup
   useEffect(() => {
     song.tracks.forEach((track) => {
       const audio = new Audio(track.url);
@@ -79,19 +104,6 @@ export const useAudioManager = (song: Song) => {
       audio.addEventListener("loadedmetadata", () => {
         setDuration(audio.duration);
       });
-      
-      audio.addEventListener("ended", () => {
-        if (autoRestartSong) {
-          Object.values(audioRefs.current).forEach(audio => {
-            audio.currentTime = 0;
-            audio.play().catch(console.error);
-          });
-          setCurrentTime(0);
-          resetTruePosition(0);
-        } else {
-          handleTrackEnd();
-        }
-      });
     });
 
     setAllTrackMode(true);
@@ -101,12 +113,11 @@ export const useAudioManager = (song: Song) => {
     return () => {
       Object.values(audioRefs.current).forEach((audio) => {
         audio.removeEventListener("timeupdate", handleTimeUpdate);
-        audio.removeEventListener("ended", () => {});
         audio.pause();
         audio.currentTime = 0;
       });
     };
-  }, [song, autoRestartSong]);
+  }, [song]); // Removed autoRestartSong from dependencies
 
   const handleTimeUpdate = (event: Event) => {
     const audio = event.target as HTMLAudioElement;
