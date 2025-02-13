@@ -1,4 +1,3 @@
-
 import { RefObject, useRef } from "react";
 
 interface UsePlaybackPositionProps {
