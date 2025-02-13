@@ -1,4 +1,3 @@
-
 import { Slider } from "../ui/slider";
 
 interface ScrubberProps {
