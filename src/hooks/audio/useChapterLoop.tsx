@@ -20,7 +20,7 @@ export const useChapterLoop = ({
   getCurrentChapter,
 }: UseChapterLoopProps) => {
   const lastLoopCheckTimeRef = useRef<number>(performance.now());
-  const loopCheckIntervalRef = useRef<number>(1); // Mycket tätare kontroller (1ms)
+  const loopCheckIntervalRef = useRef<number>(500); // Kontrollera varannan sekund
   const activeChapterRef = useRef<{
     id: string;
     startTime: number;
@@ -58,7 +58,7 @@ export const useChapterLoop = ({
       const { startTime, endTime } = activeChapterRef.current;
 
       // Mer exakt kontroll för loopning
-      if (currentPosition >= endTime || Math.abs(endTime - currentPosition) < 0.01) {
+      if (currentPosition >= endTime || Math.abs(endTime - currentPosition) < 0.1) {
         console.log("\n!!! PERFORMING CHAPTER LOOP !!!");
         console.log("Timestamp:", new Date().toISOString());
         console.log("Current position:", currentPosition.toFixed(4));
@@ -69,8 +69,6 @@ export const useChapterLoop = ({
         // Återställ alla ljudelement till kapitlets starttid
         Object.values(audioRefs.current).forEach(audio => {
           if (!audio.muted) {
-            // Pausa först för att undvika överlappning
-            audio.pause();
             audio.currentTime = startTime;
             audio.play().catch(error => console.error("Error playing audio:", error));
           } else {
