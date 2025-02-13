@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -95,9 +96,13 @@
     @apply flex mx-0;
   }
 
-  /* Hide timestamp */
+  /* Timestamp styles */
   .timestamp {
-    @apply hidden;
+    @apply text-gray-500;
+    position: absolute;
+    font-size: 14px;
+    padding-top: 2px;
+    padding-left: 2px;
   }
 
   /* Current section highlight */
