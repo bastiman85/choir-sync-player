@@ -39,7 +39,7 @@ export const useAudioInitialization = ({
       const audio = new Audio();
       
       // iOS/Safari-specifika optimeringar
-      audio.preload = "auto";
+      audio.preload = "auto";  // Förladda så mycket som möjligt
       audio.setAttribute('playsinline', '');
       audio.setAttribute('webkit-playsinline', '');
       
@@ -48,54 +48,70 @@ export const useAudioInitialization = ({
         audio.preservesPitch = false;
       }
       
-      // Sätt källa och börja ladda
-      audio.src = track.url;
-      
-      const handleLoaded = () => {
-        audioRefs.current[track.id] = audio;
-        if (audio.duration && !isNaN(audio.duration)) {
-          setDuration(audio.duration);
-        }
-        resolve();
-      };
+      // Maximera buffring för iOS Safari
+      if (typeof audio.preload !== 'undefined') {
+        audio.preload = 'auto';  // Force preload
+      }
 
-      const handleError = (e: Event) => {
-        console.error(`Error loading track ${track.id}:`, e);
-        // För iOS, försök igen med timeout
-        setTimeout(() => {
-          audio.load();
-        }, 1000);
-      };
+      // Använd arraybuffer för bättre buffringshantering
+      const request = new XMLHttpRequest();
+      request.open('GET', track.url, true);
+      request.responseType = 'arraybuffer';
       
-      const setupAudioEvents = () => {
-        // Rensa eventuella gamla lyssnare
-        audio.removeEventListener("loadeddata", handleLoaded);
-        audio.removeEventListener("error", handleError);
-        audio.removeEventListener("timeupdate", handleTimeUpdate);
-        audio.removeEventListener("ended", handleTrackEnd);
-        
-        // Lägg till nya lyssnare
-        audio.addEventListener("loadeddata", handleLoaded);
-        audio.addEventListener("error", handleError);
-        
-        // Lägg till timeupdate-lyssnare för synkronisering
-        audio.addEventListener("timeupdate", () => {
-          if (!audio.muted) {
-            const currentTime = audio.currentTime;
-            Object.values(audioRefs.current).forEach(otherAudio => {
-              if (otherAudio !== audio && !otherAudio.muted) {
-                const timeDiff = Math.abs(otherAudio.currentTime - currentTime);
-                if (timeDiff > 0.1) {
-                  otherAudio.currentTime = currentTime;
-                }
+      request.onload = async () => {
+        if (request.response) {
+          // Konvertera arraybuffer till blob för bättre minneshantering
+          const blob = new Blob([request.response], { type: 'audio/mpeg' });
+          const url = URL.createObjectURL(blob);
+          audio.src = url;
+          
+          const handleLoaded = () => {
+            audioRefs.current[track.id] = audio;
+            if (audio.duration && !isNaN(audio.duration)) {
+              setDuration(audio.duration);
+            }
+            resolve();
+          };
+
+          const handleCanPlayThrough = () => {
+            console.log(`Track ${track.id} fully buffered`);
+            audio.removeEventListener('canplaythrough', handleCanPlayThrough);
+          };
+          
+          const setupAudioEvents = () => {
+            audio.addEventListener("loadeddata", handleLoaded);
+            audio.addEventListener("canplaythrough", handleCanPlayThrough);
+            
+            // Lägg till timeupdate-lyssnare för synkronisering
+            audio.addEventListener("timeupdate", () => {
+              if (!audio.muted) {
+                const currentTime = audio.currentTime;
+                Object.values(audioRefs.current).forEach(otherAudio => {
+                  if (otherAudio !== audio && !otherAudio.muted) {
+                    const timeDiff = Math.abs(otherAudio.currentTime - currentTime);
+                    if (timeDiff > 0.1) {
+                      otherAudio.currentTime = currentTime;
+                    }
+                  }
+                });
               }
             });
-          }
-        });
+          };
+          
+          setupAudioEvents();
+          audio.load(); // Starta laddningen
+        } else {
+          console.error(`Failed to load track ${track.id}`);
+          resolve();
+        }
       };
       
-      setupAudioEvents();
-      audio.load();
+      request.onerror = () => {
+        console.error(`Error loading track ${track.id}`);
+        resolve();
+      };
+      
+      request.send();
     });
 
     loadingPromises.current[track.id] = loadingPromise;
@@ -106,7 +122,7 @@ export const useAudioInitialization = ({
     const audioContext = initAudioContext();
     
     try {
-      // Ladda alla spår parallellt för bättre prestanda på iOS
+      // Ladda alla spår parallellt
       const loadPromises = song.tracks.map(track => loadTrack(track));
       await Promise.all(loadPromises);
       
@@ -140,6 +156,11 @@ export const useAudioInitialization = ({
       audio.removeEventListener("ended", handleTrackEnd);
       audio.pause();
       audio.currentTime = 0;
+      
+      // Rensa blob URL om den finns
+      if (audio.src.startsWith('blob:')) {
+        URL.revokeObjectURL(audio.src);
+      }
       audio.src = '';
     });
     
