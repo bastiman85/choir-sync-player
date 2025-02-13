@@ -20,7 +20,7 @@ export const useChapterLoop = ({
   getCurrentChapter,
 }: UseChapterLoopProps) => {
   const lastLoopCheckTimeRef = useRef<number>(performance.now());
-  const loopCheckIntervalRef = useRef<number>(5); // Minska intervallet till 5ms för snabbare kontroll
+  const loopCheckIntervalRef = useRef<number>(5); // Very low interval for precise checking
   const activeChapterRef = useRef<{
     id: string;
     startTime: number;
@@ -47,33 +47,25 @@ export const useChapterLoop = ({
       return false;
     }
 
-    // Uppdatera aktivt kapitel endast om vi nått ett nytt kapitels starttid
-    if (!activeChapterRef.current || currentChapter.id !== activeChapterRef.current.id) {
-      activeChapterRef.current = {
-        id: currentChapter.id,
-        startTime: currentChapter.time,
-        endTime: currentChapter.endTime
-      };
-
-      console.log("\n=== New Active Chapter ===");
-      console.log("Chapter:", currentChapter.title);
-      console.log("Start time:", activeChapterRef.current.startTime);
-      console.log("End time:", currentChapter.endTime || "Not set (no auto-loop)");
-      console.log("Current position:", currentPosition);
-    }
+    // Always update active chapter details
+    activeChapterRef.current = {
+      id: currentChapter.id,
+      startTime: currentChapter.time,
+      endTime: currentChapter.endTime
+    };
 
     // Använd det aktiva kapitlets gränser för loopning
     if (activeChapterRef.current && activeChapterRef.current.endTime) {
       const { startTime, endTime } = activeChapterRef.current;
 
-      // Kontrollera om vi nått eller passerat slutet av det aktiva kapitlet
-      if (currentPosition >= endTime) {
+      // Mer aggressiv kontroll för att hitta när kapitlet ska loopa
+      if (currentPosition > endTime || (endTime - currentPosition < 0.05)) {
         console.log("\n!!! PERFORMING CHAPTER LOOP !!!");
         console.log("Timestamp:", new Date().toISOString());
-        console.log("Current position:", currentPosition.toFixed(2));
-        console.log("Chapter end time:", endTime);
+        console.log("Current position:", currentPosition.toFixed(4));
+        console.log("Chapter end time:", endTime.toFixed(4));
         console.log("Looping back to:", startTime);
-        console.log("Distance past end:", (currentPosition - endTime).toFixed(2));
+        console.log("Distance past end:", (currentPosition - endTime).toFixed(4));
 
         // Reset alla ljudelement till kapitlets starttid
         Object.values(audioRefs.current).forEach(audio => {
@@ -85,15 +77,6 @@ export const useChapterLoop = ({
         
         setCurrentTime(startTime);
         return true;
-      }
-
-      // Lägg till extra loggning för när vi närmar oss slutet
-      const timeUntilEnd = endTime - currentPosition;
-      if (timeUntilEnd < 0.1) {
-        console.log("\n=== Approaching Chapter End ===");
-        console.log("Time until end:", timeUntilEnd.toFixed(3));
-        console.log("Current position:", currentPosition.toFixed(3));
-        console.log("End time:", endTime);
       }
     }
 
