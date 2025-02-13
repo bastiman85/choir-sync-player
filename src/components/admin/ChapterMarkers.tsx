@@ -15,7 +15,6 @@ const ChapterMarkers = ({ chapters, onChaptersChange }: ChapterMarkersProps) => 
       id: Math.random().toString(),
       title: "",
       time: 0,
-      endTime: 30, // Default end time 30 seconds after start
       type: "verse",
     };
     onChaptersChange([...chapters, newChapter]);
@@ -65,10 +64,11 @@ const ChapterMarkers = ({ chapters, onChaptersChange }: ChapterMarkersProps) => 
               type="number"
               step="0.1"
               placeholder="End time (seconds)"
-              value={chapter.endTime ?? chapter.time + 30}
-              onChange={(e) =>
-                updateChapter(chapter.id, "endTime", parseFloat(e.target.value))
-              }
+              value={chapter.endTime ?? ""}
+              onChange={(e) => {
+                const value = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                updateChapter(chapter.id, "endTime", value);
+              }}
               className="w-32"
             />
             <Button
