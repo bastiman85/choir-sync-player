@@ -10,6 +10,7 @@ import { useAudioSync } from "./audio/useAudioSync";
 export const useAudioManager = (song: Song) => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
   const scrubberTimeRef = useRef<number>(0);
+  const updateIntervalRef = useRef<number | null>(null);
   
   const {
     isPlaying,
@@ -61,39 +62,59 @@ export const useAudioManager = (song: Song) => {
     synchronizeTracks,
   });
 
-  // Uppdatera tiden baserat på scrubbern istället för ljudspåren
+  // Optimerad tidsuppdatering med requestAnimationFrame
   useEffect(() => {
-    const updateInterval = setInterval(() => {
+    const updateTime = () => {
       if (isPlaying) {
-        scrubberTimeRef.current += 0.05; // Uppdatera var 50:e millisekund
+        scrubberTimeRef.current += 0.05;
         setCurrentTime(scrubberTimeRef.current);
+        updateIntervalRef.current = requestAnimationFrame(updateTime);
       }
-    }, 50);
+    };
 
-    return () => clearInterval(updateInterval);
+    if (isPlaying) {
+      updateIntervalRef.current = requestAnimationFrame(updateTime);
+    } else if (updateIntervalRef.current) {
+      cancelAnimationFrame(updateIntervalRef.current);
+    }
+
+    return () => {
+      if (updateIntervalRef.current) {
+        cancelAnimationFrame(updateIntervalRef.current);
+      }
+    };
   }, [isPlaying]);
 
   useEffect(() => {
-    song.tracks.forEach((track) => {
-      const audio = new Audio(track.url);
-      audioRefs.current[track.id] = audio;
-      
-      setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
-      const shouldBeMuted = track.voicePart !== "all";
-      setMutedTracks((prev) => ({ ...prev, [track.id]: shouldBeMuted }));
-
-      audio.volume = 1;
-      audio.muted = shouldBeMuted;
+    const loadTrack = async (track: { id: string; url: string }) => {
+      const audio = new Audio();
+      audio.src = track.url;
       audio.preload = "auto";
       
-      audio.addEventListener("loadedmetadata", () => {
-        setDuration(audio.duration);
+      return new Promise<void>((resolve) => {
+        audio.addEventListener("loadedmetadata", () => {
+          audioRefs.current[track.id] = audio;
+          setDuration(audio.duration);
+          resolve();
+        });
       });
-    });
+    };
 
-    setAllTrackMode(true);
-    setInstrumentalMode(false);
-    setActiveVoicePart("all");
+    // Ladda alla spår parallellt
+    Promise.all(song.tracks.map(track => loadTrack(track))).then(() => {
+      song.tracks.forEach(track => {
+        const audio = audioRefs.current[track.id];
+        setVolumes(prev => ({ ...prev, [track.id]: 1 }));
+        const shouldBeMuted = track.voicePart !== "all";
+        setMutedTracks(prev => ({ ...prev, [track.id]: shouldBeMuted }));
+        audio.volume = 1;
+        audio.muted = shouldBeMuted;
+      });
+
+      setAllTrackMode(true);
+      setInstrumentalMode(false);
+      setActiveVoicePart("all");
+    });
 
     return () => {
       Object.values(audioRefs.current).forEach((audio) => {
@@ -104,30 +125,31 @@ export const useAudioManager = (song: Song) => {
   }, [song]);
 
   useEffect(() => {
-    Object.values(audioRefs.current).forEach((audio) => {
-      const handleEnded = () => {
-        if (autoRestartSong) {
-          Object.values(audioRefs.current).forEach(audio => {
-            audio.currentTime = 0;
-            audio.play().catch(console.error);
-          });
-          scrubberTimeRef.current = 0;
-          setCurrentTime(0);
-          resetTruePosition(0);
-        } else {
-          handleTrackEnd();
-        }
-      };
+    const handleEnded = () => {
+      if (autoRestartSong) {
+        Object.values(audioRefs.current).forEach(audio => {
+          audio.currentTime = 0;
+          audio.play().catch(console.error);
+        });
+        scrubberTimeRef.current = 0;
+        setCurrentTime(0);
+        resetTruePosition(0);
+      } else {
+        handleTrackEnd();
+      }
+    };
 
+    Object.values(audioRefs.current).forEach((audio) => {
       audio.addEventListener("ended", handleEnded);
-      
-      return () => {
-        audio.removeEventListener("ended", handleEnded);
-      };
     });
+    
+    return () => {
+      Object.values(audioRefs.current).forEach((audio) => {
+        audio.removeEventListener("ended", handleEnded);
+      });
+    };
   }, [autoRestartSong]);
 
-  // Uppdatera scrubberTimeRef när användaren söker manuellt
   useEffect(() => {
     scrubberTimeRef.current = currentTime;
   }, [currentTime]);
