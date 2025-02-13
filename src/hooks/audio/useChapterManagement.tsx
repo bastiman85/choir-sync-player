@@ -1,3 +1,4 @@
+
 import { RefObject, useCallback, useRef } from "react";
 import { Song, ChapterMarker } from "@/types/song";
 
@@ -7,6 +8,23 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
   const lastUpdateTimeRef = useRef<number>(performance.now());
   const lastLoopCheckTimeRef = useRef<number>(performance.now());
   const loopCheckIntervalRef = useRef<number>(50); // 50ms check interval
+
+  const getCurrentChapter = useCallback(() => {
+    if (!song.chapters?.length) {
+      return null;
+    }
+
+    const sortedChapters = [...song.chapters].sort((a, b) => a.time - b.time);
+    for (let i = 0; i < sortedChapters.length; i++) {
+      const chapter = sortedChapters[i];
+      const nextChapter = sortedChapters[i + 1];
+
+      if (currentTime >= chapter.time && (!nextChapter || currentTime < nextChapter.time)) {
+        return chapter;
+      }
+    }
+    return null;
+  }, [currentTime, song.chapters]);
 
   const updateChapterRefs = useCallback(() => {
     if (!song.chapters?.length) {
@@ -19,7 +37,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
     const timeSinceLastLoopCheck = now - lastLoopCheckTimeRef.current;
     
-    // Only update if enough time has passed since last check
     if (timeSinceLastLoopCheck < loopCheckIntervalRef.current) {
       return;
     }
@@ -34,7 +51,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     
     const sortedChapters = [...song.chapters].sort((a, b) => a.time - b.time);
     
-    // Find current chapter
     for (let i = 0; i < sortedChapters.length; i++) {
       const chapter = sortedChapters[i];
       const nextChapter = sortedChapters[i + 1];
@@ -107,5 +123,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     currentChapter: currentChapterRef.current,
     nextChapter: nextChapterRef.current,
     shouldLoopChapter,
+    getCurrentChapter,
   };
 };
