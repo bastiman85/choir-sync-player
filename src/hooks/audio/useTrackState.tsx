@@ -1,4 +1,3 @@
-
 import { RefObject } from "react";
 import { Song } from "@/types/song";
 
@@ -36,34 +35,27 @@ export const useTrackState = ({
   };
 
   const muteOtherTracks = (currentTrackVoicePart: string) => {
-    // Samla alla tracks som ska mutas i en array först
-    const tracksToMute = Object.entries(audioRefs.current).filter(([id]) => {
-      const track = song.tracks.find(t => t.id === id);
-      if (!track) return false;
-
-      if (currentTrackVoicePart === "all" || currentTrackVoicePart === "instrumental") {
-        // Om current track är "all" eller "instrumental", muta alla andra tracks
-        return track.voicePart !== currentTrackVoicePart;
-      } else {
-        // För röstdelar, muta bara "all" och "instrumental" tracks
-        return track.voicePart === "all" || track.voicePart === "instrumental";
-      }
-    });
-
-    // Uppdatera muted state för alla tracks på en gång
-    const updates: { [key: string]: boolean } = {};
-    tracksToMute.forEach(([id]) => {
-      updates[id] = true;
-    });
-
-    // Gör en enda uppdatering av state
-    setMutedTracks(prev => ({ ...prev, ...updates }));
-
-    // Pausa och muta alla tracks som ska mutas
-    tracksToMute.forEach(([, audio]) => {
-      audio.pause();
-      audio.muted = true;
-    });
+    // Only mute other tracks if the current track is "all" or "instrumental"
+    if (currentTrackVoicePart === "all" || currentTrackVoicePart === "instrumental") {
+      Object.entries(audioRefs.current).forEach(([id, audio]) => {
+        const track = song.tracks.find(t => t.id === id);
+        if (track && track.voicePart !== currentTrackVoicePart) {
+          audio.muted = true;
+          audio.pause();
+          setMutedTracks(prev => ({ ...prev, [id]: true }));
+        }
+      });
+    } else {
+      // For voice parts, only mute "all" and "instrumental" tracks
+      Object.entries(audioRefs.current).forEach(([id, audio]) => {
+        const track = song.tracks.find(t => t.id === id);
+        if (track && (track.voicePart === "all" || track.voicePart === "instrumental")) {
+          audio.muted = true;
+          audio.pause();
+          setMutedTracks(prev => ({ ...prev, [id]: true }));
+        }
+      });
+    }
   };
 
   return {
