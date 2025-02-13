@@ -7,14 +7,14 @@ interface UseTrackPositionProps {
 }
 
 export const useTrackPosition = ({ audioRefs, truePosition }: UseTrackPositionProps) => {
-  const SYNC_THRESHOLD = 0.05; // Endast synka om avvikelsen är större än 50ms
-  const MAX_SYNC_INTERVAL = 1000; // Max 1 synk per sekund
+  const SYNC_THRESHOLD = 0.02; // Sänk tröskelvärdet till 20ms för mer aggressiv synkning
+  const MAX_SYNC_INTERVAL = 100; // Sänk till 100ms för tätare synkronisering
   let lastSyncTime = 0;
 
   const syncTrackPositions = useCallback((targetPosition: number) => {
     const now = performance.now();
     if (now - lastSyncTime < MAX_SYNC_INTERVAL) {
-      return; // Skippa synk om det var för nära senaste synken
+      return;
     }
 
     Object.values(audioRefs.current).forEach(track => {
