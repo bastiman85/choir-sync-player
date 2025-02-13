@@ -65,7 +65,7 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
           console.log("Current time:", currentTime.toFixed(2));
           console.log("Previous chapter:", currentChapterRef.current?.title);
           console.log("New chapter:", chapter.title);
-          console.log("Chapter boundaries:", chapter.time, "to", nextChapter?.time || "end");
+          console.log("Chapter boundaries:", chapter.time, "to", chapter.endTime || nextChapter?.time || "end");
           console.log("Next chapter:", nextChapter?.title || "none");
           console.log("Time until next chapter:", nextChapter ? (nextChapter.time - currentTime).toFixed(2) : "N/A");
           console.log("=========================\n");
@@ -78,50 +78,7 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     }
   }, [currentTime, song.chapters]);
 
-  const shouldLoopChapter = useCallback((autoRestartChapter: boolean): { shouldLoop: boolean; loopToTime: number } => {
-    if (!autoRestartChapter || !currentChapterRef.current) {
-      return { shouldLoop: false, loopToTime: 0 };
-    }
-
-    const now = performance.now();
-    
-    const currentChapter = currentChapterRef.current;
-    const nextChapter = nextChapterRef.current;
-    
-    // Get first audio element to check total duration
-    const firstAudio = document.querySelector('audio');
-    const totalDuration = firstAudio?.duration || Infinity;
-    
-    // If this is the last chapter, use audio duration as end time
-    const chapterEndTime = nextChapter ? nextChapter.time : totalDuration;
-    // Använd större threshold för att säkerställa att vi fångar loopmöjligheten
-    const threshold = 0.3; // Fast threshold på 0.3 sekunder för alla kapitel
-    
-    console.log("\n=== Detailed Loop Check ===");
-    console.log("Current chapter:", currentChapter.title);
-    console.log("Current time:", currentTime.toFixed(2));
-    console.log("Chapter start time:", currentChapter.time);
-    console.log("Next chapter:", nextChapter?.title || "end of song");
-    console.log("Next chapter time:", nextChapter?.time || "N/A");
-    console.log("Chapter end time:", chapterEndTime);
-    console.log("Time until chapter end:", (chapterEndTime - currentTime).toFixed(2));
-    console.log("Loop threshold:", (chapterEndTime - threshold).toFixed(2));
-    console.log("Is last chapter:", !nextChapter ? "yes" : "no");
-    console.log("Using threshold:", threshold);
-
-    // Ändrar logiken för att loop ska triggas tidigare
-    const shouldLoop = currentTime >= (chapterEndTime - threshold);
-    
-    if (shouldLoop) {
-      console.log("\n!!! LOOP DECISION !!!");
-      console.log("Timestamp:", new Date().toISOString());
-      console.log(`Chapter end reached at ${currentTime.toFixed(2)}`);
-      console.log(`Looping back to ${currentChapter.title} at ${currentChapter.time}`);
-      console.log("!!!!!!!!!!!!!!!!!!!!!\n");
-    }
-
-    return { shouldLoop, loopToTime: currentChapter.time };
-  }, [currentTime]);
+  // Remove the shouldLoopChapter function since we're now handling looping in useChapterLoop
 
   // Update refs whenever time changes
   updateChapterRefs();
@@ -129,7 +86,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
   return {
     currentChapter: currentChapterRef.current,
     nextChapter: nextChapterRef.current,
-    shouldLoopChapter,
     getCurrentChapter,
   };
 };
