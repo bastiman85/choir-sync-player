@@ -9,6 +9,7 @@ import { useAudioSync } from "./audio/useAudioSync";
 
 export const useAudioManager = (song: Song) => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
+  const scrubberTimeRef = useRef<number>(0);
   
   const {
     isPlaying,
@@ -60,13 +61,17 @@ export const useAudioManager = (song: Song) => {
     synchronizeTracks,
   });
 
-  // Använd ett referensspår för att uppdatera UI:n
-  const handleTimeUpdate = (event: Event) => {
-    const audio = event.target as HTMLAudioElement;
-    if (!audio.muted) {
-      setCurrentTime(audio.currentTime);
-    }
-  };
+  // Uppdatera tiden baserat på scrubbern istället för ljudspåren
+  useEffect(() => {
+    const updateInterval = setInterval(() => {
+      if (isPlaying) {
+        scrubberTimeRef.current += 0.05; // Uppdatera var 50:e millisekund
+        setCurrentTime(scrubberTimeRef.current);
+      }
+    }, 50);
+
+    return () => clearInterval(updateInterval);
+  }, [isPlaying]);
 
   useEffect(() => {
     song.tracks.forEach((track) => {
@@ -80,11 +85,6 @@ export const useAudioManager = (song: Song) => {
       audio.volume = 1;
       audio.muted = shouldBeMuted;
       audio.preload = "auto";
-
-      // Lägg till timeupdate endast på det första ospärrade spåret
-      if (!shouldBeMuted) {
-        audio.addEventListener("timeupdate", handleTimeUpdate);
-      }
       
       audio.addEventListener("loadedmetadata", () => {
         setDuration(audio.duration);
@@ -97,7 +97,6 @@ export const useAudioManager = (song: Song) => {
 
     return () => {
       Object.values(audioRefs.current).forEach((audio) => {
-        audio.removeEventListener("timeupdate", handleTimeUpdate);
         audio.pause();
         audio.currentTime = 0;
       });
@@ -112,6 +111,7 @@ export const useAudioManager = (song: Song) => {
             audio.currentTime = 0;
             audio.play().catch(console.error);
           });
+          scrubberTimeRef.current = 0;
           setCurrentTime(0);
           resetTruePosition(0);
         } else {
@@ -126,6 +126,11 @@ export const useAudioManager = (song: Song) => {
       };
     });
   }, [autoRestartSong]);
+
+  // Uppdatera scrubberTimeRef när användaren söker manuellt
+  useEffect(() => {
+    scrubberTimeRef.current = currentTime;
+  }, [currentTime]);
 
   return {
     isPlaying,
