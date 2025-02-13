@@ -29,6 +29,10 @@ export const useChapterLoop = ({
 
   const handleChapterLoop = (currentPosition: number) => {
     if (!autoRestartChapter || !song.chapters?.length) {
+      console.log("\n=== Chapter Loop Status ===");
+      console.log("Auto restart chapter:", autoRestartChapter);
+      console.log("Has chapters:", !!song.chapters?.length);
+      console.log("Loop aborted - feature disabled or no chapters");
       return false;
     }
 
@@ -43,9 +47,17 @@ export const useChapterLoop = ({
 
     const currentChapter = getCurrentChapter();
     if (!currentChapter) {
+      console.log("No current chapter found");
       activeChapterRef.current = null;
       return false;
     }
+
+    console.log("\n=== Loop Check ===");
+    console.log("Current chapter:", currentChapter.title);
+    console.log("Start time:", currentChapter.time);
+    console.log("End time:", currentChapter.endTime);
+    console.log("Current position:", currentPosition);
+    console.log("Auto restart enabled:", autoRestartChapter);
 
     // Uppdatera alltid aktiva kapitlets detaljer
     activeChapterRef.current = {
@@ -56,13 +68,6 @@ export const useChapterLoop = ({
 
     if (activeChapterRef.current && activeChapterRef.current.endTime) {
       const { startTime, endTime } = activeChapterRef.current;
-
-      console.log("\n=== Chapter Update Check ===");
-      console.log("Current time:", currentPosition.toFixed(2));
-      console.log("Current chapter:", currentChapter.title);
-      console.log("Raw chapter data:", currentChapter);
-      console.log("Time until chapter end:", (endTime - currentPosition).toFixed(2));
-      console.log("Next chapter starts at:", endTime + 1);
 
       // Mer exakt kontroll för loopning med mindre marginal
       if (currentPosition >= endTime || Math.abs(endTime - currentPosition) < 0.05) {
