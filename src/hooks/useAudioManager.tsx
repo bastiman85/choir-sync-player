@@ -6,6 +6,7 @@ import { useChapterManagement } from "./audio/useChapterManagement";
 import { useTrackControls } from "./audio/useTrackControls";
 import { useAudioControls } from "./audio/useAudioControls";
 import { useAudioSync } from "./audio/useAudioSync";
+import { useChapterLoop } from "./audio/useChapterLoop";
 
 export const useAudioManager = (song: Song) => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
@@ -29,15 +30,26 @@ export const useAudioManager = (song: Song) => {
     setActiveVoicePart,
     autoRestartSong,
     setAutoRestartSong,
+    autoRestartChapter,
+    setAutoRestartChapter,
   } = useAudioState(song);
 
-  const { currentChapter } = useChapterManagement(currentTime, song);
+  const { currentChapter, getCurrentChapter } = useChapterManagement(currentTime, song);
 
   const { synchronizeTracks, resetTruePosition } = useAudioSync({
     audioRefs,
     isPlaying,
     currentTime,
     setCurrentTime,
+  });
+
+  const { handleChapterLoop } = useChapterLoop({
+    audioRefs,
+    currentTime,
+    setCurrentTime,
+    autoRestartChapter,
+    song,
+    getCurrentChapter,
   });
 
   const { togglePlayPause, handleSeek, handleTrackEnd } = useAudioControls({
@@ -117,12 +129,15 @@ export const useAudioManager = (song: Song) => {
         audio.currentTime = 0;
       });
     };
-  }, [song]); // Removed autoRestartSong from dependencies
+  }, [song]);
 
   const handleTimeUpdate = (event: Event) => {
     const audio = event.target as HTMLAudioElement;
     if (!audio.muted && !audio.paused) {
       const currentPosition = audio.currentTime;
+      if (autoRestartChapter) {
+        handleChapterLoop(currentPosition);
+      }
       setCurrentTime(currentPosition);
     }
   };
@@ -134,11 +149,13 @@ export const useAudioManager = (song: Song) => {
     volumes,
     mutedTracks,
     autoRestartSong,
+    autoRestartChapter,
     togglePlayPause,
     handleVolumeChange,
     handleMuteToggle,
     handleSeek,
     activeVoicePart,
     setAutoRestartSong,
+    setAutoRestartChapter,
   };
 };

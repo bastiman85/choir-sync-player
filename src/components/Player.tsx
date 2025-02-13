@@ -30,11 +30,13 @@ const Player = ({ song }: PlayerProps) => {
     volumes,
     mutedTracks,
     autoRestartSong,
+    autoRestartChapter,
     togglePlayPause,
     handleVolumeChange,
     handleMuteToggle,
     handleSeek,
     setAutoRestartSong,
+    setAutoRestartChapter,
   } = useAudioManager(song);
 
   const handleChapterClick = (time: number) => {
@@ -120,6 +122,9 @@ const Player = ({ song }: PlayerProps) => {
           currentTime={currentTime}
           autoRestartSong={autoRestartSong}
           onAutoRestartToggle={setAutoRestartSong}
+          hasChapters={hasChapters}
+          autoRestartChapter={autoRestartChapter}
+          onAutoRestartChapterToggle={setAutoRestartChapter}
         />
 
         <div className="flex flex-wrap items-center justify-center gap-4 mt-6 mb-6">

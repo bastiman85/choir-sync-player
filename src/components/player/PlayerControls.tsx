@@ -10,6 +10,9 @@ interface PlayerControlsProps {
   currentTime: number;
   autoRestartSong: boolean;
   onAutoRestartToggle: (checked: boolean) => void;
+  hasChapters: boolean;
+  autoRestartChapter: boolean;
+  onAutoRestartChapterToggle: (checked: boolean) => void;
 }
 
 const PlayerControls = ({
@@ -19,6 +22,9 @@ const PlayerControls = ({
   currentTime,
   autoRestartSong,
   onAutoRestartToggle,
+  hasChapters,
+  autoRestartChapter,
+  onAutoRestartChapterToggle,
 }: PlayerControlsProps) => {
   const handleSkipBack = () => {
     const newTime = Math.max(0, currentTime - 10);
@@ -28,6 +34,20 @@ const PlayerControls = ({
   const handleSkipForward = () => {
     const newTime = currentTime + 10;
     onSeek([newTime]);
+  };
+
+  const handleRestartSongToggle = (checked: boolean) => {
+    if (checked && autoRestartChapter) {
+      onAutoRestartChapterToggle(false);
+    }
+    onAutoRestartToggle(checked);
+  };
+
+  const handleRestartChapterToggle = (checked: boolean) => {
+    if (checked && autoRestartSong) {
+      onAutoRestartToggle(false);
+    }
+    onAutoRestartChapterToggle(checked);
   };
 
   return (
@@ -47,15 +67,30 @@ const PlayerControls = ({
         </Button>
       </div>
       
-      <div className="flex items-center gap-2">
-        <Switch
-          checked={autoRestartSong}
-          onCheckedChange={onAutoRestartToggle}
-          id="auto-restart"
-        />
-        <label htmlFor="auto-restart" className="text-sm text-gray-600">
-          Upprepa
-        </label>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={autoRestartSong}
+            onCheckedChange={handleRestartSongToggle}
+            id="auto-restart"
+          />
+          <label htmlFor="auto-restart" className="text-sm text-gray-600">
+            Upprepa
+          </label>
+        </div>
+
+        {hasChapters && (
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={autoRestartChapter}
+              onCheckedChange={handleRestartChapterToggle}
+              id="auto-restart-chapter"
+            />
+            <label htmlFor="auto-restart-chapter" className="text-sm text-gray-600">
+              Upprepa del
+            </label>
+          </div>
+        )}
       </div>
     </div>
   );
