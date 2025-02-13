@@ -1,5 +1,5 @@
 
-import { RefObject } from "react";
+import { RefObject, useCallback } from "react";
 
 interface UseTrackPositionProps {
   audioRefs: RefObject<{ [key: string]: HTMLAudioElement }>;
@@ -7,22 +7,33 @@ interface UseTrackPositionProps {
 }
 
 export const useTrackPosition = ({ audioRefs, truePosition }: UseTrackPositionProps) => {
-  const SYNC_OFFSET = 0.2; // 200ms offset för att kompensera för latens
+  const SYNC_THRESHOLD = 0.05; // Endast synka om avvikelsen är större än 50ms
+  const MAX_SYNC_INTERVAL = 1000; // Max 1 synk per sekund
+  let lastSyncTime = 0;
 
-  const syncTrackPositions = (targetPosition: number) => {
+  const syncTrackPositions = useCallback((targetPosition: number) => {
+    const now = performance.now();
+    if (now - lastSyncTime < MAX_SYNC_INTERVAL) {
+      return; // Skippa synk om det var för nära senaste synken
+    }
+
     Object.values(audioRefs.current).forEach(track => {
       if (!track.muted && !track.paused) {
-        track.currentTime = Math.max(0, targetPosition - SYNC_OFFSET);
+        const drift = Math.abs(track.currentTime - targetPosition);
+        if (drift > SYNC_THRESHOLD) {
+          track.currentTime = targetPosition;
+          lastSyncTime = now;
+        }
       }
     });
-  };
+  }, []);
 
-  const updateTruePosition = (newPosition: number) => {
-    // Tillåt endast bakåtjustering för att undvika tidshopp framåt
-    if (newPosition < truePosition.current) {
+  const updateTruePosition = useCallback((newPosition: number) => {
+    const drift = Math.abs(newPosition - truePosition.current);
+    if (drift > SYNC_THRESHOLD) {
       truePosition.current = newPosition;
     }
-  };
+  }, [truePosition]);
 
   return {
     syncTrackPositions,

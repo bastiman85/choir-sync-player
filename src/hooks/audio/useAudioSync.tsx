@@ -1,5 +1,5 @@
 
-import { RefObject, useEffect, useRef } from "react";
+import { RefObject, useEffect, useRef, useCallback } from "react";
 import { usePlaybackTiming } from "./usePlaybackTiming";
 import { useTrackPosition } from "./useTrackPosition";
 import { usePlaybackPosition } from "./usePlaybackPosition";
@@ -18,6 +18,8 @@ export const useAudioSync = ({
   setCurrentTime,
 }: UseAudioSyncProps) => {
   const syncFrameRef = useRef<number | null>(null);
+  const lastSyncTime = useRef(0);
+  const MIN_SYNC_INTERVAL = 500; // Minst 500ms mellan synkar
   
   const {
     truePosition,
@@ -37,9 +39,14 @@ export const useAudioSync = ({
     truePosition,
   });
 
-  const synchronizeTracks = () => {
+  const synchronizeTracks = useCallback(() => {
     if (syncFrameRef.current) {
       cancelAnimationFrame(syncFrameRef.current);
+    }
+
+    const now = performance.now();
+    if (now - lastSyncTime.current < MIN_SYNC_INTERVAL) {
+      return; // Skippa synk om det var för nära senaste synken
     }
 
     syncFrameRef.current = requestAnimationFrame(() => {
@@ -47,16 +54,17 @@ export const useAudioSync = ({
       if (earliestPosition !== null) {
         updateTruePosition(earliestPosition);
         syncTrackPositions(truePosition.current);
+        lastSyncTime.current = now;
       }
     });
-  };
+  }, [getEarliestTrackPosition, syncTrackPositions, updateTruePosition]);
 
-  const resetTruePosition = (time: number) => {
+  const resetTruePosition = useCallback((time: number) => {
     resetPosition(time);
     Object.values(audioRefs.current).forEach(track => {
       track.currentTime = time;
     });
-  };
+  }, [resetPosition]);
 
   useEffect(() => {
     return () => {
