@@ -7,7 +7,7 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
   const nextChapterRef = useRef<ChapterMarker | null>(null);
   const lastUpdateTimeRef = useRef<number>(performance.now());
   const lastLoopCheckTimeRef = useRef<number>(performance.now());
-  const loopCheckIntervalRef = useRef<number>(50); // 50ms check interval
+  const loopCheckIntervalRef = useRef<number>(250); // Öka intervallet till 250ms för att minska antalet uppdateringar
 
   const getCurrentChapter = useCallback(() => {
     if (!song.chapters?.length) {
@@ -20,7 +20,11 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
       const nextChapter = sortedChapters[i + 1];
 
       if (currentTime >= chapter.time && (!nextChapter || currentTime < nextChapter.time)) {
-        return chapter;
+        // Sätt endTime baserat på nästa kapitel om det inte finns ett explicit endTime
+        return {
+          ...chapter,
+          endTime: chapter.endTime || nextChapter?.time
+        };
       }
     }
     return null;
@@ -34,20 +38,13 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     }
 
     const now = performance.now();
-    const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
-    const timeSinceLastLoopCheck = now - lastLoopCheckTimeRef.current;
+    const timeSinceLastCheck = now - lastLoopCheckTimeRef.current;
     
-    if (timeSinceLastLoopCheck < loopCheckIntervalRef.current) {
+    if (timeSinceLastCheck < loopCheckIntervalRef.current) {
       return;
     }
     
     lastLoopCheckTimeRef.current = now;
-    
-    console.log("\n=== Chapter Update Check ===");
-    console.log("Time since last update:", timeSinceLastUpdate.toFixed(2), "ms");
-    console.log("Time since last loop check:", timeSinceLastLoopCheck.toFixed(2), "ms");
-    console.log("Previous chapter:", currentChapterRef.current?.title);
-    console.log("Current time:", currentTime.toFixed(2));
     
     const sortedChapters = [...song.chapters].sort((a, b) => a.time - b.time);
     
@@ -65,20 +62,28 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
           console.log("Current time:", currentTime.toFixed(2));
           console.log("Previous chapter:", currentChapterRef.current?.title);
           console.log("New chapter:", chapter.title);
-          console.log("Chapter boundaries:", chapter.time, "to", chapter.endTime || nextChapter?.time || "end");
+          console.log("Chapter boundaries:", chapter.time, "to", nextChapter?.time || "end");
           console.log("Next chapter:", nextChapter?.title || "none");
           console.log("Time until next chapter:", nextChapter ? (nextChapter.time - currentTime).toFixed(2) : "N/A");
           console.log("=========================\n");
           
           currentChapterRef.current = chapter;
           lastUpdateTimeRef.current = now;
+        } else {
+          // Logga bara var 2:a sekund om kapitlet inte ändrats
+          const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
+          if (timeSinceLastUpdate > 2000) {
+            console.log("\n=== Chapter Update Check ===");
+            console.log("Current time:", currentTime.toFixed(2));
+            console.log("Current chapter:", chapter.title);
+            console.log("Time until next chapter:", nextChapter ? (nextChapter.time - currentTime).toFixed(2) : "N/A");
+            lastUpdateTimeRef.current = now;
+          }
         }
         break;
       }
     }
   }, [currentTime, song.chapters]);
-
-  // Remove the shouldLoopChapter function since we're now handling looping in useChapterLoop
 
   // Update refs whenever time changes
   updateChapterRefs();
