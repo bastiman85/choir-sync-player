@@ -1,5 +1,5 @@
 
-import { RefObject } from "react";
+import { RefObject, useCallback } from "react";
 
 interface UseAudioControlsProps {
   audioRefs: RefObject<{ [key: string]: HTMLAudioElement }>;
@@ -14,6 +14,33 @@ export const useAudioControls = ({
   setCurrentTime,
   resetTruePosition,
 }: UseAudioControlsProps) => {
+  // Hjälpfunktion för att aktivera AudioContext
+  const initializeAudioContext = useCallback(async () => {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioContext) {
+      const context = new AudioContext();
+      if (context.state === 'suspended') {
+        await context.resume();
+      }
+      return context;
+    }
+    return null;
+  }, []);
+
+  const ensureAudioReadyForPlayback = useCallback(async (audio: HTMLAudioElement) => {
+    return new Promise<void>((resolve) => {
+      const checkState = () => {
+        if (audio.readyState >= 2) { // HAVE_CURRENT_DATA eller högre
+          resolve();
+        } else {
+          audio.addEventListener('loadeddata', () => resolve(), { once: true });
+          audio.load();
+        }
+      };
+      checkState();
+    });
+  }, []);
+
   const togglePlayPause = async (isPlaying: boolean) => {
     try {
       if (isPlaying) {
@@ -21,63 +48,61 @@ export const useAudioControls = ({
           audio.pause();
         });
         setIsPlaying(false);
-      } else {
-        // Samla alla spår som inte är mutade
-        const unmutedTracks = Object.values(audioRefs.current).filter(
-          (audio) => !audio.muted
-        );
+        return;
+      }
 
-        if (unmutedTracks.length === 0) {
-          console.log("No unmuted tracks to play");
-          return;
-        }
+      // Aktivera AudioContext först
+      await initializeAudioContext();
 
-        // Synkronisera alla spår till samma startposition
-        const startTime = unmutedTracks[0].currentTime;
-        unmutedTracks.forEach(audio => {
-          audio.currentTime = startTime;
-        });
+      const unmutedTracks = Object.values(audioRefs.current).filter(
+        (audio) => !audio.muted
+      );
 
-        // För iOS, skapa en enkel use gesture genom att starta och stoppa direkt
-        try {
-          const tempAudio = unmutedTracks[0];
-          await tempAudio.play();
-          tempAudio.pause();
-        } catch (error) {
-          console.log("Initial play-pause cycle failed:", error);
-        }
+      if (unmutedTracks.length === 0) {
+        console.log("No unmuted tracks to play");
+        return;
+      }
 
-        // Försök spela upp alla spår samtidigt
-        let playPromises = unmutedTracks.map(audio => {
-          // Säkerställ att audio är i rätt läge för uppspelning
-          if (audio.paused) {
-            return audio.play().catch(error => {
-              console.log("Error playing track:", error);
-              return Promise.reject(error);
-            });
+      // Synkronisera alla spår till samma startposition
+      const startTime = unmutedTracks[0].currentTime;
+      for (const audio of unmutedTracks) {
+        audio.currentTime = startTime;
+        await ensureAudioReadyForPlayback(audio);
+      }
+
+      // På iOS, gör en initial "touch" av ljudet
+      const unlockAudio = async () => {
+        const audio = unmutedTracks[0];
+        audio.volume = 0;
+        const playAttempt = audio.play();
+        if (playAttempt) {
+          try {
+            await playAttempt;
+            audio.pause();
+            audio.volume = 1;
+          } catch (e) {
+            console.log("Unlock attempt failed:", e);
           }
-          return Promise.resolve();
-        });
+        }
+      };
+      
+      await unlockAudio();
 
+      // Spela upp ett spår i taget med minimal fördröjning
+      for (const audio of unmutedTracks) {
         try {
-          await Promise.all(playPromises);
-          setIsPlaying(true);
-        } catch (error) {
-          console.log("Error during parallel playback:", error);
-          // Om parallell uppspelning misslyckas, försök sekventiellt
-          for (const audio of unmutedTracks) {
-            try {
-              if (audio.paused) {
-                await audio.play();
-                await new Promise(resolve => setTimeout(resolve, 20));
-              }
-            } catch (innerError) {
-              console.log("Sequential playback error:", innerError);
-            }
+          const playPromise = audio.play();
+          if (playPromise) {
+            await playPromise;
+            await new Promise(resolve => setTimeout(resolve, 10));
           }
-          setIsPlaying(true);
+        } catch (error) {
+          console.log("Error playing track:", error);
+          // Fortsätt med nästa spår även om detta misslyckas
         }
       }
+
+      setIsPlaying(true);
     } catch (error) {
       console.error("Playback error:", error);
       setIsPlaying(false);
@@ -104,35 +129,25 @@ export const useAudioControls = ({
         (audio) => !audio.muted
       );
 
-      // Försök spela upp alla spår samtidigt
-      let playPromises = unmutedTracks.map(audio => {
-        if (audio.paused) {
-          return audio.play().catch(error => {
-            console.log("Error playing track after seek:", error);
-            return Promise.reject(error);
-          });
-        }
-        return Promise.resolve();
-      });
-
-      try {
-        await Promise.all(playPromises);
-        setIsPlaying(true);
-      } catch (error) {
-        console.log("Error during parallel playback after seek:", error);
-        // Om parallell uppspelning misslyckas, försök sekventiellt
-        for (const audio of unmutedTracks) {
-          try {
-            if (audio.paused) {
-              await audio.play();
-              await new Promise(resolve => setTimeout(resolve, 20));
-            }
-          } catch (innerError) {
-            console.log("Sequential playback error after seek:", innerError);
-          }
-        }
-        setIsPlaying(true);
+      // Säkerställ att alla spår är redo
+      for (const audio of unmutedTracks) {
+        await ensureAudioReadyForPlayback(audio);
       }
+
+      // Spela upp ett spår i taget
+      for (const audio of unmutedTracks) {
+        try {
+          const playPromise = audio.play();
+          if (playPromise) {
+            await playPromise;
+            await new Promise(resolve => setTimeout(resolve, 10));
+          }
+        } catch (error) {
+          console.log("Error playing track after seek:", error);
+        }
+      }
+      
+      setIsPlaying(true);
     }
   };
 
