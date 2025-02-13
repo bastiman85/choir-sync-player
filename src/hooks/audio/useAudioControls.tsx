@@ -57,20 +57,28 @@ export const useAudioControls = ({
       
       // Lägg till en kort paus innan uppspelningen startas
       setTimeout(() => {
-        // Hitta tidigaste position igen innan uppspelning
+        // Hämta aktiva spår igen för att säkerställa att vi har alla
+        const updatedActiveAudios = getActiveAudioElements();
         let startPosition = Infinity;
-        activeAudios.forEach(audio => {
+        
+        // Hitta tidigaste position igen innan uppspelning
+        updatedActiveAudios.forEach(audio => {
           startPosition = Math.min(startPosition, audio.currentTime);
         });
         
-        // Synka en sista gång innan uppspelning
-        activeAudios.forEach((audio) => {
+        // Synka en sista gång innan uppspelning och logga
+        console.log('--- Synkronisering före uppspelning ---');
+        console.log(`Synkar till position: ${startPosition.toFixed(3)} sekunder`);
+        
+        updatedActiveAudios.forEach((audio) => {
           audio.currentTime = startPosition;
+          console.log(`Spår synkat till: ${audio.currentTime.toFixed(3)} sekunder`);
           audio.play().catch(console.error);
         });
         
         setCurrentTime(startPosition);
         resetTruePosition(startPosition);
+        console.log('-------------------------');
       }, SYNC_PAUSE_DURATION);
       
       setIsPlaying(true);
@@ -93,20 +101,28 @@ export const useAudioControls = ({
     
     // Lägg till en kort paus innan uppspelningen återupptas
     setTimeout(() => {
-      // Hitta tidigaste position innan uppspelning återupptas
+      // Hämta aktiva spår igen för att säkerställa att vi har alla
+      const updatedActiveAudios = getActiveAudioElements();
       let startPosition = Infinity;
-      activeAudios.forEach(audio => {
+      
+      // Hitta tidigaste position innan uppspelning återupptas
+      updatedActiveAudios.forEach(audio => {
         startPosition = Math.min(startPosition, audio.currentTime);
       });
       
-      // Synka en sista gång innan uppspelning
-      activeAudios.forEach((audio) => {
+      // Synka en sista gång innan uppspelning och logga
+      console.log('--- Synkronisering före återuppspelning ---');
+      console.log(`Synkar till position: ${startPosition.toFixed(3)} sekunder`);
+      
+      updatedActiveAudios.forEach((audio) => {
         audio.currentTime = startPosition;
+        console.log(`Spår synkat till: ${audio.currentTime.toFixed(3)} sekunder`);
         audio.play().catch(console.error);
       });
       
       setCurrentTime(startPosition);
       resetTruePosition(startPosition);
+      console.log('-------------------------');
       setIsPlaying(true);
     }, SYNC_PAUSE_DURATION);
   };
