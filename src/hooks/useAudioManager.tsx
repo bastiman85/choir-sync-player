@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from "react";
 import { Song } from "@/types/song";
 import { useAudioState } from "./audio/useAudioState";
@@ -94,11 +93,8 @@ export const useAudioManager = (song: Song) => {
 
       audio.volume = 1;
       audio.muted = shouldBeMuted;
-      audio.preload = "auto"; // Säkerställ att alla spår laddas i förväg
+      audio.preload = "auto";
 
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.addEventListener("timeupdate", handleTimeUpdate);
-      
       audio.addEventListener("loadedmetadata", () => {
         setDuration(audio.duration);
       });
@@ -110,7 +106,6 @@ export const useAudioManager = (song: Song) => {
 
     return () => {
       Object.values(audioRefs.current).forEach((audio) => {
-        audio.removeEventListener("timeupdate", handleTimeUpdate);
         audio.pause();
         audio.currentTime = 0;
       });

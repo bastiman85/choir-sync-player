@@ -1,5 +1,5 @@
 
-import { RefObject, useEffect, useRef } from "react";
+import { RefObject, useRef } from "react";
 import { usePlaybackTiming } from "./usePlaybackTiming";
 import { useTrackPosition } from "./useTrackPosition";
 import { usePlaybackPosition } from "./usePlaybackPosition";
@@ -17,47 +17,27 @@ export const useAudioSync = ({
   currentTime,
   setCurrentTime,
 }: UseAudioSyncProps) => {
-  const uiUpdateInterval = useRef<number | null>(null);
-  
-  const {
-    truePosition,
-    updatePosition,
-    resetPosition,
-    updateUIPosition,
-    shouldUpdateUI,
-  } = usePlaybackPosition({ setCurrentTime });
-
-  const { shouldSync, updateSyncTime, getEarliestTrackPosition } = usePlaybackTiming({
+  const { getEarliestTrackPosition } = usePlaybackTiming({
     audioRefs,
     isPlaying,
-  });
-
-  const { syncTrackPositions, updateTruePosition } = useTrackPosition({
-    audioRefs,
-    truePosition,
   });
 
   const synchronizeTracks = () => {
     const earliestPosition = getEarliestTrackPosition();
     if (earliestPosition !== null) {
       Object.values(audioRefs.current).forEach(track => {
-        if (!track.muted && !track.paused) {
-          const drift = Math.abs(track.currentTime - earliestPosition);
-          if (drift > 0.05) {
-            track.currentTime = earliestPosition;
-          }
+        if (!track.muted) {
+          track.currentTime = earliestPosition;
         }
       });
     }
   };
 
   const resetTruePosition = (time: number) => {
-    resetPosition(time);
-    // Synka alla spår till den nya positionen omedelbart
     Object.values(audioRefs.current).forEach(track => {
       track.currentTime = time;
     });
-    // Om vi spelar, se till att alla ospärrade spår spelar
+    
     if (isPlaying) {
       Object.values(audioRefs.current).forEach(track => {
         if (!track.muted) {
@@ -65,7 +45,6 @@ export const useAudioSync = ({
         }
       });
     }
-    synchronizeTracks();
   };
 
   return { synchronizeTracks, resetTruePosition };
