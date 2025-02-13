@@ -9,6 +9,8 @@ import { useAudioSync } from "./audio/useAudioSync";
 
 export const useAudioManager = (song: Song) => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
+  const loadingPromises = useRef<{ [key: string]: Promise<void> }>({});
+  const audioContextRef = useRef<AudioContext | null>(null);
   
   const {
     isPlaying,
@@ -70,26 +72,48 @@ export const useAudioManager = (song: Song) => {
   };
 
   useEffect(() => {
+    // Initiera Web Audio Context
+    const initAudioContext = () => {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      return audioContextRef.current;
+    };
+
     const loadTrack = async (track: { id: string; url: string }) => {
-      const audio = new Audio();
-      
-      // Optimeringar för iOS Safari
-      audio.preload = "auto";
-      audio.setAttribute('playsinline', '');
-      audio.setAttribute('webkit-playsinline', '');
-      audio.setAttribute('preload', 'auto');
-      
-      // Lägg till specifika iOS-attribut för bättre ljudhantering
-      audio.setAttribute('x-webkit-airplay', 'allow');
-      audio.setAttribute('controlsList', 'nodownload');
-      
-      // Förbered ljudet för uppspelning
-      audio.load();
-      
-      // Sätt src sist för att undvika race conditions
-      audio.src = track.url;
-      
-      return new Promise<void>((resolve) => {
+      // Återanvänd existerande promise om det finns
+      if (loadingPromises.current[track.id]) {
+        return loadingPromises.current[track.id];
+      }
+
+      const loadingPromise = new Promise<void>(async (resolve) => {
+        const audio = new Audio();
+        
+        // Optimeringar för iOS Safari
+        audio.preload = "auto";
+        audio.setAttribute('playsinline', '');
+        audio.setAttribute('webkit-playsinline', '');
+        audio.setAttribute('preload', 'auto');
+        
+        // iOS-specifika attribut
+        audio.setAttribute('x-webkit-airplay', 'allow');
+        audio.setAttribute('controlsList', 'nodownload');
+        
+        // Använd range requests för att förbättra laddningstiden
+        const response = await fetch(track.url, {
+          headers: {
+            Range: 'bytes=0-',
+          },
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          audio.src = objectUrl;
+        } else {
+          audio.src = track.url;
+        }
+        
         const handleLoaded = () => {
           audioRefs.current[track.id] = audio;
           setDuration(audio.duration);
@@ -97,72 +121,91 @@ export const useAudioManager = (song: Song) => {
           resolve();
         };
         
-        const handleCanPlayThrough = () => {
-          audio.removeEventListener('canplaythrough', handleCanPlayThrough);
-          resolve();
-        };
-        
         audio.addEventListener("loadedmetadata", handleLoaded);
-        audio.addEventListener('canplaythrough', handleCanPlayThrough);
         
-        // Lägg till felhantering
+        // Rensa objektURL när ljudet är laddat
+        audio.addEventListener('canplaythrough', () => {
+          if (response.ok) {
+            URL.revokeObjectURL(objectUrl);
+          }
+        }, { once: true });
+
+        // Felhantering
         audio.addEventListener("error", (e) => {
           console.error("Error loading audio:", e);
           resolve();
         });
+
+        // Starta laddningen
+        audio.load();
       });
+
+      loadingPromises.current[track.id] = loadingPromise;
+      return loadingPromise;
     };
 
     const initializeTracks = async () => {
-      // Ladda spår sekventiellt för att minska belastningen
-      for (const track of song.tracks) {
-        await loadTrack(track);
+      const audioContext = initAudioContext();
+      
+      // Ladda spår i mindre grupper för att minska minnesanvändningen
+      const batchSize = 2;
+      for (let i = 0; i < song.tracks.length; i += batchSize) {
+        const batch = song.tracks.slice(i, i + batchSize);
+        await Promise.all(batch.map(track => loadTrack(track)));
         
-        const audio = audioRefs.current[track.id];
-        if (audio) {
-          // Sätt initial volym och mute-tillstånd
-          setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
-          const shouldBeMuted = track.voicePart !== "all";
-          setMutedTracks((prev) => ({ ...prev, [track.id]: shouldBeMuted }));
+        // Konfigurera ljudet efter laddning
+        batch.forEach(track => {
+          const audio = audioRefs.current[track.id];
+          if (audio) {
+            setVolumes((prev) => ({ ...prev, [track.id]: 1 }));
+            const shouldBeMuted = track.voicePart !== "all";
+            setMutedTracks((prev) => ({ ...prev, [track.id]: shouldBeMuted }));
 
-          audio.volume = 1;
-          audio.muted = shouldBeMuted;
-          
-          // Lägg till eventlyssnare
-          audio.removeEventListener("timeupdate", handleTimeUpdate);
-          audio.addEventListener("timeupdate", handleTimeUpdate);
-          audio.addEventListener("ended", handleTrackEnd);
-          
-          // Förbered för iOS-uppspelning
-          try {
-            await audio.load();
-          } catch (error) {
-            console.error("Error preloading audio:", error);
+            audio.volume = 1;
+            audio.muted = shouldBeMuted;
+            
+            audio.removeEventListener("timeupdate", handleTimeUpdate);
+            audio.addEventListener("timeupdate", handleTimeUpdate);
+            audio.addEventListener("ended", handleTrackEnd);
           }
-        }
+        });
       }
     };
 
     initializeTracks();
 
-    // Sätt initial state för spårlägen
     setAllTrackMode(true);
     setInstrumentalMode(false);
     setActiveVoicePart("all");
 
     return () => {
+      // Cleanup
       Object.values(audioRefs.current).forEach((audio) => {
         audio.removeEventListener("timeupdate", handleTimeUpdate);
         audio.removeEventListener("ended", handleTrackEnd);
         audio.pause();
         audio.currentTime = 0;
-        audio.src = ''; // Rensa src för att frigöra minne
+        audio.src = '';
       });
+      
+      // Rensa objektURLs och promises
+      Object.values(loadingPromises.current).forEach(promise => {
+        if (promise.cancel) {
+          promise.cancel();
+        }
+      });
+      
+      // Stäng AudioContext
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+      
       audioRefs.current = {};
+      loadingPromises.current = {};
     };
   }, [song]);
 
-  // Wrapper för togglePlayPause för att hantera async/await
   const handleTogglePlayPause = () => {
     togglePlayPause(isPlaying);
   };
