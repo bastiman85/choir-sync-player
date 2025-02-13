@@ -1,4 +1,3 @@
-
 import { RefObject } from "react";
 
 interface UseTrackSyncProps {
@@ -25,16 +24,22 @@ export const useTrackSync = ({ audioRefs, truePosition, isPlaying }: UseTrackSyn
     const earliestPosition = findEarliestPosition();
     
     if (earliestPosition !== null) {
-      truePosition.current = earliestPosition;
+      // Never allow forward jumps, only backward or small corrections
+      if (earliestPosition < truePosition.current) {
+        truePosition.current = earliestPosition;
+      }
     }
 
+    // Sync all non-muted tracks to the true position
     tracks.forEach((track) => {
-      if (!track.muted && !track.paused) {
+      if (!track.muted) {
         const drift = Math.abs(track.currentTime - truePosition.current);
-        if (drift > 0.05) { // Endast synka om driften är större än 50ms
+        // Only sync if there's significant drift and we're not jumping forward
+        if (drift > 0.1 && track.currentTime > truePosition.current) {
           track.currentTime = truePosition.current;
         }
 
+        // Ensure playback state matches
         if (isPlaying && track.paused) {
           track.currentTime = truePosition.current;
           track.play().catch(console.error);
