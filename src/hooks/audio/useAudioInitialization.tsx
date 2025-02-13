@@ -54,20 +54,8 @@ export const useAudioInitialization = ({
         (audio as any).mozFrameBufferLength = 1024;
       }
       
-      // Ladda ljudet i mindre delar
-      try {
-        const response = await fetch(track.url);
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        audio.src = objectUrl;
-        
-        // Spara object URL för senare cleanup
-        objectUrlsRef.current[track.id] = objectUrl;
-      } catch (error) {
-        console.error("Error loading audio:", error);
-        resolve();
-        return;
-      }
+      // Sätt URL direkt utan fetch för att kringgå CORS
+      audio.src = track.url;
       
       const handleLoaded = () => {
         audioRefs.current[track.id] = audio;
@@ -86,6 +74,11 @@ export const useAudioInitialization = ({
         
         audio.addEventListener("canplay", () => {
           console.log("Audio can play");
+          resolve();
+        });
+        
+        audio.addEventListener("error", (e) => {
+          console.error("Error loading audio:", e);
           resolve();
         });
         
