@@ -58,6 +58,7 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
           console.log("Current time:", currentTime.toFixed(2));
           console.log("Previous chapter:", currentChapterRef.current?.title);
           console.log("New chapter:", chapter.title);
+          console.log("Raw chapter data:", chapter); // Lägg till denna rad för att se all data
           console.log("Chapter boundaries:", chapter.time, "to", chapter.endTime || "no end time set");
           if (nextChapter) {
             console.log("Next chapter:", nextChapter.title);
@@ -74,6 +75,7 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
             console.log("\n=== Chapter Update Check ===");
             console.log("Current time:", currentTime.toFixed(2));
             console.log("Current chapter:", chapter.title);
+            console.log("Raw chapter data:", chapter); // Lägg till denna rad för att se all data
             if (chapter.endTime) {
               console.log("Time until chapter end:", (chapter.endTime - currentTime).toFixed(2));
             }
