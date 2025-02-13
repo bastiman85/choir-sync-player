@@ -21,6 +21,11 @@ export const useChapterLoop = ({
 }: UseChapterLoopProps) => {
   const lastLoopCheckTimeRef = useRef<number>(performance.now());
   const loopCheckIntervalRef = useRef<number>(25);
+  const activeChapterRef = useRef<{
+    id: string;
+    startTime: number;
+    endTime: number;
+  } | null>(null);
 
   const handleChapterLoop = (currentPosition: number) => {
     if (!autoRestartChapter || !song.chapters?.length) {
@@ -38,6 +43,7 @@ export const useChapterLoop = ({
 
     const currentChapter = getCurrentChapter();
     if (!currentChapter) {
+      activeChapterRef.current = null;
       return false;
     }
 
@@ -45,38 +51,46 @@ export const useChapterLoop = ({
     const currentChapterIndex = sortedChapters.findIndex(c => c.id === currentChapter.id);
     const nextChapter = sortedChapters[currentChapterIndex + 1];
 
-    // Bestäm sluttiden för kapitlet baserat på endTime eller nästa kapitels starttid
-    const chapterEndTime = currentChapter.endTime || (nextChapter?.time ?? Infinity);
+    // Uppdatera aktivt kapitel endast om vi nått ett nytt kapitels starttid
+    if (!activeChapterRef.current || currentPosition >= nextChapter?.time) {
+      activeChapterRef.current = {
+        id: currentChapter.id,
+        startTime: currentChapter.time,
+        endTime: currentChapter.endTime || nextChapter?.time || Infinity
+      };
 
-    console.log("\n=== Loop Check Start ===");
-    console.log("Current position:", currentPosition.toFixed(2));
-    console.log("Current chapter:", currentChapter.title);
-    console.log("Chapter start time:", currentChapter.time);
-    console.log("Chapter end time:", chapterEndTime);
-    console.log("Using explicit end time:", currentChapter.endTime ? "yes" : "no");
-    console.log("Next chapter:", nextChapter?.title || "none");
-    console.log("Time until chapter end:", (chapterEndTime - currentPosition).toFixed(2));
-
-    // Kontrollera om vi har nått slutet av kapitlet
-    if (currentPosition >= chapterEndTime) {
-      console.log("\n!!! PERFORMING CHAPTER LOOP !!!");
-      console.log("Timestamp:", new Date().toISOString());
-      console.log(`Looping back to chapter "${currentChapter.title}" at time ${currentChapter.time}`);
-      console.log("Distance past end:", (currentPosition - chapterEndTime).toFixed(2));
-
-      // Reset all audio elements to the start av current chapter
-      Object.values(audioRefs.current).forEach(audio => {
-        audio.currentTime = currentChapter.time;
-        if (!audio.muted) {
-          audio.play().catch(error => console.error("Error playing audio:", error));
-        }
-      });
-      
-      setCurrentTime(currentChapter.time);
-      return true;
+      console.log("\n=== New Active Chapter ===");
+      console.log("Chapter:", currentChapter.title);
+      console.log("Start time:", activeChapterRef.current.startTime);
+      console.log("End time:", activeChapterRef.current.endTime);
+      console.log("Current position:", currentPosition);
     }
 
-    console.log("=== Loop Check End ===\n");
+    // Använd det aktiva kapitlets gränser för loopning
+    if (activeChapterRef.current) {
+      const { startTime, endTime } = activeChapterRef.current;
+
+      // Kontrollera om vi nått slutet av det aktiva kapitlet
+      if (currentPosition >= endTime) {
+        console.log("\n!!! PERFORMING CHAPTER LOOP !!!");
+        console.log("Timestamp:", new Date().toISOString());
+        console.log("Current position:", currentPosition.toFixed(2));
+        console.log("Looping back to:", startTime);
+        console.log("Distance past end:", (currentPosition - endTime).toFixed(2));
+
+        // Reset alla ljudelement till kapitlets starttid
+        Object.values(audioRefs.current).forEach(audio => {
+          audio.currentTime = startTime;
+          if (!audio.muted) {
+            audio.play().catch(error => console.error("Error playing audio:", error));
+          }
+        });
+        
+        setCurrentTime(startTime);
+        return true;
+      }
+    }
+
     return false;
   };
 
