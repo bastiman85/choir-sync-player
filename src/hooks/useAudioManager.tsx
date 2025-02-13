@@ -133,10 +133,16 @@ export const useAudioManager = (song: Song) => {
     const audio = event.target as HTMLAudioElement;
     if (!audio.muted && !audio.paused) {
       const currentPosition = audio.currentTime;
-      const chapterLooped = handleChapterLoop(currentPosition); // Spara returvärdet
-      if (!chapterLooped) { // Uppdatera bara currentTime om vi inte loopade
-        setCurrentTime(currentPosition);
+      const chapter = getCurrentChapter();
+      
+      // Om vi har ett kapitel och har passerat dess sluttid, låt looplogiken hantera det
+      if (chapter?.endTime && currentPosition >= chapter.endTime) {
+        handleChapterLoop(currentPosition);
+        return; // Avbryt här för att inte uppdatera currentTime
       }
+      
+      // I alla andra fall, uppdatera currentTime som vanligt
+      setCurrentTime(currentPosition);
     }
   };
 
