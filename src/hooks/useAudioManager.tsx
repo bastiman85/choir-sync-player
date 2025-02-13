@@ -94,7 +94,7 @@ export const useAudioManager = (song: Song) => {
 
       audio.volume = 1;
       audio.muted = shouldBeMuted;
-      audio.preload = "auto";
+      audio.preload = "auto"; // Säkerställ att alla spår laddas i förväg
 
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.addEventListener("timeupdate", handleTimeUpdate);

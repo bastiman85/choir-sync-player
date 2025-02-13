@@ -1,3 +1,4 @@
+
 import { RefObject } from "react";
 import { Song } from "@/types/song";
 import { useTrackState } from "./useTrackState";
@@ -61,21 +62,27 @@ export const useMuteControl = ({
       if (newMuted) {
         audio.pause();
       } else if (wasPlaying && earliestPosition !== Infinity) {
-        // Pause all tracks momentarily
+        // Pausa alla spår tillfälligt
         Object.values(audioRefs.current).forEach(track => {
           if (!track.muted) {
             track.pause();
-            track.currentTime = earliestPosition;
           }
         });
         
-        // Set the newly unmuted track position
-        audio.currentTime = earliestPosition;
+        // Hitta en bra synkpunkt strax innan nuvarande position
+        const syncPoint = Math.max(0, earliestPosition - 0.2);
         
-        // Small delay for synchronization
+        // Sätt alla spår till synkpunkten
+        Object.values(audioRefs.current).forEach(track => {
+          if (!track.muted) {
+            track.currentTime = syncPoint;
+          }
+        });
+        
+        // Kort paus för att säkerställa att allt är redo
         await new Promise(resolve => setTimeout(resolve, 50));
         
-        // Resume playback
+        // Starta alla spår igen från synkpunkten
         Object.values(audioRefs.current).forEach(track => {
           if (!track.muted) {
             track.play().catch(console.error);
@@ -83,8 +90,6 @@ export const useMuteControl = ({
         });
       }
     }
-    
-    synchronizeTracks();
   };
 
   return { handleMuteToggle };
