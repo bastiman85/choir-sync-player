@@ -30,11 +30,15 @@ export const useAudioControls = ({
       const activeAudios = getActiveAudioElements();
       if (activeAudios.length === 0) return;
 
-      const currentTime = activeAudios[0].currentTime || 0;
+      // Hitta den tidigaste positionen bland aktiva spår
+      let earliestPosition = Infinity;
+      activeAudios.forEach(audio => {
+        earliestPosition = Math.min(earliestPosition, audio.currentTime);
+      });
       
       // Logga startpositioner för alla spår
       console.log('--- Spår startpositioner ---');
-      console.log(`App currentTime: ${currentTime.toFixed(3)} sekunder`);
+      console.log(`App currentTime: ${earliestPosition.toFixed(3)} sekunder`);
       Object.entries(audioRefs.current).forEach(([trackId, audio]) => {
         if (!audio.muted) {
           console.log(`Spår ${trackId}: ${audio.currentTime.toFixed(3)} sekunder`);
@@ -42,14 +46,14 @@ export const useAudioControls = ({
       });
       console.log('-------------------------');
       
-      // Synkronisera alla aktiva spår till samma tidpunkt och resettera den sanna positionen
+      // Synkronisera alla aktiva spår till den tidigaste tidpunkten
       activeAudios.forEach((audio) => {
         audio.pause();
-        audio.currentTime = currentTime;
+        audio.currentTime = earliestPosition;
       });
       
-      setCurrentTime(currentTime);
-      resetTruePosition(currentTime);
+      setCurrentTime(earliestPosition);
+      resetTruePosition(earliestPosition);
       
       // Lägg till en kort paus innan uppspelningen startas
       setTimeout(() => {
