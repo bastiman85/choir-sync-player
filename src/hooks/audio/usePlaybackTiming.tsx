@@ -1,3 +1,4 @@
+
 import { RefObject, useRef } from "react";
 
 interface UsePlaybackTimingProps {
@@ -6,30 +7,21 @@ interface UsePlaybackTimingProps {
 }
 
 export const usePlaybackTiming = ({ audioRefs, isPlaying }: UsePlaybackTimingProps) => {
-  const lastSyncTime = useRef<number>(performance.now());
-  const syncInterval = useRef<number>(50); // 50ms sync interval
-
-  const shouldSync = (now: number) => {
-    return now - lastSyncTime.current >= syncInterval.current;
-  };
-
-  const updateSyncTime = (time: number) => {
-    lastSyncTime.current = time;
-  };
-
   const getEarliestTrackPosition = () => {
     let earliestPosition = Infinity;
+    let validTrackFound = false;
+    
     Object.values(audioRefs.current).forEach(track => {
-      if (!track.muted && !track.paused) {
+      if (!track.muted && !track.paused && !isNaN(track.currentTime)) {
         earliestPosition = Math.min(earliestPosition, track.currentTime);
+        validTrackFound = true;
       }
     });
-    return earliestPosition !== Infinity ? earliestPosition : null;
+    
+    return validTrackFound ? earliestPosition : null;
   };
 
   return {
-    shouldSync,
-    updateSyncTime,
     getEarliestTrackPosition,
   };
 };

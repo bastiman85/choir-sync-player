@@ -1,3 +1,4 @@
+
 import { RefObject } from "react";
 
 interface UseTrackPositionProps {
@@ -7,25 +8,32 @@ interface UseTrackPositionProps {
 
 export const useTrackPosition = ({ audioRefs, truePosition }: UseTrackPositionProps) => {
   const syncTrackPositions = (targetPosition: number) => {
-    Object.values(audioRefs.current).forEach(track => {
-      if (!track.muted) {
+    const tracks = Object.values(audioRefs.current);
+    
+    tracks.forEach(track => {
+      if (!track.muted && !track.paused) {
         const drift = Math.abs(track.currentTime - targetPosition);
-        if (drift > 0.1 && track.currentTime > targetPosition) {
-          track.currentTime = targetPosition;
+        
+        // Synkronisera endast om driften är betydande
+        if (drift > 0.1) {
+          // Använd en mjukare korrigering för mindre drifter
+          if (drift < 0.3) {
+            track.playbackRate = track.currentTime > targetPosition ? 0.95 : 1.05;
+            setTimeout(() => {
+              track.playbackRate = 1;
+            }, 100);
+          } else {
+            // För större drifter, gör en direkt korrigering
+            track.currentTime = targetPosition;
+          }
+        } else {
+          track.playbackRate = 1;
         }
       }
     });
   };
 
-  const updateTruePosition = (newPosition: number) => {
-    // Never allow forward jumps, only backward corrections
-    if (newPosition < truePosition.current) {
-      truePosition.current = newPosition;
-    }
-  };
-
   return {
     syncTrackPositions,
-    updateTruePosition,
   };
 };

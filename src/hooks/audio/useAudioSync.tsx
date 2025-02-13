@@ -1,3 +1,4 @@
+
 import { RefObject, useEffect, useRef } from "react";
 import { usePlaybackTiming } from "./usePlaybackTiming";
 import { useTrackPosition } from "./useTrackPosition";
@@ -16,66 +17,99 @@ export const useAudioSync = ({
   currentTime,
   setCurrentTime,
 }: UseAudioSyncProps) => {
-  const uiUpdateInterval = useRef<number | null>(null);
+  const syncIntervalRef = useRef<number | null>(null);
+  const lastSyncTime = useRef<number>(0);
+  const syncThreshold = useRef<number>(0.1); // 100ms synktröskel
   
   const {
     truePosition,
     updatePosition,
     resetPosition,
     updateUIPosition,
-    shouldUpdateUI,
   } = usePlaybackPosition({ setCurrentTime });
 
-  const { shouldSync, updateSyncTime, getEarliestTrackPosition } = usePlaybackTiming({
+  const { getEarliestTrackPosition } = usePlaybackTiming({
     audioRefs,
     isPlaying,
   });
 
-  const { syncTrackPositions, updateTruePosition } = useTrackPosition({
+  const { syncTrackPositions } = useTrackPosition({
     audioRefs,
     truePosition,
   });
 
   const synchronizeTracks = () => {
-    const now = updatePosition(isPlaying);
+    const now = performance.now();
+    const timeSinceLastSync = now - lastSyncTime.current;
     
-    if (shouldSync(now)) {
-      updateSyncTime(now);
-      const earliestPosition = getEarliestTrackPosition();
+    // Optimera synkroniseringsfrekvensen
+    if (timeSinceLastSync < 50) { // Undvik för täta synkroniseringar
+      return;
+    }
+
+    updatePosition(isPlaying);
+    const earliestPosition = getEarliestTrackPosition();
+    
+    if (earliestPosition !== null) {
+      const tracks = Object.values(audioRefs.current);
+      let maxDrift = 0;
       
-      if (earliestPosition !== null) {
-        updateTruePosition(earliestPosition);
-        syncTrackPositions(truePosition.current);
+      // Beräkna max drift mellan spåren
+      tracks.forEach(track => {
+        if (!track.muted && !track.paused) {
+          const drift = Math.abs(track.currentTime - earliestPosition);
+          maxDrift = Math.max(maxDrift, drift);
+        }
+      });
+
+      // Synkronisera endast om driften är över tröskeln
+      if (maxDrift > syncThreshold.current) {
+        syncTrackPositions(earliestPosition);
+        truePosition.current = earliestPosition;
       }
     }
-  };
 
-  const resetTruePosition = (time: number) => {
-    resetPosition(time);
-    Object.values(audioRefs.current).forEach(track => {
-      track.currentTime = time;
-    });
+    lastSyncTime.current = now;
   };
 
   useEffect(() => {
     if (isPlaying) {
-      synchronizeTracks();
-      
-      uiUpdateInterval.current = window.setInterval(() => {
+      // Använd RequestAnimationFrame för jämnare uppdateringar
+      const updateUI = () => {
         const earliestPosition = getEarliestTrackPosition();
         if (earliestPosition !== null) {
           updateUIPosition(earliestPosition);
         }
-      }, 50);
+        
+        if (isPlaying) {
+          requestAnimationFrame(updateUI);
+        }
+      };
+
+      requestAnimationFrame(updateUI);
+
+      // Synkronisera spåren med ett fast intervall
+      syncIntervalRef.current = window.setInterval(() => {
+        synchronizeTracks();
+      }, 100);
     }
     
     return () => {
-      if (uiUpdateInterval.current) {
-        clearInterval(uiUpdateInterval.current);
-        uiUpdateInterval.current = null;
+      if (syncIntervalRef.current) {
+        clearInterval(syncIntervalRef.current);
+        syncIntervalRef.current = null;
       }
     };
   }, [isPlaying]);
+
+  const resetTruePosition = (time: number) => {
+    resetPosition(time);
+    Object.values(audioRefs.current).forEach(track => {
+      if (!track.muted) {
+        track.currentTime = time;
+      }
+    });
+  };
 
   return { synchronizeTracks, resetTruePosition };
 };
