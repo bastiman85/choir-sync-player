@@ -53,9 +53,19 @@ export const useAudioSync = ({
 
   const resetTruePosition = (time: number) => {
     resetPosition(time);
+    // Synka alla spår till den nya positionen omedelbart
     Object.values(audioRefs.current).forEach(track => {
       track.currentTime = time;
     });
+    // Om vi spelar, se till att alla ospärrade spår spelar
+    if (isPlaying) {
+      Object.values(audioRefs.current).forEach(track => {
+        if (!track.muted) {
+          track.play().catch(console.error);
+        }
+      });
+    }
+    synchronizeTracks();
   };
 
   return { synchronizeTracks, resetTruePosition };
