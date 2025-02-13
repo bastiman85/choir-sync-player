@@ -1,4 +1,3 @@
-
 import { RefObject } from "react";
 import { Song } from "@/types/song";
 import { useTrackState } from "./useTrackState";
@@ -11,6 +10,7 @@ interface UseMuteControlProps {
   setInstrumentalMode: (value: boolean) => void;
   setAllTrackMode: (value: boolean) => void;
   setActiveVoicePart: (value: string) => void;
+  synchronizeTracks: () => void;
 }
 
 export const useMuteControl = ({
@@ -21,6 +21,7 @@ export const useMuteControl = ({
   setInstrumentalMode,
   setAllTrackMode,
   setActiveVoicePart,
+  synchronizeTracks,
 }: UseMuteControlProps) => {
   const { updateTrackModes, muteOtherTracks } = useTrackState({
     audioRefs,
@@ -60,27 +61,21 @@ export const useMuteControl = ({
       if (newMuted) {
         audio.pause();
       } else if (wasPlaying && earliestPosition !== Infinity) {
-        // Pausa alla spår tillfälligt
+        // Pause all tracks momentarily
         Object.values(audioRefs.current).forEach(track => {
           if (!track.muted) {
             track.pause();
+            track.currentTime = earliestPosition;
           }
         });
         
-        // Hitta en bra synkpunkt strax innan nuvarande position
-        const syncPoint = Math.max(0, earliestPosition - 0.2);
+        // Set the newly unmuted track position
+        audio.currentTime = earliestPosition;
         
-        // Sätt alla spår till synkpunkten
-        Object.values(audioRefs.current).forEach(track => {
-          if (!track.muted) {
-            track.currentTime = syncPoint;
-          }
-        });
-        
-        // Kort paus för att säkerställa att allt är redo
+        // Small delay for synchronization
         await new Promise(resolve => setTimeout(resolve, 50));
         
-        // Starta alla spår igen från synkpunkten
+        // Resume playback
         Object.values(audioRefs.current).forEach(track => {
           if (!track.muted) {
             track.play().catch(console.error);
@@ -88,6 +83,8 @@ export const useMuteControl = ({
         });
       }
     }
+    
+    synchronizeTracks();
   };
 
   return { handleMuteToggle };
