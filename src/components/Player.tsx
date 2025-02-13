@@ -29,10 +29,12 @@ const Player = ({ song }: PlayerProps) => {
     duration,
     volumes,
     mutedTracks,
+    autoRestartSong,
     togglePlayPause,
     handleVolumeChange,
     handleMuteToggle,
     handleSeek,
+    setAutoRestartSong,
   } = useAudioManager(song);
 
   const handleChapterClick = (time: number) => {
@@ -116,6 +118,8 @@ const Player = ({ song }: PlayerProps) => {
           onPlayPauseClick={handlePlayPauseClick}
           onSeek={handleSeek}
           currentTime={currentTime}
+          autoRestartSong={autoRestartSong}
+          onAutoRestartToggle={setAutoRestartSong}
         />
 
         <div className="flex flex-wrap items-center justify-center gap-4 mt-6 mb-6">

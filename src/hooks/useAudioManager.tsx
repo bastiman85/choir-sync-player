@@ -27,6 +27,8 @@ export const useAudioManager = (song: Song) => {
     setAllTrackMode,
     activeVoicePart,
     setActiveVoicePart,
+    autoRestartSong,
+    setAutoRestartSong,
   } = useAudioState(song);
 
   const { currentChapter } = useChapterManagement(currentTime, song);
@@ -58,14 +60,6 @@ export const useAudioManager = (song: Song) => {
     synchronizeTracks,
   });
 
-  const handleTimeUpdate = (event: Event) => {
-    const audio = event.target as HTMLAudioElement;
-    if (!audio.muted && !audio.paused) {
-      const currentPosition = audio.currentTime;
-      setCurrentTime(currentPosition);
-    }
-  };
-
   useEffect(() => {
     song.tracks.forEach((track) => {
       const audio = new Audio(track.url);
@@ -86,7 +80,18 @@ export const useAudioManager = (song: Song) => {
         setDuration(audio.duration);
       });
       
-      audio.addEventListener("ended", handleTrackEnd);
+      audio.addEventListener("ended", () => {
+        if (autoRestartSong) {
+          Object.values(audioRefs.current).forEach(audio => {
+            audio.currentTime = 0;
+            audio.play().catch(console.error);
+          });
+          setCurrentTime(0);
+          resetTruePosition(0);
+        } else {
+          handleTrackEnd();
+        }
+      });
     });
 
     setAllTrackMode(true);
@@ -96,12 +101,20 @@ export const useAudioManager = (song: Song) => {
     return () => {
       Object.values(audioRefs.current).forEach((audio) => {
         audio.removeEventListener("timeupdate", handleTimeUpdate);
-        audio.removeEventListener("ended", handleTrackEnd);
+        audio.removeEventListener("ended", () => {});
         audio.pause();
         audio.currentTime = 0;
       });
     };
-  }, [song]);
+  }, [song, autoRestartSong]);
+
+  const handleTimeUpdate = (event: Event) => {
+    const audio = event.target as HTMLAudioElement;
+    if (!audio.muted && !audio.paused) {
+      const currentPosition = audio.currentTime;
+      setCurrentTime(currentPosition);
+    }
+  };
 
   return {
     isPlaying,
@@ -109,10 +122,12 @@ export const useAudioManager = (song: Song) => {
     duration,
     volumes,
     mutedTracks,
+    autoRestartSong,
     togglePlayPause,
     handleVolumeChange,
     handleMuteToggle,
     handleSeek,
     activeVoicePart,
+    setAutoRestartSong,
   };
 };

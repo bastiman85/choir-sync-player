@@ -3,8 +3,8 @@ import { RefObject } from "react";
 
 interface UseAudioControlsProps {
   audioRefs: RefObject<{ [key: string]: HTMLAudioElement }>;
-  setIsPlaying: (playing: boolean) => void;
-  setCurrentTime: (time: number) => void;
+  setIsPlaying: (value: boolean) => void;
+  setCurrentTime: (value: number) => void;
   resetTruePosition: (time: number) => void;
 }
 
@@ -19,21 +19,22 @@ export const useAudioControls = ({
       Object.values(audioRefs.current).forEach((audio) => {
         audio.pause();
       });
+      setIsPlaying(false);
     } else {
       Object.values(audioRefs.current).forEach((audio) => {
         audio.play().catch(console.error);
       });
+      setIsPlaying(true);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleSeek = (value: number[]) => {
     const newTime = value[0];
-    setCurrentTime(newTime);
-    resetTruePosition(newTime);
     Object.values(audioRefs.current).forEach((audio) => {
       audio.currentTime = newTime;
     });
+    setCurrentTime(newTime);
+    resetTruePosition(newTime);
   };
 
   const handleTrackEnd = () => {
