@@ -23,14 +23,15 @@ export const useAudioControls = ({
       });
       setIsPlaying(false);
     } else {
+      const currentTime = Object.values(audioRefs.current)[0]?.currentTime || 0;
+      
       // Logga startpositioner för alla spår
       console.log('--- Spår startpositioner ---');
+      console.log(`App currentTime: ${currentTime.toFixed(3)} sekunder`);
       Object.entries(audioRefs.current).forEach(([trackId, audio]) => {
         console.log(`Spår ${trackId}: ${audio.currentTime.toFixed(3)} sekunder`);
       });
       console.log('-------------------------');
-
-      const currentTime = Object.values(audioRefs.current)[0]?.currentTime || 0;
       
       // Synkronisera alla spår till samma tidpunkt
       Object.values(audioRefs.current).forEach((audio) => {
