@@ -1,4 +1,3 @@
-
 import { RefObject } from "react";
 import { Song } from "@/types/song";
 import { useVolumeControl } from "./useVolumeControl";
@@ -14,6 +13,7 @@ interface UseTrackControlsProps {
   setInstrumentalMode: (value: boolean) => void;
   setAllTrackMode: (value: boolean) => void;
   setActiveVoicePart: (value: string) => void;
+  synchronizeTracks: () => void;
 }
 
 export const useTrackControls = ({
@@ -26,6 +26,7 @@ export const useTrackControls = ({
   setInstrumentalMode,
   setAllTrackMode,
   setActiveVoicePart,
+  synchronizeTracks,
 }: UseTrackControlsProps) => {
   const { handleVolumeChange } = useVolumeControl({
     audioRefs,
@@ -46,6 +47,7 @@ export const useTrackControls = ({
     setInstrumentalMode,
     setAllTrackMode,
     setActiveVoicePart,
+    synchronizeTracks,
   });
 
   return {
