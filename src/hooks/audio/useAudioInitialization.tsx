@@ -39,79 +39,48 @@ export const useAudioInitialization = ({
       const audio = new Audio();
       
       // iOS/Safari-specifika optimeringar
-      audio.preload = "auto";  // Förladda så mycket som möjligt
+      audio.preload = "auto";
       audio.setAttribute('playsinline', '');
       audio.setAttribute('webkit-playsinline', '');
       
-      // Grundläggande inställningar
-      if ('preservesPitch' in audio) {
-        audio.preservesPitch = false;
-      }
+      // Sätt källa direkt
+      audio.src = track.url;
       
-      // Maximera buffring för iOS Safari
-      if (typeof audio.preload !== 'undefined') {
-        audio.preload = 'auto';  // Force preload
-      }
-
-      // Använd arraybuffer för bättre buffringshantering
-      const request = new XMLHttpRequest();
-      request.open('GET', track.url, true);
-      request.responseType = 'arraybuffer';
-      
-      request.onload = async () => {
-        if (request.response) {
-          // Konvertera arraybuffer till blob för bättre minneshantering
-          const blob = new Blob([request.response], { type: 'audio/mpeg' });
-          const url = URL.createObjectURL(blob);
-          audio.src = url;
-          
-          const handleLoaded = () => {
-            audioRefs.current[track.id] = audio;
-            if (audio.duration && !isNaN(audio.duration)) {
-              setDuration(audio.duration);
-            }
-            resolve();
-          };
-
-          const handleCanPlayThrough = () => {
-            console.log(`Track ${track.id} fully buffered`);
-            audio.removeEventListener('canplaythrough', handleCanPlayThrough);
-          };
-          
-          const setupAudioEvents = () => {
-            audio.addEventListener("loadeddata", handleLoaded);
-            audio.addEventListener("canplaythrough", handleCanPlayThrough);
-            
-            // Lägg till timeupdate-lyssnare för synkronisering
-            audio.addEventListener("timeupdate", () => {
-              if (!audio.muted) {
-                const currentTime = audio.currentTime;
-                Object.values(audioRefs.current).forEach(otherAudio => {
-                  if (otherAudio !== audio && !otherAudio.muted) {
-                    const timeDiff = Math.abs(otherAudio.currentTime - currentTime);
-                    if (timeDiff > 0.1) {
-                      otherAudio.currentTime = currentTime;
-                    }
-                  }
-                });
-              }
-            });
-          };
-          
-          setupAudioEvents();
-          audio.load(); // Starta laddningen
-        } else {
-          console.error(`Failed to load track ${track.id}`);
-          resolve();
+      const handleLoaded = () => {
+        audioRefs.current[track.id] = audio;
+        if (audio.duration && !isNaN(audio.duration)) {
+          setDuration(audio.duration);
         }
+        resolve();
       };
-      
-      request.onerror = () => {
+
+      const handleError = (e: Event) => {
         console.error(`Error loading track ${track.id}`);
         resolve();
       };
+
+      const setupAudioEvents = () => {
+        audio.addEventListener("loadeddata", handleLoaded);
+        audio.addEventListener("error", handleError);
+        
+        // Lägg till timeupdate-lyssnare för synkronisering
+        audio.addEventListener("timeupdate", () => {
+          if (!audio.muted) {
+            const currentTime = audio.currentTime;
+            Object.values(audioRefs.current).forEach(otherAudio => {
+              if (otherAudio !== audio && !otherAudio.muted) {
+                const timeDiff = Math.abs(otherAudio.currentTime - currentTime);
+                if (timeDiff > 0.1) {
+                  otherAudio.currentTime = currentTime;
+                }
+              }
+            });
+          }
+        });
+      };
       
-      request.send();
+      setupAudioEvents();
+      audio.load();
     });
 
     loadingPromises.current[track.id] = loadingPromise;
@@ -156,11 +125,6 @@ export const useAudioInitialization = ({
       audio.removeEventListener("ended", handleTrackEnd);
       audio.pause();
       audio.currentTime = 0;
-      
-      // Rensa blob URL om den finns
-      if (audio.src.startsWith('blob:')) {
-        URL.revokeObjectURL(audio.src);
-      }
       audio.src = '';
     });
     
