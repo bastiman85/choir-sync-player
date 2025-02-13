@@ -45,9 +45,11 @@ export const useAudioInitialization = ({
       audio.setAttribute('x-webkit-airplay', 'allow');
       
       // Minska bufferstorleken för bättre prestanda
-      audio.mozPreservesPitch = false;
+      if ('preservesPitch' in audio) {
+        audio.preservesPitch = false;
+      }
       if ((audio as any).mozFrameBufferLength !== undefined) {
-        (audio as any).mozFrameBufferLength = 2048; // Öka bufferstorleken något för stabilare uppspelning
+        (audio as any).mozFrameBufferLength = 2048;
       }
       
       // Lägg till audio.crossOrigin för CORS-hantering
