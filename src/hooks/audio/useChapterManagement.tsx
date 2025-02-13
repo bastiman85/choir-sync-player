@@ -87,33 +87,37 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     const currentChapter = currentChapterRef.current;
     const nextChapter = nextChapterRef.current;
     
+    // Get first audio element to check total duration
+    const firstAudio = document.querySelector('audio');
+    const totalDuration = firstAudio?.duration || Infinity;
+    
+    // If this is the last chapter, use audio duration as end time
+    const chapterEndTime = nextChapter ? nextChapter.time : totalDuration;
+    const threshold = nextChapter ? 0.2 : 0.5; // Larger threshold for last chapter
+    
     console.log("\n=== Detailed Loop Check ===");
     console.log("Current chapter:", currentChapter.title);
     console.log("Current time:", currentTime.toFixed(2));
     console.log("Chapter start time:", currentChapter.time);
     console.log("Next chapter:", nextChapter?.title || "end of song");
     console.log("Next chapter time:", nextChapter?.time || "N/A");
-    
-    const chapterEndTime = nextChapter ? nextChapter.time : Infinity;
-    
     console.log("Chapter end time:", chapterEndTime);
     console.log("Time until chapter end:", (chapterEndTime - currentTime).toFixed(2));
-    console.log("Loop threshold:", (chapterEndTime - 0.1).toFixed(2));
+    console.log("Loop threshold:", (chapterEndTime - threshold).toFixed(2));
+    console.log("Is last chapter:", !nextChapter ? "yes" : "no");
+    console.log("Using threshold:", threshold);
 
-    const shouldLoop = currentTime >= chapterEndTime - 0.1;
-    console.log("Should loop?", shouldLoop);
-    console.log("Time comparison:", `${currentTime.toFixed(2)} >= ${(chapterEndTime - 0.1).toFixed(2)}`);
-
+    const shouldLoop = currentTime >= chapterEndTime - threshold;
+    
     if (shouldLoop) {
       console.log("\n!!! LOOP DECISION !!!");
       console.log("Timestamp:", new Date().toISOString());
       console.log(`Chapter end reached at ${currentTime.toFixed(2)}`);
       console.log(`Looping back to ${currentChapter.title} at ${currentChapter.time}`);
       console.log("!!!!!!!!!!!!!!!!!!!!!\n");
-      return { shouldLoop: true, loopToTime: currentChapter.time };
     }
 
-    return { shouldLoop: false, loopToTime: 0 };
+    return { shouldLoop, loopToTime: currentChapter.time };
   }, [currentTime]);
 
   // Update refs whenever time changes
