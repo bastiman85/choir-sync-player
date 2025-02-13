@@ -1,8 +1,6 @@
 
-import { RefObject, useRef } from "react";
+import { RefObject } from "react";
 import { usePlaybackTiming } from "./usePlaybackTiming";
-import { useTrackPosition } from "./useTrackPosition";
-import { usePlaybackPosition } from "./usePlaybackPosition";
 
 interface UseAudioSyncProps {
   audioRefs: RefObject<{ [key: string]: HTMLAudioElement }>;
@@ -17,17 +15,32 @@ export const useAudioSync = ({
   currentTime,
   setCurrentTime,
 }: UseAudioSyncProps) => {
-  const { getEarliestTrackPosition } = usePlaybackTiming({
-    audioRefs,
-    isPlaying,
-  });
+  const synchronizeTracks = async () => {
+    // Pausa alla spår först
+    Object.values(audioRefs.current).forEach(track => {
+      if (!track.muted) {
+        track.pause();
+      }
+    });
 
-  const synchronizeTracks = () => {
-    const earliestPosition = getEarliestTrackPosition();
-    if (earliestPosition !== null) {
+    // Hitta en synkpunkt strax innan nuvarande position
+    const syncPoint = Math.max(0, currentTime - 0.2);
+
+    // Sätt alla spår till synkpunkten
+    Object.values(audioRefs.current).forEach(track => {
+      if (!track.muted) {
+        track.currentTime = syncPoint;
+      }
+    });
+
+    // Kort paus för att säkerställa att allt är redo
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Starta alla spår igen från synkpunkten om vi ska spela
+    if (isPlaying) {
       Object.values(audioRefs.current).forEach(track => {
         if (!track.muted) {
-          track.currentTime = earliestPosition;
+          track.play().catch(console.error);
         }
       });
     }
