@@ -18,7 +18,6 @@ export const useAudioSync = ({
   setCurrentTime,
 }: UseAudioSyncProps) => {
   const uiUpdateInterval = useRef<number | null>(null);
-  const syncInterval = useRef<number | null>(null);
   
   const {
     truePosition,
@@ -55,12 +54,7 @@ export const useAudioSync = ({
 
   useEffect(() => {
     if (isPlaying) {
-      // Kör synkronisering var 30:e millisekund istället för 50
-      syncInterval.current = window.setInterval(() => {
-        synchronizeTracks();
-      }, 30);
-      
-      // Uppdatera UI var 50:e millisekund
+      // Uppdatera bara UI-position under uppspelning, ingen kontinuerlig synkning
       uiUpdateInterval.current = window.setInterval(() => {
         const earliestPosition = getEarliestTrackPosition();
         if (earliestPosition !== null) {
@@ -70,10 +64,6 @@ export const useAudioSync = ({
     }
     
     return () => {
-      if (syncInterval.current) {
-        clearInterval(syncInterval.current);
-        syncInterval.current = null;
-      }
       if (uiUpdateInterval.current) {
         clearInterval(uiUpdateInterval.current);
         uiUpdateInterval.current = null;
