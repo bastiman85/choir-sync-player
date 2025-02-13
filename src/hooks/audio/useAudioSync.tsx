@@ -1,3 +1,4 @@
+
 import { RefObject, useEffect, useRef } from "react";
 import { usePlaybackTiming } from "./usePlaybackTiming";
 import { useTrackPosition } from "./useTrackPosition";
@@ -37,12 +38,14 @@ export const useAudioSync = ({
   });
 
   const synchronizeTracks = () => {
-    // Only sync if there's significant drift (more than 0.5 seconds)
     const earliestPosition = getEarliestTrackPosition();
     if (earliestPosition !== null) {
       Object.values(audioRefs.current).forEach(track => {
-        if (!track.muted && Math.abs(track.currentTime - earliestPosition) > 0.5) {
-          track.currentTime = earliestPosition;
+        if (!track.muted) {
+          const drift = Math.abs(track.currentTime - earliestPosition);
+          if (drift > 0.05) {
+            track.currentTime = earliestPosition;
+          }
         }
       });
     }
@@ -57,10 +60,10 @@ export const useAudioSync = ({
 
   useEffect(() => {
     if (isPlaying) {
-      // Reduce sync check frequency to avoid interference with looping
+      // Increase sync frequency
       uiUpdateInterval.current = window.setInterval(() => {
         synchronizeTracks();
-      }, 1000); // Check every second instead of every 50ms
+      }, 100); // Check every 100ms instead of 1000ms
     }
     
     return () => {

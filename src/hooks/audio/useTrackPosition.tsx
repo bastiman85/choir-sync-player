@@ -1,3 +1,4 @@
+
 import { RefObject } from "react";
 
 interface UseTrackPositionProps {
@@ -10,7 +11,7 @@ export const useTrackPosition = ({ audioRefs, truePosition }: UseTrackPositionPr
     Object.values(audioRefs.current).forEach(track => {
       if (!track.muted) {
         const drift = Math.abs(track.currentTime - targetPosition);
-        if (drift > 0.1 && track.currentTime > targetPosition) {
+        if (drift > 0.05) {
           track.currentTime = targetPosition;
         }
       }
@@ -18,10 +19,7 @@ export const useTrackPosition = ({ audioRefs, truePosition }: UseTrackPositionPr
   };
 
   const updateTruePosition = (newPosition: number) => {
-    // Never allow forward jumps, only backward corrections
-    if (newPosition < truePosition.current) {
-      truePosition.current = newPosition;
-    }
+    truePosition.current = newPosition;
   };
 
   return {
