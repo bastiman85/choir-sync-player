@@ -18,7 +18,6 @@ export interface ChapterMarker {
   id: string;
   title: string;
   time: number;
-  endTime?: number;
   type: "verse" | "chorus" | "bridge" | "other";
 }
 

@@ -60,17 +60,6 @@ const ChapterMarkers = ({ chapters, onChaptersChange }: ChapterMarkersProps) => 
               }
               className="w-32"
             />
-            <Input
-              type="number"
-              step="0.1"
-              placeholder="End time (seconds)"
-              value={chapter.endTime ?? ""}
-              onChange={(e) => {
-                const value = e.target.value === "" ? undefined : parseFloat(e.target.value);
-                updateChapter(chapter.id, "endTime", value);
-              }}
-              className="w-32"
-            />
             <Button
               type="button"
               variant="ghost"

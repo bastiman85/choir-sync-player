@@ -11,7 +11,6 @@ export const useAudioState = (song: Song) => {
   const [instrumentalMode, setInstrumentalMode] = useState(false);
   const [allTrackMode, setAllTrackMode] = useState(false);
   const [autoRestartSong, setAutoRestartSong] = useState(false);
-  const [autoRestartChapter, setAutoRestartChapter] = useState(false);
   const [activeVoicePart, setActiveVoicePart] = useState<string>("all");
 
   return {
@@ -31,8 +30,6 @@ export const useAudioState = (song: Song) => {
     setAllTrackMode,
     autoRestartSong,
     setAutoRestartSong,
-    autoRestartChapter,
-    setAutoRestartChapter,
     activeVoicePart,
     setActiveVoicePart,
   };

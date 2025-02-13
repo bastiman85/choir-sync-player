@@ -12,7 +12,6 @@ export type Database = {
       chapters: {
         Row: {
           created_at: string
-          end_time: number | null
           id: string
           song_id: string | null
           start_time: number
@@ -20,7 +19,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          end_time?: number | null
           id?: string
           song_id?: string | null
           start_time: number
@@ -28,7 +26,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          end_time?: number | null
           id?: string
           song_id?: string | null
           start_time?: number
