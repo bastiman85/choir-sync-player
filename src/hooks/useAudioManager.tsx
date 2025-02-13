@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from "react";
 import { Song } from "@/types/song";
 import { useAudioState } from "./audio/useAudioState";
@@ -73,7 +72,6 @@ export const useAudioManager = (song: Song) => {
   };
 
   useEffect(() => {
-    // Initiera Web Audio Context
     const initAudioContext = () => {
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -82,7 +80,6 @@ export const useAudioManager = (song: Song) => {
     };
 
     const loadTrack = async (track: { id: string; url: string }) => {
-      // Återanvänd existerande promise om det finns
       if (loadingPromises.current[track.id]) {
         return loadingPromises.current[track.id];
       }
@@ -90,55 +87,43 @@ export const useAudioManager = (song: Song) => {
       const loadingPromise = new Promise<void>(async (resolve) => {
         const audio = new Audio();
         
-        // Optimeringar för iOS Safari
         audio.preload = "auto";
         audio.setAttribute('playsinline', '');
         audio.setAttribute('webkit-playsinline', '');
         audio.setAttribute('preload', 'auto');
-        
-        // iOS-specifika attribut
         audio.setAttribute('x-webkit-airplay', 'allow');
         audio.setAttribute('controlsList', 'nodownload');
         
-        try {
-          // Använd range requests för att förbättra laddningstiden
-          const response = await fetch(track.url, {
-            headers: {
-              Range: 'bytes=0-',
-            },
-          });
-
-          let audioSrc = track.url;
-          if (response.ok) {
-            const blob = await response.blob();
-            const newObjectUrl = URL.createObjectURL(blob);
-            objectUrlsRef.current[track.id] = newObjectUrl;
-            audioSrc = newObjectUrl;
-          }
-          
-          audio.src = audioSrc;
-        } catch (error) {
-          console.error("Error fetching audio:", error);
-          audio.src = track.url;
-        }
+        audio.src = track.url;
         
         const handleLoaded = () => {
           audioRefs.current[track.id] = audio;
-          setDuration(audio.duration);
+          if (audio.duration && !isNaN(audio.duration)) {
+            setDuration(audio.duration);
+          }
           audio.removeEventListener("loadedmetadata", handleLoaded);
           resolve();
         };
         
-        audio.addEventListener("loadedmetadata", handleLoaded);
+        const handleCanPlayThrough = () => {
+          audio.removeEventListener('canplaythrough', handleCanPlayThrough);
+          resolve();
+        };
         
-        // Felhantering
+        audio.addEventListener("loadedmetadata", handleLoaded);
+        audio.addEventListener('canplaythrough', handleCanPlayThrough);
+        
         audio.addEventListener("error", (e) => {
           console.error("Error loading audio:", e);
           resolve();
         });
 
-        // Starta laddningen
-        audio.load();
+        try {
+          await audio.load();
+        } catch (error) {
+          console.error("Error loading audio:", error);
+          resolve();
+        }
       });
 
       loadingPromises.current[track.id] = loadingPromise;
@@ -146,15 +131,13 @@ export const useAudioManager = (song: Song) => {
     };
 
     const initializeTracks = async () => {
-      const audioContext = initAudioContext();
+      initAudioContext();
       
-      // Ladda spår i mindre grupper för att minska minnesanvändningen
       const batchSize = 2;
       for (let i = 0; i < song.tracks.length; i += batchSize) {
         const batch = song.tracks.slice(i, i + batchSize);
         await Promise.all(batch.map(track => loadTrack(track)));
         
-        // Konfigurera ljudet efter laddning
         batch.forEach(track => {
           const audio = audioRefs.current[track.id];
           if (audio) {
@@ -180,7 +163,6 @@ export const useAudioManager = (song: Song) => {
     setActiveVoicePart("all");
 
     return () => {
-      // Cleanup
       Object.values(audioRefs.current).forEach((audio) => {
         audio.removeEventListener("timeupdate", handleTimeUpdate);
         audio.removeEventListener("ended", handleTrackEnd);
@@ -189,12 +171,6 @@ export const useAudioManager = (song: Song) => {
         audio.src = '';
       });
       
-      // Rensa ObjectURLs
-      Object.values(objectUrlsRef.current).forEach(url => {
-        URL.revokeObjectURL(url);
-      });
-      
-      // Stäng AudioContext
       if (audioContextRef.current) {
         audioContextRef.current.close();
         audioContextRef.current = null;
@@ -202,7 +178,6 @@ export const useAudioManager = (song: Song) => {
       
       audioRefs.current = {};
       loadingPromises.current = {};
-      objectUrlsRef.current = {};
     };
   }, [song]);
 
