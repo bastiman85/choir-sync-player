@@ -33,10 +33,14 @@ export const useAudioControls = ({
       });
       console.log('-------------------------');
       
-      // Synkronisera alla spår till samma tidpunkt
+      // Synkronisera alla spår till samma tidpunkt och resettera den sanna positionen
       Object.values(audioRefs.current).forEach((audio) => {
+        audio.pause();
         audio.currentTime = currentTime;
       });
+      
+      setCurrentTime(currentTime);
+      resetTruePosition(currentTime);
       
       // Lägg till en kort paus innan uppspelningen startas
       setTimeout(() => {
