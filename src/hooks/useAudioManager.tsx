@@ -138,13 +138,14 @@ export const useAudioManager = (song: Song) => {
       console.log("\n=== Time Update Check ===");
       console.log("Auto restart chapter enabled:", autoRestartChapter);
       console.log("Current position:", currentPosition.toFixed(2));
-      console.log("Current chapter end time:", chapter?.endTime);
+      console.log("Current chapter:", chapter?.title);
+      console.log("Chapter end time:", chapter?.endTime);
       
       // Om vi har ett kapitel och har passerat dess sluttid, låt looplogiken hantera det
       if (chapter?.endTime && currentPosition >= chapter.endTime) {
-        console.log("Past chapter end, attempting loop...");
-        handleChapterLoop(currentPosition);
-        console.log("Loop attempt completed");
+        console.log("Past chapter end, attempting loop with autoRestartChapter =", autoRestartChapter);
+        const looped = handleChapterLoop(currentPosition);
+        console.log("Loop attempt completed, result:", looped);
         return; // Avbryt här för att inte uppdatera currentTime
       }
       
