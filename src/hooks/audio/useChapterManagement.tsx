@@ -11,7 +11,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
 
   const getCurrentChapter = useCallback(() => {
     if (!song.chapters?.length) {
-      console.log("No chapters found in song");
       return null;
     }
 
@@ -53,19 +52,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
         nextChapterRef.current = nextChapter || null;
         
         if (currentChapterRef.current?.id !== chapter.id) {
-          console.log("\n=== Chapter State Change ===");
-          console.log("Timestamp:", new Date().toISOString());
-          console.log("Current time:", currentTime.toFixed(2));
-          console.log("Previous chapter:", currentChapterRef.current?.title);
-          console.log("New chapter:", chapter.title);
-          console.log("Raw chapter data:", chapter);
-          console.log("Chapter start time:", chapter.time);
-          if (nextChapter) {
-            console.log("Next chapter:", nextChapter.title);
-            console.log("Next chapter starts at:", nextChapter.time);
-          }
-          console.log("=========================\n");
-          
           currentChapterRef.current = chapter;
           lastUpdateTimeRef.current = now;
         }
