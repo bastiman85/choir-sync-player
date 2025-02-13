@@ -35,7 +35,7 @@ export const useAudioManager = (song: Song) => {
 
   const { currentChapter } = useChapterManagement(currentTime, song);
 
-  const { synchronizeTracks, resetTruePosition } = useAudioSync({
+  const { resetTruePosition } = useAudioSync({
     audioRefs,
     isPlaying,
     currentTime,
@@ -59,7 +59,6 @@ export const useAudioManager = (song: Song) => {
     setInstrumentalMode,
     setAllTrackMode,
     setActiveVoicePart,
-    synchronizeTracks,
   });
 
   // Optimerad tidsuppdatering med requestAnimationFrame
