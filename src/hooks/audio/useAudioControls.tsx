@@ -16,44 +16,24 @@ export const useAudioControls = ({
 }: UseAudioControlsProps) => {
   const waitForAudioLoad = useCallback((audio: HTMLAudioElement) => {
     return new Promise<void>((resolve) => {
+      if (audio.readyState >= 3) {
+        resolve();
+        return;
+      }
+
       const handleCanPlay = () => {
-        audio.removeEventListener('canplay', handleCanPlay);
+        audio.removeEventListener('canplaythrough', handleCanPlay);
         resolve();
       };
 
-      if (audio.readyState >= 3) {
-        resolve();
-      } else {
-        audio.addEventListener('canplay', handleCanPlay);
-      }
+      audio.addEventListener('canplaythrough', handleCanPlay);
     });
   }, []);
 
   const stopAllTracks = () => {
     Object.values(audioRefs.current).forEach((audio) => {
-      try {
-        audio.pause();
-      } catch (error) {
-        console.error("Error stopping track:", error);
-      }
+      audio.pause();
     });
-  };
-
-  const prepareTrackForPlay = async (audio: HTMLAudioElement, startTime: number) => {
-    try {
-      audio.pause();
-      audio.currentTime = startTime;
-      
-      // För iOS: sätt en kort bit av ljudet för att "låsa upp" uppspelning
-      await audio.play();
-      audio.pause();
-      audio.currentTime = startTime;
-      
-      return true;
-    } catch (error) {
-      console.error("Error preparing track:", error);
-      return false;
-    }
   };
 
   const togglePlayPause = async (isPlaying: boolean) => {
@@ -75,33 +55,28 @@ export const useAudioControls = ({
 
       const startTime = unmutedTracks[0].currentTime;
 
-      // Förbered alla spår för uppspelning
-      const preparePromises = unmutedTracks.map(audio => 
-        prepareTrackForPlay(audio, startTime)
-      );
-
-      const prepareResults = await Promise.all(preparePromises);
-      if (!prepareResults.every(Boolean)) {
-        console.error("Some tracks failed to prepare");
-        return;
-      }
+      // Pausa alla spår och sätt rätt position
+      unmutedTracks.forEach(audio => {
+        audio.currentTime = startTime;
+      });
 
       // Vänta på att spåren ska vara redo
       await Promise.all(unmutedTracks.map(waitForAudioLoad));
 
-      // Spela upp alla spår
-      let playbackStarted = false;
+      // Spela upp spåren ett i taget
+      let successCount = 0;
+      
       for (const audio of unmutedTracks) {
         try {
+          // Enkel uppspelning utan förberedelser
           await audio.play();
-          playbackStarted = true;
+          successCount++;
         } catch (error) {
-          console.error("Error playing track:", error);
-          // Fortsätt med nästa spår även om detta misslyckades
+          console.error("Failed to play track:", error);
         }
       }
 
-      if (playbackStarted) {
+      if (successCount > 0) {
         setIsPlaying(true);
       } else {
         stopAllTracks();
@@ -134,32 +109,22 @@ export const useAudioControls = ({
         (audio) => !audio.muted
       );
 
-      // Förbered spåren för uppspelning
-      const preparePromises = unmutedTracks.map(audio => 
-        prepareTrackForPlay(audio, newTime)
-      );
-
-      const prepareResults = await Promise.all(preparePromises);
-      if (!prepareResults.every(Boolean)) {
-        console.error("Some tracks failed to prepare after seek");
-        return;
-      }
-
       // Vänta på att spåren ska vara redo
       await Promise.all(unmutedTracks.map(waitForAudioLoad));
 
-      // Spela upp spåren
-      let playbackStarted = false;
+      // Spela upp spåren ett i taget
+      let successCount = 0;
+      
       for (const audio of unmutedTracks) {
         try {
           await audio.play();
-          playbackStarted = true;
+          successCount++;
         } catch (error) {
-          console.error("Error playing track after seek:", error);
+          console.error("Failed to play track after seek:", error);
         }
       }
 
-      if (playbackStarted) {
+      if (successCount > 0) {
         setIsPlaying(true);
       } else {
         stopAllTracks();
