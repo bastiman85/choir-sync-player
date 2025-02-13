@@ -1,6 +1,8 @@
 
-import { RefObject } from "react";
+import { RefObject, useEffect, useRef } from "react";
 import { usePlaybackTiming } from "./usePlaybackTiming";
+import { useTrackPosition } from "./useTrackPosition";
+import { usePlaybackPosition } from "./usePlaybackPosition";
 
 interface UseAudioSyncProps {
   audioRefs: RefObject<{ [key: string]: HTMLAudioElement }>;
@@ -15,50 +17,69 @@ export const useAudioSync = ({
   currentTime,
   setCurrentTime,
 }: UseAudioSyncProps) => {
-  const synchronizeTracks = async () => {
-    // Pausa alla spår först
-    Object.values(audioRefs.current).forEach(track => {
-      if (!track.muted) {
-        track.pause();
-      }
-    });
+  const uiUpdateInterval = useRef<number | null>(null);
+  const syncInterval = useRef<number | null>(null);
+  
+  const {
+    truePosition,
+    updatePosition,
+    resetPosition,
+    updateUIPosition,
+    shouldUpdateUI,
+  } = usePlaybackPosition({ setCurrentTime });
 
-    // Hitta en synkpunkt strax innan nuvarande position
-    const syncPoint = Math.max(0, currentTime - 0.2);
+  const { getEarliestTrackPosition } = usePlaybackTiming({
+    audioRefs,
+    isPlaying,
+  });
 
-    // Sätt alla spår till synkpunkten
-    Object.values(audioRefs.current).forEach(track => {
-      if (!track.muted) {
-        track.currentTime = syncPoint;
-      }
-    });
+  const { syncTrackPositions, updateTruePosition } = useTrackPosition({
+    audioRefs,
+    truePosition,
+  });
 
-    // Kort paus för att säkerställa att allt är redo
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    // Starta alla spår igen från synkpunkten om vi ska spela
-    if (isPlaying) {
-      Object.values(audioRefs.current).forEach(track => {
-        if (!track.muted) {
-          track.play().catch(console.error);
-        }
-      });
+  const synchronizeTracks = () => {
+    const earliestPosition = getEarliestTrackPosition();
+    if (earliestPosition !== null) {
+      updateTruePosition(earliestPosition);
+      syncTrackPositions(truePosition.current);
     }
   };
 
   const resetTruePosition = (time: number) => {
+    resetPosition(time);
     Object.values(audioRefs.current).forEach(track => {
       track.currentTime = time;
     });
-    
-    if (isPlaying) {
-      Object.values(audioRefs.current).forEach(track => {
-        if (!track.muted) {
-          track.play().catch(console.error);
-        }
-      });
-    }
   };
+
+  useEffect(() => {
+    if (isPlaying) {
+      // Kör synkronisering var 30:e millisekund istället för 50
+      syncInterval.current = window.setInterval(() => {
+        synchronizeTracks();
+      }, 30);
+      
+      // Uppdatera UI var 50:e millisekund
+      uiUpdateInterval.current = window.setInterval(() => {
+        const earliestPosition = getEarliestTrackPosition();
+        if (earliestPosition !== null) {
+          updateUIPosition(earliestPosition);
+        }
+      }, 50);
+    }
+    
+    return () => {
+      if (syncInterval.current) {
+        clearInterval(syncInterval.current);
+        syncInterval.current = null;
+      }
+      if (uiUpdateInterval.current) {
+        clearInterval(uiUpdateInterval.current);
+        uiUpdateInterval.current = null;
+      }
+    };
+  }, [isPlaying]);
 
   return { synchronizeTracks, resetTruePosition };
 };
