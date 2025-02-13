@@ -1,3 +1,4 @@
+
 import { RefObject } from "react";
 import { Song } from "@/types/song";
 
@@ -26,7 +27,9 @@ export const useVolumeControl = ({
     const newVolume = value / 100;
     const track = song.tracks.find(t => t.id === trackId);
     
-    if ((track?.voicePart === "instrumental" || track?.voicePart === "all") && value > 0) {
+    if (!track) return;
+    
+    if ((track.voicePart === "instrumental" || track.voicePart === "all") && value > 0) {
       if (track.voicePart === "instrumental") {
         setInstrumentalMode(true);
         setAllTrackMode(false);
@@ -37,32 +40,49 @@ export const useVolumeControl = ({
         setActiveVoicePart("all");
       }
       
-      Object.entries(audioRefs.current).forEach(([id, audio]) => {
-        const trackPart = song.tracks.find(t => t.id === id)?.voicePart;
-        if (trackPart !== track.voicePart) {
-          audio.muted = true;
-          audio.pause();
-          setMutedTracks(prev => ({ ...prev, [id]: true }));
-        }
-      });
-    } else if ((track?.voicePart !== "instrumental" && track?.voicePart !== "all") && value > 0) {
+      // Kontrollera att audioRefs.current finns och att spåren existerar innan vi försöker modifiera dem
+      if (audioRefs.current) {
+        Object.entries(audioRefs.current).forEach(([id, audio]) => {
+          if (!audio) return;  // Skippa om audio-elementet inte existerar
+          
+          const trackPart = song.tracks.find(t => t.id === id)?.voicePart;
+          if (trackPart !== track.voicePart) {
+            audio.muted = true;
+            if (!audio.paused) {
+              audio.pause();
+            }
+            setMutedTracks(prev => ({ ...prev, [id]: true }));
+          }
+        });
+      }
+    } else if ((track.voicePart !== "instrumental" && track.voicePart !== "all") && value > 0) {
       setInstrumentalMode(false);
       setAllTrackMode(false);
-      setActiveVoicePart(track?.voicePart || "all");
+      setActiveVoicePart(track.voicePart);
       
-      song.tracks.forEach(t => {
-        if (t.voicePart === "instrumental" || t.voicePart === "all") {
-          const audio = audioRefs.current[t.id];
-          audio.muted = true;
-          audio.pause();
-          setMutedTracks(prev => ({ ...prev, [t.id]: true }));
-        }
-      });
+      // Kontrollera att audioRefs.current finns innan vi försöker använda det
+      if (audioRefs.current) {
+        song.tracks.forEach(t => {
+          if (t.voicePart === "instrumental" || t.voicePart === "all") {
+            const audio = audioRefs.current[t.id];
+            if (!audio) return;  // Skippa om audio-elementet inte existerar
+            
+            audio.muted = true;
+            if (!audio.paused) {
+              audio.pause();
+            }
+            setMutedTracks(prev => ({ ...prev, [t.id]: true }));
+          }
+        });
+      }
     }
 
     setVolumes(prev => ({ ...prev, [trackId]: newVolume }));
-    if (audioRefs.current[trackId]) {
-      audioRefs.current[trackId].volume = newVolume;
+    
+    // Kontrollera att audio-elementet existerar innan vi sätter volymen
+    const audioElement = audioRefs.current?.[trackId];
+    if (audioElement) {
+      audioElement.volume = newVolume;
     }
   };
 
