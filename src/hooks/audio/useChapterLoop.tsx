@@ -20,7 +20,7 @@ export const useChapterLoop = ({
   getCurrentChapter,
 }: UseChapterLoopProps) => {
   const lastLoopCheckTimeRef = useRef<number>(performance.now());
-  const loopCheckIntervalRef = useRef<number>(500); // Kontrollera varannan sekund
+  const loopCheckIntervalRef = useRef<number>(50); // Mycket tätare kontroller (50ms)
   const activeChapterRef = useRef<{
     id: string;
     startTime: number;
@@ -64,8 +64,8 @@ export const useChapterLoop = ({
       console.log("Time until chapter end:", (endTime - currentPosition).toFixed(2));
       console.log("Next chapter starts at:", endTime + 1);
 
-      // Mer exakt kontroll för loopning
-      if (currentPosition >= endTime || Math.abs(endTime - currentPosition) < 0.1) {
+      // Mer exakt kontroll för loopning med mindre marginal
+      if (currentPosition >= endTime || Math.abs(endTime - currentPosition) < 0.05) {
         console.log("\n!!! PERFORMING CHAPTER LOOP !!!");
         console.log("Timestamp:", new Date().toISOString());
         console.log("Current position:", currentPosition.toFixed(4));
