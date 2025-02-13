@@ -53,17 +53,23 @@ export const useChapterLoop = ({
 
     // Uppdatera aktivt kapitel endast om vi nått ett nytt kapitels starttid
     if (!activeChapterRef.current || currentPosition >= nextChapter?.time) {
+      // Använd kapitlets egen endTime om den finns, annars nästa kapitels starttid
+      const endTime = currentChapter.endTime || nextChapter?.time || Infinity;
+      
       activeChapterRef.current = {
         id: currentChapter.id,
         startTime: currentChapter.time,
-        endTime: currentChapter.endTime || nextChapter?.time || Infinity
+        endTime: endTime
       };
 
       console.log("\n=== New Active Chapter ===");
       console.log("Chapter:", currentChapter.title);
       console.log("Start time:", activeChapterRef.current.startTime);
-      console.log("End time:", activeChapterRef.current.endTime);
+      console.log("End time:", endTime, currentChapter.endTime ? "(explicit end time)" : "(next chapter start)");
       console.log("Current position:", currentPosition);
+      if (nextChapter) {
+        console.log("Next chapter starts at:", nextChapter.time);
+      }
     }
 
     // Använd det aktiva kapitlets gränser för loopning
@@ -75,6 +81,7 @@ export const useChapterLoop = ({
         console.log("\n!!! PERFORMING CHAPTER LOOP !!!");
         console.log("Timestamp:", new Date().toISOString());
         console.log("Current position:", currentPosition.toFixed(2));
+        console.log("Chapter end time:", endTime);
         console.log("Looping back to:", startTime);
         console.log("Distance past end:", (currentPosition - endTime).toFixed(2));
 
