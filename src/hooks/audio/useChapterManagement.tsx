@@ -68,18 +68,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
           
           currentChapterRef.current = chapter;
           lastUpdateTimeRef.current = now;
-        } else {
-          const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
-          if (timeSinceLastUpdate > 2000) {
-            console.log("\n=== Chapter Update Check ===");
-            console.log("Current time:", currentTime.toFixed(2));
-            console.log("Current chapter:", chapter.title);
-            console.log("Raw chapter data:", chapter);
-            if (nextChapter) {
-              console.log("Next chapter starts at:", nextChapter.time);
-            }
-            lastUpdateTimeRef.current = now;
-          }
         }
         break;
       }
