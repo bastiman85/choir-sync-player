@@ -55,33 +55,19 @@ export const useAudioControls = ({
 
       const startTime = unmutedTracks[0].currentTime;
 
-      // Pausa alla spår och sätt rätt position
+      // Synkronisera alla spår till samma position
       unmutedTracks.forEach(audio => {
         audio.currentTime = startTime;
       });
 
-      // Vänta på att spåren ska vara redo
+      // Vänta på att alla spår är redo
       await Promise.all(unmutedTracks.map(waitForAudioLoad));
 
-      // Spela upp spåren ett i taget
-      let successCount = 0;
-      
-      for (const audio of unmutedTracks) {
-        try {
-          // Enkel uppspelning utan förberedelser
-          await audio.play();
-          successCount++;
-        } catch (error) {
-          console.error("Failed to play track:", error);
-        }
-      }
+      // Spela upp alla spår samtidigt
+      const playPromises = unmutedTracks.map(audio => audio.play());
+      await Promise.all(playPromises);
+      setIsPlaying(true);
 
-      if (successCount > 0) {
-        setIsPlaying(true);
-      } else {
-        stopAllTracks();
-        setIsPlaying(false);
-      }
     } catch (error) {
       console.error("Playback error:", error);
       stopAllTracks();
@@ -109,27 +95,11 @@ export const useAudioControls = ({
         (audio) => !audio.muted
       );
 
-      // Vänta på att spåren ska vara redo
       await Promise.all(unmutedTracks.map(waitForAudioLoad));
-
-      // Spela upp spåren ett i taget
-      let successCount = 0;
       
-      for (const audio of unmutedTracks) {
-        try {
-          await audio.play();
-          successCount++;
-        } catch (error) {
-          console.error("Failed to play track after seek:", error);
-        }
-      }
-
-      if (successCount > 0) {
-        setIsPlaying(true);
-      } else {
-        stopAllTracks();
-        setIsPlaying(false);
-      }
+      const playPromises = unmutedTracks.map(audio => audio.play());
+      await Promise.all(playPromises);
+      setIsPlaying(true);
     }
   };
 
