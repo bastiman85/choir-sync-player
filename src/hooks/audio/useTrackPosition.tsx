@@ -1,5 +1,4 @@
-
-import { RefObject, useCallback } from "react";
+import { RefObject } from "react";
 
 interface UseTrackPositionProps {
   audioRefs: RefObject<{ [key: string]: HTMLAudioElement }>;
@@ -7,33 +6,23 @@ interface UseTrackPositionProps {
 }
 
 export const useTrackPosition = ({ audioRefs, truePosition }: UseTrackPositionProps) => {
-  const SYNC_THRESHOLD = 0.02; // Sänk tröskelvärdet till 20ms för mer aggressiv synkning
-  const MAX_SYNC_INTERVAL = 100; // Sänk till 100ms för tätare synkronisering
-  let lastSyncTime = 0;
-
-  const syncTrackPositions = useCallback((targetPosition: number) => {
-    const now = performance.now();
-    if (now - lastSyncTime < MAX_SYNC_INTERVAL) {
-      return;
-    }
-
+  const syncTrackPositions = (targetPosition: number) => {
     Object.values(audioRefs.current).forEach(track => {
-      if (!track.muted && !track.paused) {
+      if (!track.muted) {
         const drift = Math.abs(track.currentTime - targetPosition);
-        if (drift > SYNC_THRESHOLD) {
+        if (drift > 0.1 && track.currentTime > targetPosition) {
           track.currentTime = targetPosition;
-          lastSyncTime = now;
         }
       }
     });
-  }, []);
+  };
 
-  const updateTruePosition = useCallback((newPosition: number) => {
-    const drift = Math.abs(newPosition - truePosition.current);
-    if (drift > SYNC_THRESHOLD) {
+  const updateTruePosition = (newPosition: number) => {
+    // Never allow forward jumps, only backward corrections
+    if (newPosition < truePosition.current) {
       truePosition.current = newPosition;
     }
-  }, [truePosition]);
+  };
 
   return {
     syncTrackPositions,
