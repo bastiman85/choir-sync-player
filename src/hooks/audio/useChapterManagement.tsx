@@ -1,70 +1,15 @@
-
-import { RefObject, useCallback, useRef } from "react";
-import { Song, ChapterMarker } from "@/types/song";
+import { Song } from "@/types/song";
 
 export const useChapterManagement = (currentTime: number, song: Song) => {
-  const currentChapterRef = useRef<ChapterMarker | null>(null);
-  const nextChapterRef = useRef<ChapterMarker | null>(null);
-  const lastUpdateTimeRef = useRef<number>(performance.now());
-  const lastLoopCheckTimeRef = useRef<number>(performance.now());
-  const loopCheckIntervalRef = useRef<number>(250);
-
-  const getCurrentChapter = useCallback(() => {
-    if (!song.chapters?.length) {
-      return null;
-    }
-
-    const sortedChapters = [...song.chapters].sort((a, b) => a.time - b.time);
-    for (let i = 0; i < sortedChapters.length; i++) {
-      const chapter = sortedChapters[i];
-      const nextChapter = sortedChapters[i + 1];
-
-      if (currentTime >= chapter.time && (!nextChapter || currentTime < nextChapter.time)) {
-        return chapter;
-      }
-    }
-    return null;
-  }, [currentTime, song.chapters]);
-
-  const updateChapterRefs = useCallback(() => {
-    if (!song.chapters?.length) {
-      currentChapterRef.current = null;
-      nextChapterRef.current = null;
-      return;
-    }
-
-    const now = performance.now();
-    const timeSinceLastCheck = now - lastLoopCheckTimeRef.current;
-    
-    if (timeSinceLastCheck < loopCheckIntervalRef.current) {
-      return;
-    }
-    
-    lastLoopCheckTimeRef.current = now;
-    
-    const sortedChapters = [...song.chapters].sort((a, b) => a.time - b.time);
-    
-    for (let i = 0; i < sortedChapters.length; i++) {
-      const chapter = sortedChapters[i];
-      const nextChapter = sortedChapters[i + 1];
-
-      if (currentTime >= chapter.time && (!nextChapter || currentTime < nextChapter.time)) {
-        nextChapterRef.current = nextChapter || null;
-        
-        if (currentChapterRef.current?.id !== chapter.id) {
-          currentChapterRef.current = chapter;
-          lastUpdateTimeRef.current = now;
-        }
-        break;
-      }
-    }
-  }, [currentTime, song.chapters]);
-
-  updateChapterRefs();
+  const getCurrentChapter = () => {
+    if (!song.chapters?.length) return null;
+    return song.chapters
+      .slice()
+      .reverse()
+      .find(chapter => currentTime >= chapter.time);
+  };
 
   return {
-    currentChapter: currentChapterRef.current,
-    nextChapter: nextChapterRef.current,
     getCurrentChapter,
   };
 };
