@@ -57,6 +57,13 @@ export const useChapterLoop = ({
     if (activeChapterRef.current && activeChapterRef.current.endTime) {
       const { startTime, endTime } = activeChapterRef.current;
 
+      console.log("\n=== Chapter Update Check ===");
+      console.log("Current time:", currentPosition.toFixed(2));
+      console.log("Current chapter:", currentChapter.title);
+      console.log("Raw chapter data:", currentChapter);
+      console.log("Time until chapter end:", (endTime - currentPosition).toFixed(2));
+      console.log("Next chapter starts at:", endTime + 1);
+
       // Mer exakt kontroll för loopning
       if (currentPosition >= endTime || Math.abs(endTime - currentPosition) < 0.1) {
         console.log("\n!!! PERFORMING CHAPTER LOOP !!!");
@@ -65,6 +72,7 @@ export const useChapterLoop = ({
         console.log("Chapter end time:", endTime.toFixed(4));
         console.log("Looping back to:", startTime);
         console.log("Distance to end:", Math.abs(endTime - currentPosition).toFixed(4));
+        console.log("=========================\n");
 
         // Återställ alla ljudelement till kapitlets starttid
         Object.values(audioRefs.current).forEach(audio => {
