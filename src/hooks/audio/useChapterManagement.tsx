@@ -7,7 +7,7 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
   const nextChapterRef = useRef<ChapterMarker | null>(null);
   const lastUpdateTimeRef = useRef<number>(performance.now());
   const lastLoopCheckTimeRef = useRef<number>(performance.now());
-  const loopCheckIntervalRef = useRef<number>(250); // Öka intervallet till 250ms för att minska antalet uppdateringar
+  const loopCheckIntervalRef = useRef<number>(250);
 
   const getCurrentChapter = useCallback(() => {
     if (!song.chapters?.length) {
@@ -57,14 +57,19 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
         nextChapterRef.current = nextChapter || null;
         
         if (currentChapterRef.current?.id !== chapter.id) {
+          // Använd kapitlets egen endTime om den finns
+          const endTime = chapter.endTime || nextChapter?.time;
+          
           console.log("\n=== Chapter State Change ===");
           console.log("Timestamp:", new Date().toISOString());
           console.log("Current time:", currentTime.toFixed(2));
           console.log("Previous chapter:", currentChapterRef.current?.title);
           console.log("New chapter:", chapter.title);
-          console.log("Chapter boundaries:", chapter.time, "to", nextChapter?.time || "end");
-          console.log("Next chapter:", nextChapter?.title || "none");
-          console.log("Time until next chapter:", nextChapter ? (nextChapter.time - currentTime).toFixed(2) : "N/A");
+          console.log("Chapter boundaries:", chapter.time, "to", endTime);
+          if (nextChapter) {
+            console.log("Next chapter:", nextChapter.title);
+            console.log("Time until next chapter:", (nextChapter.time - currentTime).toFixed(2));
+          }
           console.log("=========================\n");
           
           currentChapterRef.current = chapter;
@@ -76,7 +81,9 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
             console.log("\n=== Chapter Update Check ===");
             console.log("Current time:", currentTime.toFixed(2));
             console.log("Current chapter:", chapter.title);
-            console.log("Time until next chapter:", nextChapter ? (nextChapter.time - currentTime).toFixed(2) : "N/A");
+            if (nextChapter) {
+              console.log("Time until next chapter:", (nextChapter.time - currentTime).toFixed(2));
+            }
             lastUpdateTimeRef.current = now;
           }
         }
