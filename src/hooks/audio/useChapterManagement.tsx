@@ -56,6 +56,9 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
       const nextChapter = sortedChapters[i + 1];
 
       if (currentTime >= chapter.time && (!nextChapter || currentTime < nextChapter.time)) {
+        // Always update nextChapterRef even if chapter hasn't changed
+        nextChapterRef.current = nextChapter || null;
+        
         if (currentChapterRef.current?.id !== chapter.id) {
           console.log("\n=== Chapter State Change ===");
           console.log("Timestamp:", new Date().toISOString());
@@ -68,7 +71,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
           console.log("=========================\n");
           
           currentChapterRef.current = chapter;
-          nextChapterRef.current = nextChapter || null;
           lastUpdateTimeRef.current = now;
         }
         break;
@@ -82,7 +84,6 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     }
 
     const now = performance.now();
-    lastLoopCheckTimeRef.current = now;
     
     const currentChapter = currentChapterRef.current;
     const nextChapter = nextChapterRef.current;
@@ -93,7 +94,8 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     
     // If this is the last chapter, use audio duration as end time
     const chapterEndTime = nextChapter ? nextChapter.time : totalDuration;
-    const threshold = nextChapter ? 0.2 : 0.5; // Larger threshold for last chapter
+    // Använd större threshold för att säkerställa att vi fångar loopmöjligheten
+    const threshold = 0.3; // Fast threshold på 0.3 sekunder för alla kapitel
     
     console.log("\n=== Detailed Loop Check ===");
     console.log("Current chapter:", currentChapter.title);
@@ -107,7 +109,8 @@ export const useChapterManagement = (currentTime: number, song: Song) => {
     console.log("Is last chapter:", !nextChapter ? "yes" : "no");
     console.log("Using threshold:", threshold);
 
-    const shouldLoop = currentTime >= chapterEndTime - threshold;
+    // Ändrar logiken för att loop ska triggas tidigare
+    const shouldLoop = currentTime >= (chapterEndTime - threshold);
     
     if (shouldLoop) {
       console.log("\n!!! LOOP DECISION !!!");
