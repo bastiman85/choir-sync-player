@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -10,7 +11,14 @@
   </head>
 
   <body>
+    <div id="version-info" style="position: fixed; top: 0; left: 0; background: rgba(0,0,0,0.8); color: white; padding: 4px 8px; font-size: 12px; z-index: 9999;"></div>
     <div id="root"></div>
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Använd en timestamp som versionsnummer för att säkerställa att den alltid är unik
+      const version = new Date().toISOString();
+      document.getElementById('version-info').textContent = `Version: ${version}`;
+    </script>
   </body>
 </html>
