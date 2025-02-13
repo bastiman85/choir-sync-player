@@ -20,8 +20,8 @@ export const useChapterLoop = ({
   getCurrentChapter,
 }: UseChapterLoopProps) => {
   const lastLoopCheckTimeRef = useRef<number>(performance.now());
-  const loopCheckIntervalRef = useRef<number>(50); // 50ms check interval
-  const audioEndThreshold = useRef<number>(0.5); // threshold for end of audio
+  const loopCheckIntervalRef = useRef<number>(25); // Minskat till 25ms för snabbare kontroller
+  const loopThresholdRef = useRef<number>(0.2); // Mindre threshold för tidigare loop-detektion
 
   const handleChapterLoop = (currentPosition: number) => {
     if (!autoRestartChapter || !song.chapters?.length) {
@@ -56,29 +56,30 @@ export const useChapterLoop = ({
     
     // If this is the last chapter, use the audio duration as the end time
     const chapterEndTime = nextChapter ? nextChapter.time : totalDuration;
+    const threshold = loopThresholdRef.current;
     
     console.log("Next chapter starts at:", nextChapter?.time || "end of song");
     console.log("Current chapter ends at:", chapterEndTime);
     console.log("Time until chapter end:", (chapterEndTime - currentPosition).toFixed(2));
-    console.log("Loop threshold:", (chapterEndTime - audioEndThreshold.current).toFixed(2));
+    console.log("Loop threshold:", threshold);
+    console.log("Will loop at:", (chapterEndTime - threshold).toFixed(2));
     console.log("Total duration:", totalDuration);
     console.log("Is last chapter:", !nextChapter ? "yes" : "no");
 
-    // Check if we're close to the end of the chapter
-    // For the last chapter, use a larger threshold to ensure we catch the loop
-    const thresholdTime = nextChapter ? 0.2 : audioEndThreshold.current;
-    
-    if (currentPosition >= chapterEndTime - thresholdTime) {
+    // Kontrollera om vi är nära slutet av kapitlet för att loopa
+    if (currentPosition >= chapterEndTime - threshold) {
       console.log("\n!!! PERFORMING CHAPTER LOOP !!!");
       console.log("Timestamp:", new Date().toISOString());
       console.log(`Looping back to chapter "${currentChapter.title}" at time ${currentChapter.time}`);
-      console.log("Using threshold:", thresholdTime);
+      console.log("Distance to chapter end:", (chapterEndTime - currentPosition).toFixed(2));
 
       // Reset all audio elements to the start of the current chapter
       Object.values(audioRefs.current).forEach(audio => {
-        audio.currentTime = currentChapter.time;
-        if (!audio.muted) {
-          audio.play().catch(error => console.error("Error playing audio:", error));
+        if (audio.currentTime >= chapterEndTime - threshold) {
+          audio.currentTime = currentChapter.time;
+          if (!audio.muted) {
+            audio.play().catch(error => console.error("Error playing audio:", error));
+          }
         }
       });
       
