@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Player from "@/components/Player";
@@ -80,6 +81,7 @@ const PlayerPage = () => {
           id: chapter.id,
           title: chapter.title,
           time: chapter.start_time,
+          endTime: chapter.end_time,
           type: "verse" as const
         })),
         htmlContent: data.html_content
