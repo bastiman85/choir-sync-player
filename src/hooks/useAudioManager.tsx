@@ -11,6 +11,7 @@ export const useAudioManager = (song: Song) => {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
   const loadingPromises = useRef<{ [key: string]: Promise<void> }>({});
   const audioContextRef = useRef<AudioContext | null>(null);
+  const objectUrlsRef = useRef<{ [key: string]: string }>({});
   
   const {
     isPlaying,
@@ -99,18 +100,25 @@ export const useAudioManager = (song: Song) => {
         audio.setAttribute('x-webkit-airplay', 'allow');
         audio.setAttribute('controlsList', 'nodownload');
         
-        // Använd range requests för att förbättra laddningstiden
-        const response = await fetch(track.url, {
-          headers: {
-            Range: 'bytes=0-',
-          },
-        });
+        try {
+          // Använd range requests för att förbättra laddningstiden
+          const response = await fetch(track.url, {
+            headers: {
+              Range: 'bytes=0-',
+            },
+          });
 
-        if (response.ok) {
-          const blob = await response.blob();
-          const objectUrl = URL.createObjectURL(blob);
-          audio.src = objectUrl;
-        } else {
+          let audioSrc = track.url;
+          if (response.ok) {
+            const blob = await response.blob();
+            const newObjectUrl = URL.createObjectURL(blob);
+            objectUrlsRef.current[track.id] = newObjectUrl;
+            audioSrc = newObjectUrl;
+          }
+          
+          audio.src = audioSrc;
+        } catch (error) {
+          console.error("Error fetching audio:", error);
           audio.src = track.url;
         }
         
@@ -123,13 +131,6 @@ export const useAudioManager = (song: Song) => {
         
         audio.addEventListener("loadedmetadata", handleLoaded);
         
-        // Rensa objektURL när ljudet är laddat
-        audio.addEventListener('canplaythrough', () => {
-          if (response.ok) {
-            URL.revokeObjectURL(objectUrl);
-          }
-        }, { once: true });
-
         // Felhantering
         audio.addEventListener("error", (e) => {
           console.error("Error loading audio:", e);
@@ -188,11 +189,9 @@ export const useAudioManager = (song: Song) => {
         audio.src = '';
       });
       
-      // Rensa objektURLs och promises
-      Object.values(loadingPromises.current).forEach(promise => {
-        if (promise.cancel) {
-          promise.cancel();
-        }
+      // Rensa ObjectURLs
+      Object.values(objectUrlsRef.current).forEach(url => {
+        URL.revokeObjectURL(url);
       });
       
       // Stäng AudioContext
@@ -203,6 +202,7 @@ export const useAudioManager = (song: Song) => {
       
       audioRefs.current = {};
       loadingPromises.current = {};
+      objectUrlsRef.current = {};
     };
   }, [song]);
 
