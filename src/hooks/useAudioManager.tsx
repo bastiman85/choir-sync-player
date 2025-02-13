@@ -83,8 +83,7 @@ export const useAudioManager = (song: Song) => {
       audio.setAttribute('x-webkit-airplay', 'allow');
       audio.setAttribute('controlsList', 'nodownload');
       
-      // Sätt upp buffering för bättre prestanda
-      audio.autobuffer = true;
+      // Förbered ljudet för uppspelning
       audio.load();
       
       // Sätt src sist för att undvika race conditions
@@ -163,6 +162,11 @@ export const useAudioManager = (song: Song) => {
     };
   }, [song]);
 
+  // Wrapper för togglePlayPause för att hantera async/await
+  const handleTogglePlayPause = () => {
+    togglePlayPause(isPlaying);
+  };
+
   return {
     isPlaying,
     currentTime,
@@ -173,7 +177,7 @@ export const useAudioManager = (song: Song) => {
     autoRestartChapter,
     setAutoRestartSong,
     setAutoRestartChapter,
-    togglePlayPause,
+    togglePlayPause: handleTogglePlayPause,
     handleVolumeChange,
     handleMuteToggle,
     handleSeek,
